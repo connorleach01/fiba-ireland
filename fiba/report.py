@@ -81,6 +81,19 @@ def build_nav(conn, event_slug: str, org_id: int) -> dict:
             "tournament": tournament, "teams": "tournament_teams.html"}
 
 
+def _box_rows(entries) -> list[dict]:
+    """Rows for the raw team box score.
+
+    `entries` is a list of (identity, stats, games, highlight); percentages are
+    always recomputed from the totals rather than averaged.
+    """
+    return [
+        {"code": identity["code"], "name": identity["name"], "stats": stats,
+         "games": games, "highlight": highlight}
+        for identity, stats, games, highlight in entries
+    ]
+
+
 def _player_details(conn, event_slug: str, org_id: int, players: list[dict],
                     game_ids: list[int] | None = None) -> dict:
     """Pre-render the expandable panel for each player.
@@ -184,6 +197,10 @@ def build_scout(conn, event_slug: str, org_id: int,
         league=league,
         players=players,
         zones=zones, faced_zones=faced_zones, player_details=details,
+        box_rows=_box_rows([
+            (profile["identity"], profile["totals"], profile["games_played"], True),
+            ({"code": "OPP", "name": "Their opponents"}, profile["opp_totals"],
+             profile["games_played"], False)]),
         lineups=lineups[:8],
         lineups_available=lineups_available,
         bench=bench,
@@ -254,6 +271,7 @@ def build_review(conn, event_slug: str, game_id: int,
         off=metrics.four_factors(opp_totals, totals),
         league=league,
         totals=totals, opp_totals=opp_totals,
+        box_rows=_box_rows([(us, totals, 1, True), (them, opp_totals, 1, False)]),
         players=players, zones=zones, faced_zones=faced_zones,
         player_details=_player_details(conn, event_slug, org_id, players, [game_id]),
         lineups=lineups, on_off=on_off, bench=bench,
@@ -314,6 +332,10 @@ def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
         profile=profile, league=league, players=players, zones=zones,
         faced_zones=faced_zones,
         player_details=_player_details(conn, event_slug, org_id, players),
+        box_rows=_box_rows([
+            (profile["identity"], profile["totals"], profile["games_played"], True),
+            ({"code": "OPP", "name": "Opponents"}, profile["opp_totals"],
+             profile["games_played"], False)]),
         lineups=lineups[:10], lineups_available=lineups_available,
         nav=nav, page="tournament", reference=reference,
         **_inks(profile["identity"]["code"], None),

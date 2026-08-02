@@ -32,6 +32,12 @@
 </div>
 </section>
 
+<section>
+<h2>Team box score</h2>
+{{ m.team_box(box_rows, per_game=True, caption='Per game') }}
+{{ m.scoring_share(box_rows, per_game=True) }}
+</section>
+
 <section class="keep">
 <h2>Four factors, all games</h2>
 {{ m.four_factor_table(ff, p.opp_four_factors, league, p.identity.code, 'Opponents') }}
@@ -94,11 +100,11 @@
 <h2>Shooting</h2>
 <div class="chartpair">
   <div>
-    <h3>Shots we took</h3>
+    <h3>Shots {{ p.identity.name }} took</h3>
     {{ charts.shots }}
   </div>
   <div>
-    <h3>Shots we allowed</h3>
+    <h3>Shots {{ p.identity.name }} allowed</h3>
     {{ charts.shots_faced }}
   </div>
 </div>
@@ -107,8 +113,8 @@
 <section>
 <h2>Shooting by zone</h2>
 <div class="cols">
-  <div>{{ m.zone_table(zones, caption='Our offence') }}</div>
-  <div>{{ m.zone_table(faced_zones, caption='What we allowed') }}</div>
+  <div>{{ m.zone_table(zones, caption='Shots ' ~ p.identity.name ~ ' took') }}</div>
+  <div>{{ m.zone_table(faced_zones, caption='Shots ' ~ p.identity.name ~ ' allowed') }}</div>
 </div>
 </section>
 

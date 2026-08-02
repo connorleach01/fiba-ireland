@@ -35,6 +35,11 @@
 </div>
 </section>
 
+<section>
+<h2>Team box score</h2>
+{{ m.team_box(box_rows, per_game=True, caption='Per game') }}
+</section>
+
 <section class="keep">
 <h2>Four factors</h2>
 {{ m.four_factor_table(ff, off, league, p.identity.code, 'Opponents') }}
@@ -45,32 +50,11 @@
 <h2>How they score</h2>
 <div class="cols">
   <div>
-    <table>
-      <caption>Per game</caption>
-      <thead><tr><th class="left">Category</th><th>Per game</th><th>% of points</th></tr></thead>
-      <tbody>
-      {% set ppg = p.points_for_pg or 1 %}
-      {% for label, value in [('Points in paint', p.pip_pg), ('Fast break', p.fastbreak_pg),
-                              ('Second chance', p.second_chance_pg),
-                              ('Off turnovers', p.points_off_to_pg),
-                              ('From the bench', p.bench_points_pg)] %}
-        <tr>
-          <td class="left">{{ label }}</td>
-          <td>{{ m.num(value) }}</td>
-          <td class="muted">{{ m.num(100 * (value or 0) / ppg) }}%</td>
-        </tr>
-      {% endfor %}
-        <tr class="total"><td class="left">Total points</td>
-          <td>{{ m.num(p.points_for_pg) }}</td><td class="muted">&ndash;</td></tr>
-      </tbody>
-    </table>
-    <p class="note">These categories overlap and do not sum to the total: a
-    fast-break layup counts as points in the paint too, and bench points cut
-    across all of them.</p>
-    {{ m.zone_table(zones, caption='Their offence') }}
+    {{ m.scoring_share(box_rows, per_game=True) }}
+    {{ m.zone_table(zones, caption='Shots ' ~ p.identity.name ~ ' took') }}
   </div>
   <div class="col-narrow">
-    <h3>Shot chart, all games</h3>
+    <h3>Shots {{ p.identity.name }} took</h3>
     {{ charts.shots }}
   </div>
 </div>
@@ -80,11 +64,11 @@
 <h2>What they allow</h2>
 <div class="chartpair">
   <div>
-    <h3>Shots they concede</h3>
+    <h3>Shots {{ p.identity.name }} allowed</h3>
     {{ charts.shots_faced }}
   </div>
   <div>
-    {{ m.zone_table(faced_zones, caption='Opponent offence against them') }}
+    {{ m.zone_table(faced_zones, caption='Shots ' ~ p.identity.name ~ ' allowed') }}
     <p class="note">Where a team lets opponents shoot from is the clearest read
     on their defence: a high rim share means the paint is open, a high three
     share means they run shooters off the line but concede space outside.</p>

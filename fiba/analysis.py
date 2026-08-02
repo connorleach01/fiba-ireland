@@ -240,6 +240,10 @@ def player_profile(conn, event_slug: str, org_id: int,
         entry["reb_pg"] = entry["REB"] / entry["games"]
         entry["ast_pg"] = entry["AS"] / entry["games"]
         entry["fg_pct"] = metrics._pct(entry["FGM"], entry["FGA"])
+        # Points produced per field goal attempt. Exactly twice eFG%, but on a
+        # scale coaches read directly: 1.00 means a shot is worth a point.
+        entry["pts_per_fga"] = metrics._safe_div(
+            2 * entry["FG2M"] + 3 * entry["FG3M"], entry["FGA"])
         entry["fg3_pct"] = metrics._pct(entry["FG3M"], entry["FG3A"])
         entry["ft_pct"] = metrics._pct(entry["FTM"], entry["FTA"])
         entry["fouls_drawn_per40"] = metrics._safe_div(entry["FD"] * 2400.0,

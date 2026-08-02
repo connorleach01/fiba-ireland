@@ -488,38 +488,121 @@ td .flag, li .flag { margin-right: 5px; }
     </table>
   </div>
   <div>
-    <table>
-      <caption>Scoring breakdown</caption>
-      <thead><tr><th class="left">Category</th><th>IRL</th><th>FIN</th><th>Diff</th></tr></thead>
-      <tbody>
-        <tr>
-          <td class="left">Points in paint</td><td>46</td><td>34</td>
-          <td class="pos">+12</td>
-        </tr>
-        <tr>
-          <td class="left">Fast break</td><td>17</td><td>15</td>
-          <td class="pos">+2</td>
-        </tr>
-        <tr>
-          <td class="left">Second chance</td><td>10</td><td>16</td>
-          <td class="neg">-6</td>
-        </tr>
-        <tr>
-          <td class="left">Off turnovers</td><td>22</td><td>18</td>
-          <td class="pos">+4</td>
-        </tr>
-        <tr>
-          <td class="left">Bench points</td><td>45</td><td>24</td>
-          <td class="pos">+21</td>
-        </tr>
-        <tr>
-          <td class="left">Turnovers</td><td>18</td><td>22</td>
-          <td class="pos">-4</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="scroll-x">
+<table>
+<caption>Scoring breakdown</caption><thead><tr>
+  <th class="left">Category</th>
+<th>IRL</th><th>% of pts</th><th>FIN</th><th>% of pts</th></tr></thead>
+<tbody>
+  <tr>
+    <td class="left">Points in paint</td>
+      <td>46</td>
+      <td class="muted">59.0%</td>
+      <td>34</td>
+      <td class="muted">44.7%</td>
+  </tr>
+  <tr>
+    <td class="left">Fast break</td>
+      <td>17</td>
+      <td class="muted">21.8%</td>
+      <td>15</td>
+      <td class="muted">19.7%</td>
+  </tr>
+  <tr>
+    <td class="left">Second chance</td>
+      <td>10</td>
+      <td class="muted">12.8%</td>
+      <td>16</td>
+      <td class="muted">21.1%</td>
+  </tr>
+  <tr>
+    <td class="left">Off turnovers</td>
+      <td>22</td>
+      <td class="muted">28.2%</td>
+      <td>18</td>
+      <td class="muted">23.7%</td>
+  </tr>
+  <tr>
+    <td class="left">From the bench</td>
+      <td>45</td>
+      <td class="muted">57.7%</td>
+      <td>24</td>
+      <td class="muted">31.6%</td>
+  </tr>
+  <tr class="total">
+    <td class="left">Total points</td>
+      <td>78</td>
+      <td class="muted">&ndash;</td>
+      <td>76</td>
+      <td class="muted">&ndash;</td>
+  </tr>
+</tbody>
+</table>
+</div>
+<p class="note">These categories overlap and do not sum to the total: a
+fast-break layup counts as points in the paint too, and bench points cut across
+all of them.</p>
+
   </div>
 </div>
+</section>
+
+<section>
+<h2>Team box score</h2>
+<div class="scroll-x">
+<table>
+<thead><tr>
+  <th class="left">Team</th><th>PTS</th>
+  <th>FG</th><th>FG%</th><th>2PT</th><th>2P%</th><th>3PT</th><th>3P%</th>
+  <th>FT</th><th>FT%</th>
+  <th>OR</th><th>DR</th><th>REB</th><th>AST</th><th>TO</th><th>STL</th>
+  <th>BLK</th><th>PF</th>
+</tr></thead>
+<tbody>
+  <tr class="highlight">
+    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="IRL flag"><rect x="0.0000" width="1.0000" height="2" fill="#169b62"/><rect x="1.0000" width="1.0000" height="2" fill="#ffffff"/><rect x="2.0000" width="1.0000" height="2" fill="#ff883e"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Ireland</td>
+    <td>78</td>
+    <td>31/74</td>
+    <td>41.9</td>
+    <td>27/55</td>
+    <td>49.1</td>
+    <td>4/19</td>
+    <td>21.1</td>
+    <td>12/22</td>
+    <td>54.5</td>
+    <td>12</td>
+    <td>33</td>
+    <td>45</td>
+    <td>25</td>
+    <td>18</td>
+    <td>13</td>
+    <td>1</td>
+    <td>19</td>
+  </tr>
+  <tr>
+    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="FIN flag"><rect width="3" height="2" fill="#ffffff"/><rect x=".78" width=".52" height="2" fill="#003580"/><rect y=".74" width="3" height=".52" fill="#003580"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Finland</td>
+    <td>76</td>
+    <td>26/74</td>
+    <td>35.1</td>
+    <td>18/40</td>
+    <td>45.0</td>
+    <td>8/34</td>
+    <td>23.5</td>
+    <td>16/23</td>
+    <td>69.6</td>
+    <td>18</td>
+    <td>37</td>
+    <td>55</td>
+    <td>16</td>
+    <td>22</td>
+    <td>10</td>
+    <td>4</td>
+    <td>21</td>
+  </tr>
+</tbody>
+</table>
+</div>
+
 </section>
 
 <section class="keep">
@@ -577,11 +660,11 @@ vertical rule marks the competition average for that factor.</p>
 <h2>Shooting</h2>
 <div class="chartpair">
   <div>
-    <h3>IRL shots taken</h3>
+    <h3>Shots Ireland took</h3>
     <figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="300" height="219" role="img" aria-label="Ireland shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="166.2" cy="110.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="98.2" cy="149.9" r="3.6"><title>layup missed</title></circle><circle cx="18.2" cy="154.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="93.2" cy="149.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="94.2" cy="112.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="262.2" cy="165.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="90.2" cy="135.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="155.2" cy="158.9" r="3.6"><title>2PtsFG under the basket, points after turnover, jump shot missed</title></circle><circle cx="138.2" cy="140.9" r="3.6"><title>2pt jump shot inside the paint missed</title></circle><circle cx="34.2" cy="80.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="67.2" cy="167.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="178.2" cy="128.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="103.2" cy="136.9" r="3.6"><title>2pt driving layup missed</title></circle><circle cx="33.2" cy="66.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="264.2" cy="161.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="104.2" cy="132.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="5.2" cy="132.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="132.2" cy="100.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="90.2" cy="110.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="117.2" cy="142.9" r="3.6"><title>layup missed</title></circle><circle cx="90.2" cy="152.9" r="3.6"><title>layup missed</title></circle><circle cx="268.2" cy="161.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="7.2" cy="112.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="124.2" cy="14.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="5.2" cy="124.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="183.2" cy="142.9" r="3.6"><title>2PtsFG inside right, jump shot missed</title></circle><circle cx="93.2" cy="167.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="224.2" cy="51.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="135.2" cy="128.9" r="3.6"><title>layup missed</title></circle><circle cx="108.2" cy="137.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="246.2" cy="148.9" r="3.6"><title>2PtsFG inside right wing, jump shot missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="2.2" cy="160.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="178.2" cy="91.9" r="3.6"><title>2pt fadeaway jump shot missed</title></circle><circle cx="118.2" cy="9.9" r="3.6"><title>3PtsFG back court, jump shot missed</title></circle><circle cx="233.2" cy="63.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="263.2" cy="167.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="91.2" cy="152.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="91.2" cy="169.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="97.2" cy="154.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="101.2" cy="165.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="73.2" cy="46.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="185.2" cy="65.9" r="3.6"><title>2PtsFG inside center, jump shot missed</title></circle></g><g class="shot made"><circle cx="110.2" cy="141.9" r="3.6"><title>2PtsFG inside paint, points from fastbreak + after turnover, layup made</title></circle><circle cx="94.2" cy="162.9" r="3.6"><title>layup made</title></circle><circle cx="2.2" cy="162.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="108.2" cy="151.9" r="3.6"><title>layup made</title></circle><circle cx="207.2" cy="49.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="141.2" cy="143.9" r="3.6"><title>2PtsFG inside paint, points from fastbreak + after turnover, driving layup made</title></circle><circle cx="239.2" cy="61.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="162.2" cy="149.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="155.2" cy="145.9" r="3.6"><title>2PtsFG inside paint, points from fastbreak + after turnover, driving layup made</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket made</title></circle><circle cx="103.2" cy="148.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="158.2" cy="143.9" r="3.6"><title>layup made</title></circle><circle cx="154.2" cy="160.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, driving layup made</title></circle><circle cx="162.2" cy="155.9" r="3.6"><title>layup made</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket made</title></circle><circle cx="110.2" cy="140.9" r="3.6"><title>layup made</title></circle><circle cx="189.2" cy="69.9" r="3.6"><title>2PtsFG inside center, jump shot made</title></circle><circle cx="180.2" cy="137.9" r="3.6"><title>2PtsFG inside right, points after turnover, jump shot made</title></circle><circle cx="164.2" cy="143.9" r="3.6"><title>2PtsFG inside paint, points after turnover, eurostep made</title></circle><circle cx="245.2" cy="137.9" r="3.6"><title>2PtsFG inside right, jump shot made</title></circle><circle cx="103.2" cy="147.9" r="3.6"><title>2pt driving layup made</title></circle><circle cx="164.2" cy="148.9" r="3.6"><title>2pt driving layup made</title></circle><circle cx="164.2" cy="145.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="96.2" cy="142.9" r="3.6"><title>2pt floating jump shot made</title></circle><circle cx="94.2" cy="143.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="158.2" cy="139.9" r="3.6"><title>2pt driving layup made</title></circle><circle cx="160.2" cy="150.9" r="3.6"><title>layup made</title></circle><circle cx="16.2" cy="99.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="207.2" cy="99.9" r="3.6"><title>2PtsFG inside right, points after turnover, jump shot made</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket made</title></circle><circle cx="131.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, points after turnover, dunk made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (31)</span><span class="key"><i class="swatch missed"></i>Missed (43)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure>
   </div>
   <div>
-    <h3>Shots allowed to FIN</h3>
+    <h3>Shots Ireland allowed</h3>
     <figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="300" height="219" role="img" aria-label="Shots allowed by Ireland" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="125.2" cy="111.9" r="3.6"><title>layup missed</title></circle><circle cx="187.2" cy="37.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="184.2" cy="109.9" r="3.6"><title>2PtsFG inside right, jump shot missed</title></circle><circle cx="216.2" cy="42.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="17.2" cy="104.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="253.2" cy="103.9" r="3.6"><title>3pt step back jump shot missed</title></circle><circle cx="233.2" cy="88.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="165.2" cy="134.9" r="3.6"><title>2pt driving layup missed</title></circle><circle cx="85.2" cy="155.9" r="3.6"><title>2PtsFG inside left, points after turnover, jump shot missed</title></circle><circle cx="98.2" cy="143.9" r="3.6"><title>2pt driving layup missed</title></circle><circle cx="69.2" cy="51.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="43.2" cy="69.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="31.2" cy="71.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="161.2" cy="156.9" r="3.6"><title>2pt driving layup missed</title></circle><circle cx="146.2" cy="24.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="164.2" cy="155.9" r="3.6"><title>2pt driving layup missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="105.2" cy="153.9" r="3.6"><title>layup missed</title></circle><circle cx="170.2" cy="143.9" r="3.6"><title>2pt driving layup missed</title></circle><circle cx="221.2" cy="28.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="263.2" cy="163.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="170.2" cy="122.9" r="3.6"><title>layup missed</title></circle><circle cx="169.2" cy="152.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="199.2" cy="163.9" r="3.6"><title>2PtsFG inside right wing, jump shot missed</title></circle><circle cx="263.2" cy="130.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="44.2" cy="55.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="40.2" cy="145.9" r="3.6"><title>2PtsFG inside left, jump shot missed</title></circle><circle cx="5.2" cy="176.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="72.2" cy="161.9" r="3.6"><title>2pt floating jump shot missed</title></circle><circle cx="3.2" cy="176.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="159.2" cy="148.9" r="3.6"><title>layup missed</title></circle><circle cx="103.2" cy="18.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="135.2" cy="118.9" r="3.6"><title>layup missed</title></circle><circle cx="3.2" cy="141.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="107.2" cy="132.9" r="3.6"><title>2pt driving layup missed</title></circle><circle cx="15.2" cy="156.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="144.2" cy="18.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="238.2" cy="83.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="149.2" cy="20.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="169.2" cy="141.9" r="3.6"><title>layup missed</title></circle><circle cx="77.2" cy="35.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="239.2" cy="78.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="106.2" cy="142.9" r="3.6"><title>2pt driving layup missed</title></circle><circle cx="132.2" cy="26.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="253.2" cy="118.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="37.2" cy="70.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="106.2" cy="133.9" r="3.6"><title>layup missed</title></circle><circle cx="230.2" cy="80.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket made</title></circle><circle cx="165.2" cy="147.9" r="3.6"><title>2pt driving layup made</title></circle><circle cx="112.2" cy="155.9" r="3.6"><title>layup made</title></circle><circle cx="70.2" cy="38.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="103.2" cy="156.9" r="3.6"><title>layup made</title></circle><circle cx="159.2" cy="153.9" r="3.6"><title>layup made</title></circle><circle cx="120.2" cy="148.9" r="3.6"><title>2PtsFG inside paint, points from fastbreak + after turnover, layup made</title></circle><circle cx="151.2" cy="107.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="103.2" cy="36.9" r="3.6"><title>3pt jump shot from center made</title></circle><circle cx="151.2" cy="140.9" r="3.6"><title>layup made</title></circle><circle cx="4.2" cy="134.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="6.2" cy="165.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="170.2" cy="141.9" r="3.6"><title>2pt driving layup made</title></circle><circle cx="132.2" cy="165.9" r="3.6"><title>2PtsFG under the basket, dunk made</title></circle><circle cx="154.2" cy="165.9" r="3.6"><title>2PtsFG under the basket, fast break, driving layup made</title></circle><circle cx="19.2" cy="89.9" r="3.6"><title>3PtsFG outside left, points from fastbreak + after turnover, jump shot made</title></circle><circle cx="60.2" cy="105.9" r="3.6"><title>2PtsFG inside left, points after turnover, jump shot made</title></circle><circle cx="109.2" cy="150.9" r="3.6"><title>2pt driving layup made</title></circle><circle cx="108.2" cy="140.9" r="3.6"><title>2pt driving layup made</title></circle><circle cx="247.2" cy="87.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="103.2" cy="138.9" r="3.6"><title>2pt driving layup made</title></circle><circle cx="264.2" cy="145.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="170.2" cy="138.9" r="3.6"><title>2pt driving layup made</title></circle><circle cx="264.2" cy="132.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="112.2" cy="140.9" r="3.6"><title>layup made</title></circle><circle cx="96.2" cy="144.9" r="3.6"><title>2PtsFG inside paint, points from fastbreak + after turnover, driving layup made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>FIN made (26)</span><span class="key"><i class="swatch missed"></i>Missed (48)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure>
   </div>
 </div>
@@ -592,7 +675,7 @@ vertical rule marks the competition average for that factor.</p>
 <div class="cols">
   <div><div class="scroll-x">
 <table>
-<caption>IRL offence</caption>
+<caption>Shots Ireland took</caption>
 <thead><tr><th class="left">Zone</th><th data-sortable>M</th><th data-sortable>A</th>
 <th data-sortable>FG%</th><th data-sortable>Share</th><th data-sortable>Pts/att</th></tr></thead>
 <tbody>
@@ -650,7 +733,7 @@ vertical rule marks the competition average for that factor.</p>
 </div>
   <div><div class="scroll-x">
 <table>
-<caption>FIN offence, what we allowed</caption>
+<caption>Shots Ireland allowed</caption>
 <thead><tr><th class="left">Zone</th><th data-sortable>M</th><th data-sortable>A</th>
 <th data-sortable>FG%</th><th data-sortable>Share</th><th data-sortable>Pts/att</th></tr></thead>
 <tbody>
@@ -716,11 +799,13 @@ vertical rule marks the competition average for that factor.</p>
 <thead>
   <tr>
     <th class="left">#</th><th class="left" data-sortable>Player</th>
-    <th class="left" data-sortable>Pos</th>
       <th data-sortable>MIN</th><th data-sortable>PTS</th><th data-sortable>REB</th>
       <th data-sortable>AST</th><th data-sortable>+/&ndash;</th>
-    <th>FG</th><th>3PT</th><th>FT</th>
-    <th data-sortable>USG%</th><th data-sortable>eFG%</th>
+    <th>FG</th><th data-sortable>FG%</th>
+    <th>3PT</th><th data-sortable>3P%</th>
+    <th>FT</th><th data-sortable>FT%</th>
+    <th data-sortable>Pts/att</th>
+    <th data-sortable>USG%</th>
     <th data-sortable>REB%</th><th data-sortable>AST%</th>
     <th data-sortable>TOV%</th><th data-sortable>FD/40</th>
   </tr>
@@ -731,17 +816,19 @@ vertical rule marks the competition average for that factor.</p>
       aria-controls="pd-346752">
     <td class="left">0</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Kieran Quinn</td>
-    <td class="left muted">F</td>
       <td>24.9</td>
       <td>4</td>
       <td>1</td>
       <td>3</td>
       <td class="pos">+1</td>
     <td>2/6</td>
-    <td>0/3</td>
-    <td>0/0</td>
-    <td>15.8</td>
     <td>33.3</td>
+    <td>0/3</td>
+    <td>0.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0.67</td>
+    <td>15.8</td>
     <td>1.6</td>
     <td>17.3</td>
     <td>40.0</td>
@@ -752,17 +839,19 @@ vertical rule marks the competition average for that factor.</p>
       aria-controls="pd-356513">
     <td class="left">13</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Aivaras Buzas</td>
-    <td class="left muted">G</td>
       <td>24.2</td>
       <td>8</td>
       <td>7</td>
       <td>2</td>
       <td class="neg">-1</td>
     <td>4/7</td>
-    <td>0/1</td>
-    <td>0/2</td>
-    <td>14.4</td>
     <td>57.1</td>
+    <td>0/1</td>
+    <td>0.0</td>
+    <td>0/2</td>
+    <td>0.0</td>
+    <td>1.14</td>
+    <td>14.4</td>
     <td>11.5</td>
     <td>13.5</td>
     <td>11.3</td>
@@ -773,17 +862,19 @@ vertical rule marks the competition average for that factor.</p>
       aria-controls="pd-368739">
     <td class="left">2</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Declan Ehigie</td>
-    <td class="left muted">G</td>
       <td>24.1</td>
       <td>10</td>
       <td>5</td>
       <td>4</td>
       <td class="pos">+5</td>
     <td>4/5</td>
-    <td>0/0</td>
-    <td>2/2</td>
-    <td>9.6</td>
     <td>80.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>2/2</td>
+    <td>100.0</td>
+    <td>1.60</td>
+    <td>9.6</td>
     <td>8.3</td>
     <td>27.3</td>
     <td>0.0</td>
@@ -794,17 +885,19 @@ vertical rule marks the competition average for that factor.</p>
       aria-controls="pd-368749">
     <td class="left">21</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Sean Patterson</td>
-    <td class="left muted">G</td>
       <td>23.4</td>
       <td>13</td>
       <td>4</td>
       <td>5</td>
       <td class="pos">+7</td>
     <td>5/10</td>
-    <td>0/1</td>
-    <td>3/4</td>
-    <td>28.2</td>
     <td>50.0</td>
+    <td>0/1</td>
+    <td>0.0</td>
+    <td>3/4</td>
+    <td>75.0</td>
+    <td>1.00</td>
+    <td>28.2</td>
     <td>6.8</td>
     <td>38.1</td>
     <td>29.8</td>
@@ -815,17 +908,19 @@ vertical rule marks the competition average for that factor.</p>
       aria-controls="pd-368742">
     <td class="left">9</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Fryderyk Klimas</td>
-    <td class="left muted">SG</td>
       <td>21.3</td>
       <td>11</td>
       <td>5</td>
       <td>3</td>
       <td class="neg">-3</td>
     <td>5/9</td>
+    <td>55.6</td>
     <td>1/3</td>
+    <td>33.3</td>
     <td>0/1</td>
+    <td>0.0</td>
+    <td>1.22</td>
     <td>21.1</td>
-    <td>61.1</td>
     <td>9.4</td>
     <td>26.0</td>
     <td>17.5</td>
@@ -836,17 +931,19 @@ vertical rule marks the competition average for that factor.</p>
       aria-controls="pd-368752">
     <td class="left">3</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Shareef Elmahi</td>
-    <td class="left muted">SG</td>
       <td>21.0</td>
       <td>4</td>
       <td>5</td>
       <td>3</td>
       <td class="neg">-2</td>
     <td>2/11</td>
-    <td>0/2</td>
-    <td>0/0</td>
-    <td>20.6</td>
     <td>18.2</td>
+    <td>0/2</td>
+    <td>0.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0.36</td>
+    <td>20.6</td>
     <td>9.5</td>
     <td>21.0</td>
     <td>0.0</td>
@@ -857,17 +954,19 @@ vertical rule marks the competition average for that factor.</p>
       aria-controls="pd-417960">
     <td class="left">5</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Jayden Umeh</td>
-    <td class="left muted"></td>
       <td>16.4</td>
       <td>3</td>
       <td>3</td>
       <td>2</td>
       <td class="pos">+6</td>
     <td>1/5</td>
+    <td>20.0</td>
     <td>1/4</td>
+    <td>25.0</td>
     <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0.60</td>
     <td>12.0</td>
-    <td>30.0</td>
     <td>7.3</td>
     <td>17.1</td>
     <td>0.0</td>
@@ -878,17 +977,19 @@ vertical rule marks the competition average for that factor.</p>
       aria-controls="pd-369067">
     <td class="left">30</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Mark Burns</td>
-    <td class="left muted">G</td>
       <td>15.2</td>
       <td>8</td>
       <td>0</td>
       <td>1</td>
       <td class="neg">-1</td>
     <td>2/3</td>
+    <td>66.7</td>
     <td>1/1</td>
+    <td>100.0</td>
     <td>3/7</td>
+    <td>42.9</td>
+    <td>1.67</td>
     <td>18.3</td>
-    <td>83.3</td>
     <td>0.0</td>
     <td>10.2</td>
     <td>14.1</td>
@@ -899,17 +1000,19 @@ vertical rule marks the competition average for that factor.</p>
       aria-controls="pd-393548">
     <td class="left">24</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Aidan McGrath</td>
-    <td class="left muted">F</td>
       <td>14.1</td>
       <td>10</td>
       <td>3</td>
       <td>1</td>
       <td class="pos">+4</td>
     <td>4/14</td>
-    <td>0/2</td>
-    <td>2/2</td>
-    <td>44.4</td>
     <td>28.6</td>
+    <td>0/2</td>
+    <td>0.0</td>
+    <td>2/2</td>
+    <td>100.0</td>
+    <td>0.57</td>
+    <td>44.4</td>
     <td>8.5</td>
     <td>14.5</td>
     <td>6.3</td>
@@ -920,17 +1023,19 @@ vertical rule marks the competition average for that factor.</p>
       aria-controls="pd-417148">
     <td class="left">8</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Michael Cunningham Smyth</td>
-    <td class="left muted"></td>
       <td>13.7</td>
       <td>5</td>
       <td>3</td>
       <td>1</td>
       <td class="neg">-8</td>
     <td>1/2</td>
+    <td>50.0</td>
     <td>1/2</td>
+    <td>50.0</td>
     <td>2/4</td>
+    <td>50.0</td>
+    <td>1.50</td>
     <td>22.3</td>
-    <td>75.0</td>
     <td>8.7</td>
     <td>10.4</td>
     <td>51.5</td>
@@ -941,17 +1046,19 @@ vertical rule marks the competition average for that factor.</p>
       aria-controls="pd-346218">
     <td class="left">4</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Nathan Gbinigie</td>
-    <td class="left muted">F</td>
       <td>1.6</td>
       <td>2</td>
       <td>0</td>
       <td>0</td>
       <td class="pos">+2</td>
     <td>1/2</td>
-    <td>0/0</td>
-    <td>0/0</td>
-    <td>49.2</td>
     <td>50.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>1.00</td>
+    <td>49.2</td>
     <td>0.0</td>
     <td>0.0</td>
     <td>0.0</td>
@@ -1352,7 +1459,6 @@ splits and true shooting.</p>
   <tr>
     <th class="left">Lineup</th><th data-sortable>MIN</th><th data-sortable>Gm</th>
     <th data-sortable>PF</th><th data-sortable>PA</th><th data-sortable>+/&ndash;</th>
-    <th data-sortable>Net/100</th>
   </tr>
 </thead>
 <tbody>
@@ -1363,7 +1469,6 @@ splits and true shooting.</p>
     <td>10</td>
     <td>9</td>
     <td class="pos">+1</td>
-    <td class="pos">+9.5</td>
   </tr>
   <tr>
     <td class="left">0 Quinn &middot; 2 Ehigie &middot; 9 Klimas &middot; 3 Elmahi &middot; 30 Burns</td>
@@ -1372,7 +1477,6 @@ splits and true shooting.</p>
     <td>6</td>
     <td>9</td>
     <td class="neg">-3</td>
-    <td class="neg">-33.8</td>
   </tr>
   <tr>
     <td class="left">0 Quinn &middot; 13 Buzas &middot; 9 Klimas &middot; 21 Patterson &middot; 5 Umeh</td>
@@ -1381,7 +1485,6 @@ splits and true shooting.</p>
     <td>6</td>
     <td>5</td>
     <td class="pos">+1</td>
-    <td class="pos">+15.1</td>
   </tr>
   <tr>
     <td class="left">0 Quinn &middot; 13 Buzas &middot; 9 Klimas &middot; 30 Burns &middot; 8 Smyth</td>
@@ -1390,7 +1493,6 @@ splits and true shooting.</p>
     <td>2</td>
     <td>7</td>
     <td class="neg">-5</td>
-    <td class="neg">-83.3</td>
   </tr>
   <tr>
     <td class="left">0 Quinn &middot; 13 Buzas &middot; 2 Ehigie &middot; 9 Klimas &middot; 5 Umeh</td>
@@ -1399,7 +1501,6 @@ splits and true shooting.</p>
     <td>9</td>
     <td>6</td>
     <td class="pos">+3</td>
-    <td class="pos">+50.0</td>
   </tr>
   <tr>
     <td class="left">0 Quinn &middot; 13 Buzas &middot; 2 Ehigie &middot; 21 Patterson &middot; 8 Smyth</td>
@@ -1408,7 +1509,6 @@ splits and true shooting.</p>
     <td>4</td>
     <td>5</td>
     <td class="neg">-1</td>
-    <td class=""><span class="muted">&ndash;</span></td>
   </tr>
   <tr>
     <td class="left">13 Buzas &middot; 21 Patterson &middot; 3 Elmahi &middot; 30 Burns &middot; 24 McGrath</td>
@@ -1417,7 +1517,6 @@ splits and true shooting.</p>
     <td>5</td>
     <td>3</td>
     <td class="pos">+2</td>
-    <td class=""><span class="muted">&ndash;</span></td>
   </tr>
   <tr>
     <td class="left">2 Ehigie &middot; 21 Patterson &middot; 24 McGrath &middot; 8 Smyth &middot; 5 Umeh</td>
@@ -1426,7 +1525,6 @@ splits and true shooting.</p>
     <td>7</td>
     <td>5</td>
     <td class="pos">+2</td>
-    <td class=""><span class="muted">&ndash;</span></td>
   </tr>
   <tr>
     <td class="left">13 Buzas &middot; 2 Ehigie &middot; 9 Klimas &middot; 3 Elmahi &middot; 24 McGrath</td>
@@ -1435,7 +1533,6 @@ splits and true shooting.</p>
     <td>4</td>
     <td>5</td>
     <td class="neg">-1</td>
-    <td class=""><span class="muted">&ndash;</span></td>
   </tr>
   <tr>
     <td class="left">0 Quinn &middot; 13 Buzas &middot; 21 Patterson &middot; 8 Smyth &middot; 5 Umeh</td>
@@ -1444,7 +1541,6 @@ splits and true shooting.</p>
     <td>2</td>
     <td>5</td>
     <td class="neg">-3</td>
-    <td class=""><span class="muted">&ndash;</span></td>
   </tr>
   <tr>
     <td class="left">4 Gbinigie &middot; 0 Quinn &middot; 13 Buzas &middot; 9 Klimas &middot; 30 Burns</td>
@@ -1453,7 +1549,6 @@ splits and true shooting.</p>
     <td>4</td>
     <td>2</td>
     <td class="pos">+2</td>
-    <td class=""><span class="muted">&ndash;</span></td>
   </tr>
   <tr>
     <td class="left">0 Quinn &middot; 13 Buzas &middot; 21 Patterson &middot; 3 Elmahi &middot; 8 Smyth</td>
@@ -1462,138 +1557,20 @@ splits and true shooting.</p>
     <td>4</td>
     <td>2</td>
     <td class="pos">+2</td>
-    <td class=""><span class="muted">&ndash;</span></td>
   </tr>
 </tbody>
 </table>
 </div>
-<p class="note">Net/100 assumes two possessions per minute and is
-withheld below three minutes together. Minutes are the sample each lineup is
-judged on.</p>
+<p class="note">PF and PA are points scored and allowed while that five
+was on court. Minutes are the sample each lineup is judged on, so read a large
+plus-minus over two minutes as noise.</p>
 
-</section>
-
-<section>
-<h2>On / off</h2>
-<div class="scroll-x">
-<table>
-<thead>
-  <tr><th class="left">#</th><th class="left" data-sortable>Player</th>
-      <th data-sortable>On min</th><th data-sortable>On net/100</th>
-      <th data-sortable>Off min</th><th data-sortable>Off net/100</th>
-      <th data-sortable>Swing</th></tr>
-</thead>
-<tbody>
-  <tr>
-    <td class="left">0</td>
-    <td class="left name">Kieran Quinn</td>
-    <td>24.9</td>
-    <td class="neg">-2.0</td>
-    <td>15.1</td>
-    <td class="pos">+3.3</td>
-    <td class="neg">-5.3</td>
-  </tr>
-  <tr>
-    <td class="left">13</td>
-    <td class="left name">Aivaras Buzas</td>
-    <td>24.2</td>
-    <td class="neg">-6.2</td>
-    <td>15.8</td>
-    <td class="pos">+9.5</td>
-    <td class="neg">-15.7</td>
-  </tr>
-  <tr>
-    <td class="left">2</td>
-    <td class="left name">Declan Ehigie</td>
-    <td>24.1</td>
-    <td class="pos">+6.2</td>
-    <td>15.9</td>
-    <td class="neg">-9.4</td>
-    <td class="pos">+15.7</td>
-  </tr>
-  <tr>
-    <td class="left">21</td>
-    <td class="left name">Sean Patterson</td>
-    <td>23.4</td>
-    <td class="pos">+15.0</td>
-    <td>16.6</td>
-    <td class="neg">-21.0</td>
-    <td class="pos">+36.0</td>
-  </tr>
-  <tr>
-    <td class="left">9</td>
-    <td class="left name">Fryderyk Klimas</td>
-    <td>21.3</td>
-    <td class="neg">-7.0</td>
-    <td>18.7</td>
-    <td class="pos">+8.0</td>
-    <td class="neg">-15.1</td>
-  </tr>
-  <tr>
-    <td class="left">3</td>
-    <td class="left name">Shareef Elmahi</td>
-    <td>21.0</td>
-    <td class="neg">-4.8</td>
-    <td>19.0</td>
-    <td class="pos">+5.3</td>
-    <td class="neg">-10.0</td>
-  </tr>
-  <tr>
-    <td class="left">5</td>
-    <td class="left name">Jayden Umeh</td>
-    <td>16.4</td>
-    <td class="pos">+18.3</td>
-    <td>23.6</td>
-    <td class="neg">-12.7</td>
-    <td class="pos">+31.0</td>
-  </tr>
-  <tr>
-    <td class="left">30</td>
-    <td class="left name">Mark Burns</td>
-    <td>15.2</td>
-    <td class="neg">-3.3</td>
-    <td>24.8</td>
-    <td class="pos">+2.0</td>
-    <td class="neg">-5.3</td>
-  </tr>
-  <tr>
-    <td class="left">24</td>
-    <td class="left name">Aidan McGrath</td>
-    <td>14.1</td>
-    <td class="pos">+7.1</td>
-    <td>25.9</td>
-    <td class="neg">-3.9</td>
-    <td class="pos">+11.0</td>
-  </tr>
-  <tr>
-    <td class="left">8</td>
-    <td class="left name">Michael Cunningham Smyth</td>
-    <td>13.7</td>
-    <td class="neg">-36.5</td>
-    <td>26.3</td>
-    <td class="pos">+19.0</td>
-    <td class="neg">-55.5</td>
-  </tr>
-  <tr>
-    <td class="left">4</td>
-    <td class="left name">Nathan Gbinigie</td>
-    <td>1.6</td>
-    <td class=""><span class="muted">&ndash;</span></td>
-    <td>38.4</td>
-    <td class="neg">-2.6</td>
-    <td class=""><span class="muted">&ndash;</span></td>
-  </tr>
-</tbody>
-</table>
-</div>
-<p class="note">On/off from a single game covers very few possessions. Read it as
-a description of what happened, not as a measure of the player.</p>
 </section>
 
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Sun 02 Aug 2026, 19:31 (Irish time)</span>
+  <span>Generated Sun 02 Aug 2026, 19:48 (Irish time)</span>
 </div>
 
 <div class="running-foot">

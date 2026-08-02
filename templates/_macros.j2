@@ -42,7 +42,6 @@ Rate stats are still noisy at this stage of the tournament.</p>
 <thead>
   <tr>
     <th class="left">#</th><th class="left" data-sortable>Player</th>
-    <th class="left" data-sortable>Pos</th>
     {% if per_game %}
       <th data-sortable>GP</th><th data-sortable>MPG</th><th data-sortable>PPG</th>
       <th data-sortable>RPG</th><th data-sortable>APG</th>
@@ -50,8 +49,11 @@ Rate stats are still noisy at this stage of the tournament.</p>
       <th data-sortable>MIN</th><th data-sortable>PTS</th><th data-sortable>REB</th>
       <th data-sortable>AST</th><th data-sortable>+/&ndash;</th>
     {% endif %}
-    <th>FG</th><th>3PT</th><th>FT</th>
-    <th data-sortable>USG%</th><th data-sortable>eFG%</th>
+    <th>FG</th><th data-sortable>FG%</th>
+    <th>3PT</th><th data-sortable>3P%</th>
+    <th>FT</th><th data-sortable>FT%</th>
+    <th data-sortable>Pts/att</th>
+    <th data-sortable>USG%</th>
     <th data-sortable>REB%</th><th data-sortable>AST%</th>
     <th data-sortable>TOV%</th><th data-sortable>FD/40</th>
   </tr>
@@ -64,7 +66,6 @@ Rate stats are still noisy at this stage of the tournament.</p>
       aria-controls="pd-{{ p.person_id }}"{% endif %}>
     <td class="left">{{ p.uniform_number or '' }}</td>
     <td class="left name">{% if d %}<span class="twisty" aria-hidden="true">&#9656;</span>{% endif %}{{ p.full_name }}</td>
-    <td class="left muted">{{ p.position or '' }}</td>
     {% if per_game %}
       <td>{{ p.games }}</td>
       <td>{{ num(p.minutes_pg) }}</td>
@@ -79,10 +80,13 @@ Rate stats are still noisy at this stage of the tournament.</p>
       <td class="{{ tone(p.PM) }}">{{ '%+d'|format(p.PM or 0) }}</td>
     {% endif %}
     <td>{{ p.FGM }}/{{ p.FGA }}</td>
+    <td>{{ num(p.fg_pct) }}</td>
     <td>{{ p.FG3M }}/{{ p.FG3A }}</td>
+    <td>{{ num(p.fg3_pct) }}</td>
     <td>{{ p.FTM }}/{{ p.FTA }}</td>
+    <td>{{ num(p.ft_pct) }}</td>
+    <td>{{ num(p.pts_per_fga, 2) }}</td>
     <td>{{ num(p.usage_pct) }}</td>
-    <td>{{ num(p.efg_pct) }}</td>
     <td>{{ num(p.treb_pct) }}</td>
     <td>{{ num(p.ast_pct) }}</td>
     <td>{{ num(p.tov_pct) }}</td>
@@ -141,7 +145,6 @@ Rate stats are still noisy at this stage of the tournament.</p>
   <tr>
     <th class="left">Lineup</th><th data-sortable>MIN</th><th data-sortable>Gm</th>
     <th data-sortable>PF</th><th data-sortable>PA</th><th data-sortable>+/&ndash;</th>
-    <th data-sortable>Net/100</th>
   </tr>
 </thead>
 <tbody>
@@ -153,15 +156,14 @@ Rate stats are still noisy at this stage of the tournament.</p>
     <td>{{ l.points_for }}</td>
     <td>{{ l.points_against }}</td>
     <td class="{{ tone(l.plus_minus) }}">{{ '%+d'|format(l.plus_minus) }}</td>
-    <td class="{{ tone(l.net_per_100) }}">{{ signed(l.net_per_100) }}</td>
   </tr>
 {% endfor %}
 </tbody>
 </table>
 </div>
-<p class="note">{{ note }}Net/100 assumes two possessions per minute and is
-withheld below three minutes together. Minutes are the sample each lineup is
-judged on.</p>
+<p class="note">{{ note }}PF and PA are points scored and allowed while that five
+was on court. Minutes are the sample each lineup is judged on, so read a large
+plus-minus over two minutes as noise.</p>
 {% else %}
 <p class="note">No lineup met the minimum minutes threshold.</p>
 {% endif %}
@@ -211,4 +213,90 @@ judged on.</p>
 </tbody>
 </table>
 </div>
+{% endmacro %}
+
+
+{# Raw box score totals, the format coaches read first. `rows` is a list of
+   {code, name, stats, games}; set per_game to divide counting stats by games.
+   Percentages always come from the totals, never from averaged percentages. #}
+{% macro team_box(rows, per_game=False, caption='') %}
+{% set dp = 1 if per_game else 0 %}
+<div class="scroll-x">
+<table>
+{% if caption %}<caption>{{ caption }}</caption>{% endif %}
+<thead><tr>
+  <th class="left">Team</th><th>PTS</th>
+  <th>FG</th><th>FG%</th><th>2PT</th><th>2P%</th><th>3PT</th><th>3P%</th>
+  <th>FT</th><th>FT%</th>
+  <th>OR</th><th>DR</th><th>REB</th><th>AST</th><th>TO</th><th>STL</th>
+  <th>BLK</th><th>PF</th>
+</tr></thead>
+<tbody>
+{% for r in rows %}
+  {% set t = r.stats %}
+  {% set n = r.games if (per_game and r.games) else 1 %}
+  <tr{% if r.highlight %} class="highlight"{% endif %}>
+    <td class="left name">{{ flag(r.code) }}{{ r.name }}</td>
+    <td>{{ num(t.PTS / n, dp) }}</td>
+    <td>{{ num(t.FGM / n, dp) }}/{{ num(t.FGA / n, dp) }}</td>
+    <td>{{ num(100 * t.FGM / t.FGA if t.FGA else none) }}</td>
+    <td>{{ num(t.FG2M / n, dp) }}/{{ num(t.FG2A / n, dp) }}</td>
+    <td>{{ num(100 * t.FG2M / t.FG2A if t.FG2A else none) }}</td>
+    <td>{{ num(t.FG3M / n, dp) }}/{{ num(t.FG3A / n, dp) }}</td>
+    <td>{{ num(100 * t.FG3M / t.FG3A if t.FG3A else none) }}</td>
+    <td>{{ num(t.FTM / n, dp) }}/{{ num(t.FTA / n, dp) }}</td>
+    <td>{{ num(100 * t.FTM / t.FTA if t.FTA else none) }}</td>
+    <td>{{ num(t.OR / n, dp) }}</td>
+    <td>{{ num(t.DR / n, dp) }}</td>
+    <td>{{ num(t.REB / n, dp) }}</td>
+    <td>{{ num(t.AS / n, dp) }}</td>
+    <td>{{ num(t.TO / n, dp) }}</td>
+    <td>{{ num(t.ST / n, dp) }}</td>
+    <td>{{ num(t.BS / n, dp) }}</td>
+    <td>{{ num(t.PF / n, dp) }}</td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endmacro %}
+
+
+{# Scoring categories as a share of each team's points. They overlap, so they
+   do not sum to 100 and the caller says so. #}
+{% macro scoring_share(rows, per_game=False, caption='Scoring breakdown') %}
+{% set dp = 1 if per_game else 0 %}
+<div class="scroll-x">
+<table>
+{% if caption %}<caption>{{ caption }}</caption>{% endif %}
+<thead><tr>
+  <th class="left">Category</th>
+  {% for r in rows %}<th>{{ r.code }}</th><th>% of pts</th>{% endfor %}
+</tr></thead>
+<tbody>
+{% for label, key in [('Points in paint','A_PIP'), ('Fast break','A_FBP'),
+                      ('Second chance','A_SCP'), ('Off turnovers','A_PAT'),
+                      ('From the bench','A_PFB')] %}
+  <tr>
+    <td class="left">{{ label }}</td>
+    {% for r in rows %}
+      {% set v = r.stats[key] or 0 %}{% set n = r.games if r.games else 1 %}
+      <td>{{ num(v / n, dp) }}</td>
+      <td class="muted">{{ num(100 * v / r.stats.PTS if r.stats.PTS else none) }}%</td>
+    {% endfor %}
+  </tr>
+{% endfor %}
+  <tr class="total">
+    <td class="left">Total points</td>
+    {% for r in rows %}
+      <td>{{ num(r.stats.PTS / (r.games if r.games else 1), dp) }}</td>
+      <td class="muted">&ndash;</td>
+    {% endfor %}
+  </tr>
+</tbody>
+</table>
+</div>
+<p class="note">These categories overlap and do not sum to the total: a
+fast-break layup counts as points in the paint too, and bench points cut across
+all of them.</p>
 {% endmacro %}

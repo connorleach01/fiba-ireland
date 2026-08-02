@@ -43,23 +43,14 @@
     </table>
   </div>
   <div>
-    <table>
-      <caption>Scoring breakdown</caption>
-      <thead><tr><th class="left">Category</th><th>{{ us.code }}</th><th>{{ them.code }}</th><th>Diff</th></tr></thead>
-      <tbody>
-      {% for label, key in [('Points in paint','A_PIP'), ('Fast break','A_FBP'),
-                            ('Second chance','A_SCP'), ('Off turnovers','A_PAT'),
-                            ('Bench points','A_PFB'), ('Turnovers','TO')] %}
-        {% set a = totals[key] or 0 %}{% set b = opp_totals[key] or 0 %}
-        <tr>
-          <td class="left">{{ label }}</td><td>{{ a }}</td><td>{{ b }}</td>
-          <td class="{{ m.tone((b - a) if key == 'TO' else (a - b)) }}">{{ '%+d'|format(a - b) }}</td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+    {{ m.scoring_share(box_rows) }}
   </div>
 </div>
+</section>
+
+<section>
+<h2>Team box score</h2>
+{{ m.team_box(box_rows) }}
 </section>
 
 <section class="keep">
@@ -79,11 +70,11 @@ vertical rule marks the competition average for that factor.</p>
 <h2>Shooting</h2>
 <div class="chartpair">
   <div>
-    <h3>{{ us.code }} shots taken</h3>
+    <h3>Shots {{ us.name }} took</h3>
     {{ charts.shots }}
   </div>
   <div>
-    <h3>Shots allowed to {{ them.code }}</h3>
+    <h3>Shots {{ us.name }} allowed</h3>
     {{ charts.shots_faced }}
   </div>
 </div>
@@ -92,8 +83,8 @@ vertical rule marks the competition average for that factor.</p>
 <section>
 <h2>Shooting by zone</h2>
 <div class="cols">
-  <div>{{ m.zone_table(zones, caption=us.code ~ ' offence') }}</div>
-  <div>{{ m.zone_table(faced_zones, caption=them.code ~ ' offence, what we allowed') }}</div>
+  <div>{{ m.zone_table(zones, caption='Shots ' ~ us.name ~ ' took') }}</div>
+  <div>{{ m.zone_table(faced_zones, caption='Shots ' ~ us.name ~ ' allowed') }}</div>
 </div>
 </section>
 
@@ -115,36 +106,5 @@ splits and true shooting.</p>
 game, so lineup and on/off figures are withheld rather than shown unverified.</p>
 {% endif %}
 </section>
-
-{% if lineups_available %}
-<section>
-<h2>On / off</h2>
-<div class="scroll-x">
-<table>
-<thead>
-  <tr><th class="left">#</th><th class="left" data-sortable>Player</th>
-      <th data-sortable>On min</th><th data-sortable>On net/100</th>
-      <th data-sortable>Off min</th><th data-sortable>Off net/100</th>
-      <th data-sortable>Swing</th></tr>
-</thead>
-<tbody>
-{% for p in on_off %}
-  <tr>
-    <td class="left">{{ p.uniform_number or '' }}</td>
-    <td class="left name">{{ p.full_name }}</td>
-    <td>{{ m.num(p.on_minutes) }}</td>
-    <td class="{{ m.tone(p.on_net) }}">{{ m.signed(p.on_net) }}</td>
-    <td>{{ m.num(p.off_minutes) }}</td>
-    <td class="{{ m.tone(p.off_net) }}">{{ m.signed(p.off_net) }}</td>
-    <td class="{{ m.tone(p.swing) }}">{{ m.signed(p.swing) }}</td>
-  </tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-<p class="note">On/off from a single game covers very few possessions. Read it as
-a description of what happened, not as a measure of the player.</p>
-</section>
-{% endif %}
 
 {% endblock %}

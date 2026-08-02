@@ -144,6 +144,11 @@ lets opponents shoot from reads its defence more directly than any single number
 a high rim share means the paint is open, a high three share means they run
 shooters off the line but concede space outside.
 
+**The team box score leads.** Each game review opens with both teams' raw
+totals, the format coaches read first, before any derived metric. Scouting and
+tournament pages carry the same table as per-game averages. Percentages are
+always recomputed from totals rather than averaged across games.
+
 **Player rows expand.** Clicking a player opens their shot chart and zone splits
 beneath the table, scoped to the page: all games on a scouting report, that game
 alone on a game review. The panels are rendered at build time rather than fetched
@@ -152,7 +157,9 @@ whatever is open.
 
 **Charts do not repeat what the table already says.** Every figure has one home.
 The four factors table carries the numbers and the bars beside it carry the shape;
-the bars are unlabelled on purpose. Shot markers shrink as a chart gets denser so
+the bars are unlabelled on purpose. Player rows show Pts/att rather than eFG%
+because the two are the same number (Pts/att is exactly twice eFG%) and Pts/att
+reads directly: 1.00 means a shot is worth a point. Shot markers shrink as a chart gets denser so
 a tournament-wide chart stays readable.
 
 **Small samples are labelled, and thin ones are withheld.** Rate stats carry a
