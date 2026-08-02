@@ -1,8 +1,11 @@
 # Ireland U16 analytics — FIBA U16 EuroBasket 2026, Division B
 
+**Live site: https://connorleach01.github.io/fiba-ireland/**
+
 Turns FIBA's published game pages into scouting and self-scout reports within
 minutes of a game going final, so staff have something usable before they play
-the same opponent the next day.
+the same opponent the next day. The poller publishes the site itself, so there is
+nothing to send around: coaches bookmark one URL.
 
 **Event:** 81 games, 6-16 August 2026, Gevgelija & Skopje (MKD).
 Ireland open against the Netherlands, Thursday 6 August, 10:00 Irish time.
@@ -14,10 +17,14 @@ Ireland open against the Netherlands, Thursday 6 August, 10:00 Irish time.
 ```bash
 cd ~/code/fiba-ireland
 
-.venv/bin/python -m fiba.watch --once     # one poll now, rebuild reports
+.venv/bin/python -m fiba.watch --once     # one poll now, rebuild and publish
 .venv/bin/python -m fiba.watch            # poll every 5 minutes until stopped
-open reports/index.html                   # the landing page
+open docs/index.html                      # the local copy of the site
 ```
+
+Every poll that finds a new result rebuilds the site and pushes it, so
+https://connorleach01.github.io/fiba-ireland/ is live within about a minute of a
+game going final. Add `--no-publish` to build without pushing.
 
 Run it unattended (survives reboots):
 
@@ -30,16 +37,25 @@ tail -f data/watch.log
 Other commands:
 
 ```bash
-.venv/bin/python -m fiba.watch --rebuild                 # regenerate reports only
+.venv/bin/python -m fiba.watch --rebuild                 # regenerate and publish
+.venv/bin/python -m fiba.watch --publish                 # push the current site
 .venv/bin/python -m fiba.watch --backfill <event-slug>   # pull a past event
 .venv/bin/python -m tests.test_pipeline                  # regression tests, offline
 .venv/bin/python -m tests.validate_lineups <event-slug>  # lineup accuracy report
 ```
 
-## Reports
+## The site
 
-All output is a self-contained HTML file in `reports/`. No server, no external
-requests, works offline on a phone.
+`docs/` is the published site, served by GitHub Pages straight off the main
+branch. Every page carries a navigation bar (Dashboard, Ireland, Teams, and
+dropdowns for every scouting report and game review), so any page reaches any
+other. Tables sort by clicking a column header, and the team leaderboard toggles
+between Offence, Defence and Combined. All of that is a few dozen lines of plain
+DOM code inlined in the page: no framework, no build step, and every page is
+fully readable with JavaScript off.
+
+All output is a self-contained HTML file. No external requests, works offline on
+a phone.
 
 The design is a **printed stats report, not a dashboard**: A4 paper geometry,
 ruled sections, hairline tables, tabular figures, and no dark mode by choice, so
@@ -50,11 +66,12 @@ the foot of every page. A typical game review is 3 A4 pages, a scout report 2.
 
 | File | What it is |
 |---|---|
-| `index.html` | Landing page, next fixture, links to everything |
+| `index.html` | Dashboard: next fixture, links to everything |
 | `scout_<CODE>.html` | Opponent profile: four factors, shot profile, personnel, lineups |
 | `<date>_IRL-v-<CODE>_review.html` | Ireland self-scout for one game |
 | `irl_tournament.html` | Ireland cumulative, updates after every result |
-| `tournament_teams.html` | All 22 teams ranked by net rating |
+| `tournament_teams.html` | All 22 teams, offensive **and** defensive four factors, sortable |
+| `example/` | A worked example built from Ireland's U18 EuroBasket, linked from the dashboard until the first game is played |
 
 ## How it works
 
@@ -83,6 +100,7 @@ game page (1 GET) ──> parse ──> SQLite ──> metrics + lineups ──>
 | `theming.py` | Inline flag badges; country colours, checked for CVD and contrast |
 | `report.py` | Jinja2 → HTML |
 | `watch.py` | The poller |
+| `deploy.py` | Commits `docs/` and pushes; failures never abort a scrape |
 
 ## What was verified before the tournament
 
@@ -132,6 +150,17 @@ minutes and plus-minus still appear, because those are facts.
 twenty-five. A game that fails to parse has its cache entry discarded so the next
 poll starts clean, which matters if a page is scraped while the box score is still
 being published.
+
+## Reading the leaderboard
+
+Defensive columns describe what a team **allows**, so they do not all point the
+same way: `Opp eFG%` and `Opp FTr` are lower-is-better, while `TOV% frc`
+(turnovers forced) and `DREB%` are higher-is-better. `DREB%` is the exact
+complement of the opponent's `OREB%`, which is why the two always sum to 100.
+
+Because every game contributes both of its teams, the event average row is
+identical on offence and defence by construction. That is a property of the
+competition, not a bug.
 
 ## Known limits
 
