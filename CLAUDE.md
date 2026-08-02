@@ -150,7 +150,7 @@ dropdowns) are a few dozen lines of plain DOM code. Keep it that way.
 **Team colours come from national flags but are computed, not assumed.**
 `theming.pick_pair()` checks contrast on paper and separation under protanopia,
 deuteranopia and tritanopia, and scores the OKLab a/b plane **separately from
-lightness** — two greens differing only in lightness read as one colour on
+lightness**: two greens differing only in lightness read as one colour on
 adjacent bars however large their total distance. When two teams collide it
 reaches for the opponent's second flag colour before nudging the first, so
 Ireland v Portugal is green against Portuguese red. All 380 orderings in the
@@ -196,15 +196,15 @@ empty-event shape, and the theming rules. Run it after any change.
 Built and validated against **159 completed games** across two past events, both
 already in `data/fiba.db`:
 
-- `fiba-u16-eurobasket-2025-division-b` (81 games) — same age group
-- `fiba-u18-eurobasket-2026-division-b` (78 played) — Ireland played 7
+- `fiba-u16-eurobasket-2025-division-b` (81 games), same age group
+- `fiba-u18-eurobasket-2026-division-b` (78 played), Ireland played 7
 
 Percentages match FIBA's published figures to within 0.055pp across 318
 team-games. Derived per-game scoring and efficiency averages match FIBA's own
 published Ireland leaders exactly.
 
-After changing templates, rebuild both sites and eyeball the output in a browser
-— the tests check data, not layout:
+After changing templates, rebuild both sites and eyeball the output in a browser,
+the tests check data, not layout:
 
 ```bash
 .venv/bin/python -m fiba.watch --example --no-publish
