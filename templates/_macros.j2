@@ -24,6 +24,12 @@
 </div>
 {% endmacro %}
 
+{# Rank suffix for a stat-strip caption, blank when the metric is not ranked. #}
+{% macro rank_note(ranks, key, prefix='') -%}
+{%- set r = (ranks or {}).get(key) -%}
+{%- if r %}{{ prefix }}{{ r.label }}{% endif -%}
+{%- endmacro %}
+
 {% macro sample_banner(games_played, thing='These figures') %}
 {% if games_played <= 2 %}
 <p class="banner alert"><strong>Small sample.</strong> {{ thing }} come from
@@ -191,12 +197,13 @@ plus-minus over two minutes as noise.</p>
 </div>
 {% endmacro %}
 
-{% macro four_factor_table(team_ff, opp_ff, league, team_label, opp_label) %}
+{% macro four_factor_table(team_ff, opp_ff, league, team_label, opp_label, ranks=None) %}
 <div class="scroll-x">
 <table>
 <thead><tr>
-  <th class="left">Factor</th><th>{{ team_label }}</th><th>{{ opp_label }}</th>
-  <th>Diff</th><th>Event avg</th>
+  <th class="left">Factor</th><th>{{ team_label }}</th>
+  {% if ranks %}<th>Rank</th>{% endif %}
+  <th>{{ opp_label }}</th><th>Diff</th><th>Event avg</th>
 </tr></thead>
 <tbody>
 {% for key, label, higher in [('efg_pct','eFG%',True), ('tov_pct','TOV%',False), ('oreb_pct','OREB%',True), ('ft_rate','FTA/FGA',True)] %}
@@ -205,6 +212,9 @@ plus-minus over two minutes as noise.</p>
   <tr>
     <td class="left">{{ label }} <span class="unit">{{ 'high' if higher else 'low' }} is better</span></td>
     <td>{{ num(a) }}</td>
+    {% if ranks %}
+      <td class="muted">{{ (ranks.get(key) or {}).get('label', '') }}</td>
+    {% endif %}
     <td>{{ num(b) }}</td>
     <td class="{{ tone(d if higher else (-d if d is not none else none)) }}">{{ signed(d) }}</td>
     <td class="muted">{{ num((league or {}).get(key)) }}</td>
@@ -299,4 +309,81 @@ plus-minus over two minutes as noise.</p>
 <p class="note">These categories overlap and do not sum to the total: a
 fast-break layup counts as points in the paint too, and bench points cut across
 all of them.</p>
+{% endmacro %}
+
+
+{# Game log with both halves of the four factors, behind the same
+   Offence / Defence / Combined toggle the leaderboard uses. Every row links to
+   that game's sheet, which exists for every game in the event, not just
+   Ireland's. #}
+{% macro game_log(games, table_id='gamelog', totals=None, total_label='Tournament') %}
+<div class="viewtoggle no-print" data-target="#{{ table_id }}">
+  <button type="button" data-view="off" aria-pressed="false">Offence</button>
+  <button type="button" data-view="def" aria-pressed="false">Defence</button>
+  <button type="button" data-view="all" aria-pressed="true">Combined</button>
+</div>
+<div class="scroll-x">
+<table id="{{ table_id }}" class="view-all">
+<thead><tr>
+  <th class="left" data-sortable>Opponent</th>
+  <th class="left" data-sortable>Result</th>
+  <th data-sortable>Poss</th>
+  <th class="c-off" data-sortable>eFG%</th>
+  <th class="c-off" data-sortable>TOV%</th>
+  <th class="c-off" data-sortable>OREB%</th>
+  <th class="c-off" data-sortable>FTA/FGA</th>
+  <th class="c-off" data-sortable>ORtg</th>
+  <th class="c-def" data-sortable>Opp eFG%</th>
+  <th class="c-def" data-sortable>TOV% frc</th>
+  <th class="c-def" data-sortable>DREB%</th>
+  <th class="c-def" data-sortable>Opp FTr</th>
+  <th class="c-def" data-sortable>DRtg</th>
+  <th data-sortable>Net/100</th>
+</tr></thead>
+<tbody>
+{% for g in games %}
+  {% set o = g.four_factors %}{% set d = g.opp_four_factors %}
+  <tr>
+    <td class="left name">{{ flag(g.opponent_identity.code) }}{% if g.review_href %}<a href="{{ g.review_href }}">{{ g.opponent_identity.name }}</a>{% else %}{{ g.opponent_identity.name }}{% endif %}</td>
+    <td class="left {{ 'pos' if g.won else 'neg' }}"
+        data-value="{{ (g.score or 0) - (g.opp_score or 0) }}">
+      {{ 'W' if g.won else 'L' }} {{ g.score }}&ndash;{{ g.opp_score }}</td>
+    <td>{{ num(o.possessions, 0) }}</td>
+    <td class="c-off">{{ num(o.efg_pct) }}</td>
+    <td class="c-off">{{ num(o.tov_pct) }}</td>
+    <td class="c-off">{{ num(o.oreb_pct) }}</td>
+    <td class="c-off">{{ num(o.ft_rate) }}</td>
+    <td class="c-off">{{ num(o.off_rating) }}</td>
+    <td class="c-def">{{ num(d.efg_pct) }}</td>
+    <td class="c-def">{{ num(d.tov_pct) }}</td>
+    <td class="c-def">{{ num(o.dreb_pct) }}</td>
+    <td class="c-def">{{ num(d.ft_rate) }}</td>
+    <td class="c-def">{{ num(o.def_rating) }}</td>
+    <td class="{{ tone(o.net_rating) }}">{{ signed(o.net_rating) }}</td>
+  </tr>
+{% endfor %}
+{% if totals %}
+  <tr class="total">
+    <td class="left">{{ total_label }}</td>
+    <td class="left">{{ totals.record }}</td>
+    <td>{{ num(totals.pace, 0) }}</td>
+    <td class="c-off">{{ num(totals.own.efg_pct) }}</td>
+    <td class="c-off">{{ num(totals.own.tov_pct) }}</td>
+    <td class="c-off">{{ num(totals.own.oreb_pct) }}</td>
+    <td class="c-off">{{ num(totals.own.ft_rate) }}</td>
+    <td class="c-off">{{ num(totals.own.off_rating) }}</td>
+    <td class="c-def">{{ num(totals.opp.efg_pct) }}</td>
+    <td class="c-def">{{ num(totals.opp.tov_pct) }}</td>
+    <td class="c-def">{{ num(totals.own.dreb_pct) }}</td>
+    <td class="c-def">{{ num(totals.opp.ft_rate) }}</td>
+    <td class="c-def">{{ num(totals.own.def_rating) }}</td>
+    <td class="{{ tone(totals.own.net_rating) }}">{{ signed(totals.own.net_rating) }}</td>
+  </tr>
+{% endif %}
+</tbody>
+</table>
+</div>
+<p class="note">Click an opponent to open that game's sheet. Defensive columns
+describe what this team allowed: Opp eFG% and Opp FTr are lower-is-better,
+TOV% forced and DREB% are higher-is-better.</p>
 {% endmacro %}

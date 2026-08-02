@@ -1,28 +1,30 @@
 {% extends "_base.html.j2" %}
 {% import "_macros.j2" as m %}
 
-{% block title %}{{ us.code }} v {{ them.code }} game review{% endblock %}
-{% block eyebrow %}{{ event_name }} &middot; Game review{% endblock %}
+{% block title %}{{ home.identity.code }} v {{ away.identity.code }} game sheet{% endblock %}
+{% block eyebrow %}{{ event_name }} &middot; Game sheet{% endblock %}
 {% block kickerright %}{{ played_at }}{% endblock %}
-{% block heading %}{{ flag(us.code, 24) }}{{ us.name }} {{ score }}&ndash;{{ opp_score }} {{ them.name }}<span class="flag-wrap">{{ flag(them.code, 24) }}</span>{% endblock %}
+{% block heading %}{{ flag(home.identity.code, 24) }}{{ home.identity.name }}
+{{ home.score }}&ndash;{{ away.score }} {{ away.identity.name }}{{ flag(away.identity.code, 24) }}{% endblock %}
 {% block subtitle %}
-{{ 'Win' if won else 'Loss' }}{% if venue %} &middot; {{ venue }}{% endif %} &middot;
-{{ '%.0f'|format(ff.possessions or 0) }} possessions
-&middot; Net {{ '%+.1f'|format(ff.net_rating or 0) }} per 100
+{% if venue %}{{ venue }} &middot; {% endif %}
+{{ '%.0f'|format(ff.possessions or 0) }} possessions &middot;
+{{ home.identity.code }} net {{ '%+.1f'|format(ff.net_rating or 0) }} per 100
 {% endblock %}
-{% block footid %}{{ us.code }} v {{ them.code }} game review{% endblock %}
+{% block footid %}{{ home.identity.code }} v {{ away.identity.code }} game sheet{% endblock %}
 
 {% block content %}
 
 <section class="keep">
 <h2>Result</h2>
 <div class="statline">
-  {{ m.stat('Final', '%d&ndash;%d'|format(score, opp_score), 'Win' if won else 'Loss',
-            'pos' if won else 'neg') }}
-  {{ m.stat('Off rating', '%.1f'|format(ff.off_rating or 0), 'points / 100 poss') }}
-  {{ m.stat('Def rating', '%.1f'|format(ff.def_rating or 0), 'allowed / 100 poss') }}
-  {{ m.stat('Net', '%+.1f'|format(ff.net_rating or 0), 'per 100 poss',
-            'pos' if (ff.net_rating or 0) > 0 else 'neg') }}
+  {{ m.stat('Final', '%d&ndash;%d'|format(home.score, away.score),
+            (home.identity.name ~ ' win') if home.won else (away.identity.name ~ ' win'),
+            'pos' if home.won else 'neg') }}
+  {{ m.stat(home.identity.code ~ ' off rating', '%.1f'|format(ff.off_rating or 0),
+            'points / 100 poss') }}
+  {{ m.stat(away.identity.code ~ ' off rating', '%.1f'|format(off.off_rating or 0),
+            'points / 100 poss') }}
   {{ m.stat('Pace', '%.0f'|format(ff.possessions or 0),
             'event avg %.0f'|format(league.pace or 0)) }}
 </div>
@@ -33,12 +35,12 @@
       <caption>Score by period</caption>
       <thead><tr><th class="left">Team</th>{% for q in periods %}<th>{{ q }}</th>{% endfor %}<th>Final</th></tr></thead>
       <tbody>
-        <tr class="highlight"><td class="left">{{ flag(us.code) }}{{ us.code }}</td>
+        <tr class="highlight"><td class="left">{{ flag(home.identity.code) }}{{ home.identity.code }}</td>
           {% for q in periods %}<td>{{ our_periods.get(q, '') }}</td>{% endfor %}
-          <td>{{ score }}</td></tr>
-        <tr><td class="left">{{ flag(them.code) }}{{ them.code }}</td>
+          <td>{{ home.score }}</td></tr>
+        <tr><td class="left">{{ flag(away.identity.code) }}{{ away.identity.code }}</td>
           {% for q in periods %}<td>{{ their_periods.get(q, '') }}</td>{% endfor %}
-          <td>{{ opp_score }}</td></tr>
+          <td>{{ away.score }}</td></tr>
       </tbody>
     </table>
   </div>
@@ -55,10 +57,10 @@
 
 <section class="keep">
 <h2>Four factors</h2>
-{{ m.four_factor_table(ff, off, league, us.code, them.code) }}
+{{ m.four_factor_table(ff, off, league, home.identity.code, away.identity.code) }}
 {{ charts.four_factors }}
-<p class="note">Bars are {{ us.code }} against what {{ us.code }} allowed. The
-vertical rule marks the competition average for that factor.</p>
+<p class="note">Shown from {{ home.identity.name }}'s side: their four factors
+against what they allowed. The vertical rule marks the competition average.</p>
 </section>
 
 <section class="keep">
@@ -70,37 +72,47 @@ vertical rule marks the competition average for that factor.</p>
 <h2>Shooting</h2>
 <div class="chartpair">
   <div>
-    <h3>Shots {{ us.name }} took</h3>
-    {{ charts.shots }}
-    {{ m.zone_table(zones, caption='') }}
+    <h3>Shots {{ home.identity.name }} took</h3>
+    {{ home.chart }}
+    {{ m.zone_table(home.zones, caption='') }}
   </div>
   <div>
-    <h3>Shots {{ us.name }} allowed</h3>
-    {{ charts.shots_faced }}
-    {{ m.zone_table(faced_zones, caption='') }}
+    <h3>Shots {{ away.identity.name }} took</h3>
+    {{ away.chart }}
+    {{ m.zone_table(away.zones, caption='') }}
   </div>
 </div>
-<p class="note">Where a team lets opponents shoot from is the clearest read on
-their defence: a high rim share means the paint is open, a high three share
-means they run shooters off the line but concede space outside.</p>
 </section>
 
+{% for side in [home, away] %}
 <section>
-<h2>Box score &mdash; {{ us.name }}</h2>
-{{ m.player_table(players, per_game=False, details=player_details,
+<h2>Box score &mdash; {{ side.identity.name }}</h2>
+{{ m.player_table(side.players, per_game=False, details=side.details,
                   scope='this game') }}
+{% if loop.first %}
 <p class="note">USG% is the share of team possessions used while on court.
 FD/40 is fouls drawn per 40 minutes. Click any player for their shot chart, zone
 splits and true shooting.</p>
+{% endif %}
 </section>
+{% endfor %}
 
 <section>
 <h2>Lineups</h2>
 {% if lineups_available %}
-{{ m.lineup_table(lineups, 'Five-man units, at least 90 seconds together') }}
+<div class="cols">
+  <div>
+    <h3>{{ home.identity.name }}</h3>
+    {{ m.lineup_table(home.lineups) }}
+  </div>
+  <div>
+    <h3>{{ away.identity.name }}</h3>
+    {{ m.lineup_table(away.lineups) }}
+  </div>
+</div>
 {% else %}
 <p class="banner alert">Lineup reconstruction did not pass validation for this
-game, so lineup and on/off figures are withheld rather than shown unverified.</p>
+game, so lineup figures are withheld rather than shown unverified.</p>
 {% endif %}
 </section>
 

@@ -193,9 +193,28 @@ cost the staff the other twenty-five reports.
 ## Navigation model
 
 Nav is Dashboard, Ireland, Teams, and a Scouting dropdown. **There is no Games
-menu**: individual games are reached from the team they belong to. Ireland's game
-log links each opponent to that game's review, and the dashboard lists recent
-results the same way. Reviews are only built for Ireland's games.
+menu**: individual games are reached from the team they belong to, through the
+game log on that team's page or the dashboard's recent results.
+
+**One game sheet per game, covering both teams**, not one per viewpoint. The
+filename comes from the fixture (`{date}_{teamA}-v-{teamB}_game.html`) so every
+team's log links to the same file; `game_filename()` is the only thing that
+should generate it. `build_review`'s `org_id` argument only decides which team is
+listed first, so Ireland leads on its own games. Sheets are built for every
+finished game in the event, which is what makes the scouting game logs clickable.
+
+That is roughly 81 sheets at about 190 KB, so `docs/` runs to the high teens of
+megabytes. Fine for Pages and for git, but do not casually add per-page weight.
+
+## Ranks
+
+`analysis.event_ranks()` ranks every team that has played on twelve metrics, ties
+sharing a rank, and returns labels like "3rd of 22". The denominator counts only
+teams with games, so it stays honest early in a tournament. Pace has no
+better/worse direction and is ranked fastest first, labelled as such. Ranks
+appear in the scouting and tournament stat strips and as a column in the four
+factors table. They are deliberately absent from game sheets: a single game is
+not a ranking.
 
 ## Conventions
 

@@ -168,6 +168,80 @@ def event_averages(conn, event_slug: str) -> dict:
     return factors
 
 
+# Metrics we rank teams on, and whether a bigger number is better. Pace has no
+# direction: it is ranked fastest first and labelled as such rather than pretending
+# quick or slow is an achievement.
+RANKED_METRICS = {
+    "efg_pct": True,
+    "tov_pct": False,
+    "oreb_pct": True,
+    "ft_rate": True,
+    "off_rating": True,
+    "def_rating": False,
+    "net_rating": True,
+    "pace": True,
+    "opp_efg_pct": False,
+    "tov_forced_pct": True,
+    "dreb_pct": True,
+    "opp_ft_rate": False,
+}
+
+
+def ordinal(n: int) -> str:
+    if 10 <= n % 100 <= 20:
+        return f"{n}th"
+    return f"{n}{ {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th') }"
+
+
+def event_ranks(conn, event_slug: str) -> dict:
+    """Where each team sits in the event on every ranked metric.
+
+    Returns {org_id: {metric: {"rank": int, "of": int, "label": "3rd of 22"}}}.
+    Only teams that have played are ranked, so the denominator is honest early in
+    a tournament when some teams have no games yet.
+    """
+    values: dict[str, list[tuple[int, float]]] = {k: [] for k in RANKED_METRICS}
+    for team in event_teams(conn, event_slug):
+        profile = team_profile(conn, event_slug, team["org_id"])
+        if not profile["games_played"]:
+            continue
+        own, opp = profile["four_factors"], profile["opp_four_factors"]
+        source = {
+            "efg_pct": own.get("efg_pct"),
+            "tov_pct": own.get("tov_pct"),
+            "oreb_pct": own.get("oreb_pct"),
+            "ft_rate": own.get("ft_rate"),
+            "off_rating": own.get("off_rating"),
+            "def_rating": own.get("def_rating"),
+            "net_rating": own.get("net_rating"),
+            "pace": profile.get("pace"),
+            "opp_efg_pct": opp.get("efg_pct"),
+            "tov_forced_pct": opp.get("tov_pct"),
+            "dreb_pct": own.get("dreb_pct"),
+            "opp_ft_rate": opp.get("ft_rate"),
+        }
+        for metric, value in source.items():
+            if value is not None:
+                values[metric].append((team["org_id"], value))
+
+    ranks: dict[int, dict] = {}
+    for metric, pairs in values.items():
+        higher_is_better = RANKED_METRICS[metric]
+        pairs.sort(key=lambda pair: -pair[1] if higher_is_better else pair[1])
+        total = len(pairs)
+        previous_value = None
+        previous_rank = 0
+        for index, (org_id, value) in enumerate(pairs, start=1):
+            # Ties share a rank, otherwise two identical numbers read as different.
+            rank = previous_rank if value == previous_value else index
+            previous_value, previous_rank = value, rank
+            ranks.setdefault(org_id, {})[metric] = {
+                "rank": rank, "of": total,
+                "label": f"{ordinal(rank)} of {total}",
+            }
+    return ranks
+
+
 def player_profile(conn, event_slug: str, org_id: int,
                    game_ids: list[int] | None = None) -> list[dict]:
     """Per-player totals and rate stats over the selected games."""

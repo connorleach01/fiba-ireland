@@ -451,7 +451,7 @@ td .flag, li .flag { margin-right: 5px; }
 <header class="masthead">
   <div class="kicker">
     <span>FIBA U18 Eurobasket 2026 Division B &middot; Scouting report</span>
-    <span>Sun 02 Aug 2026, 20:35 (Irish time)</span>
+    <span>Sun 02 Aug 2026, 20:43 (Irish time)</span>
   </div>
   <h1><svg class="flag" viewBox="0 0 3 2" width="24" height="16" role="img" aria-label="SUI flag"><rect width="3" height="2" fill="#d52b1e"/><rect x="1.28" y=".3" width=".44" height="1.4" fill="#ffffff"/><rect x=".8" y=".78" width="1.4" height=".44" fill="#ffffff"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Switzerland</h1>
   <p class="sub">3&ndash;3 over 6 games
@@ -474,22 +474,22 @@ td .flag, li .flag { margin-right: 5px; }
   <div class="stat">
   <div class="label">Off rating</div>
   <div class="figure ">94.8</div>
-<div class="sub">per 100 poss</div></div>
+<div class="sub">11th of 22</div></div>
 
   <div class="stat">
   <div class="label">Def rating</div>
   <div class="figure ">86.3</div>
-<div class="sub">per 100 poss</div></div>
+<div class="sub">4th of 22</div></div>
 
   <div class="stat">
   <div class="label">Net</div>
   <div class="figure pos">+8.5</div>
-<div class="sub">per 100 poss</div></div>
+<div class="sub">7th of 22</div></div>
 
   <div class="stat">
   <div class="label">Pace</div>
   <div class="figure ">82.1</div>
-<div class="sub">event 80.1</div></div>
+<div class="sub">fastest 6th of 22</div></div>
 
   <div class="stat">
   <div class="label">3PT rate</div>
@@ -562,13 +562,14 @@ td .flag, li .flag { margin-right: 5px; }
 <div class="scroll-x">
 <table>
 <thead><tr>
-  <th class="left">Factor</th><th>SUI</th><th>Opponents</th>
-  <th>Diff</th><th>Event avg</th>
+  <th class="left">Factor</th><th>SUI</th>
+<th>Rank</th>  <th>Opponents</th><th>Diff</th><th>Event avg</th>
 </tr></thead>
 <tbody>
   <tr>
     <td class="left">eFG% <span class="unit">high is better</span></td>
     <td>45.3</td>
+      <td class="muted">10th of 22</td>
     <td>43.8</td>
     <td class="pos">+1.6</td>
     <td class="muted">44.3</td>
@@ -576,6 +577,7 @@ td .flag, li .flag { margin-right: 5px; }
   <tr>
     <td class="left">TOV% <span class="unit">low is better</span></td>
     <td>18.5</td>
+      <td class="muted">4th of 22</td>
     <td>25.0</td>
     <td class="pos">-6.5</td>
     <td class="muted">22.1</td>
@@ -583,6 +585,7 @@ td .flag, li .flag { margin-right: 5px; }
   <tr>
     <td class="left">OREB% <span class="unit">high is better</span></td>
     <td>30.0</td>
+      <td class="muted">20th of 22</td>
     <td>28.7</td>
     <td class="pos">+1.3</td>
     <td class="muted">33.9</td>
@@ -590,6 +593,7 @@ td .flag, li .flag { margin-right: 5px; }
   <tr>
     <td class="left">FTA/FGA <span class="unit">high is better</span></td>
     <td>34.8</td>
+      <td class="muted">4th of 22</td>
     <td>37.1</td>
     <td class="neg">-2.4</td>
     <td class="muted">30.6</td>
@@ -1667,121 +1671,167 @@ plus-minus over two minutes as noise.</p>
 
 <section>
 <h2>Game log</h2>
+<div class="viewtoggle no-print" data-target="#scout-log">
+  <button type="button" data-view="off" aria-pressed="false">Offence</button>
+  <button type="button" data-view="def" aria-pressed="false">Defence</button>
+  <button type="button" data-view="all" aria-pressed="true">Combined</button>
+</div>
 <div class="scroll-x">
-<table>
-<thead>
-  <tr><th class="left" data-sortable>Opponent</th><th data-sortable>Result</th>
-      <th data-sortable>eFG%</th><th data-sortable>TOV%</th>
-      <th data-sortable>OREB%</th><th data-sortable>FTA/FGA</th>
-      <th data-sortable>Poss</th><th data-sortable>ORtg</th>
-      <th data-sortable>DRtg</th><th data-sortable>Net/100</th></tr>
-</thead>
+<table id="scout-log" class="view-all">
+<thead><tr>
+  <th class="left" data-sortable>Opponent</th>
+  <th class="left" data-sortable>Result</th>
+  <th data-sortable>Poss</th>
+  <th class="c-off" data-sortable>eFG%</th>
+  <th class="c-off" data-sortable>TOV%</th>
+  <th class="c-off" data-sortable>OREB%</th>
+  <th class="c-off" data-sortable>FTA/FGA</th>
+  <th class="c-off" data-sortable>ORtg</th>
+  <th class="c-def" data-sortable>Opp eFG%</th>
+  <th class="c-def" data-sortable>TOV% frc</th>
+  <th class="c-def" data-sortable>DREB%</th>
+  <th class="c-def" data-sortable>Opp FTr</th>
+  <th class="c-def" data-sortable>DRtg</th>
+  <th data-sortable>Net/100</th>
+</tr></thead>
 <tbody>
   <tr>
-    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="ROU flag"><rect x="0.0000" width="1.0000" height="2" fill="#002b7f"/><rect x="1.0000" width="1.0000" height="2" fill="#fcd116"/><rect x="2.0000" width="1.0000" height="2" fill="#ce1126"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Romania</td>
-    <td class="neg">
+    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="ROU flag"><rect x="0.0000" width="1.0000" height="2" fill="#002b7f"/><rect x="1.0000" width="1.0000" height="2" fill="#fcd116"/><rect x="2.0000" width="1.0000" height="2" fill="#ce1126"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg><a href="2026-07-24_SUI-v-ROU_game.html">Romania</a></td>
+    <td class="left neg"
+        data-value="-7">
       L 64&ndash;71</td>
-    <td>34.1</td>
-    <td>15.8</td>
-    <td>30.6</td>
-    <td>33.3</td>
     <td>76</td>
-    <td>84.3</td>
-    <td>93.5</td>
-    <td class="neg">
-      -9.2</td>
+    <td class="c-off">34.1</td>
+    <td class="c-off">15.8</td>
+    <td class="c-off">30.6</td>
+    <td class="c-off">33.3</td>
+    <td class="c-off">84.3</td>
+    <td class="c-def">40.8</td>
+    <td class="c-def">17.1</td>
+    <td class="c-def">65.1</td>
+    <td class="c-def">44.6</td>
+    <td class="c-def">93.5</td>
+    <td class="neg">-9.2</td>
   </tr>
   <tr>
-    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="MNE flag"><rect width="3" height="2" fill="#c40308"/><circle cx="1.5" cy="1" r=".42" fill="#d0aa4b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Montenegro</td>
-    <td class="neg">
+    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="MNE flag"><rect width="3" height="2" fill="#c40308"/><circle cx="1.5" cy="1" r=".42" fill="#d0aa4b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg><a href="2026-07-25_MNE-v-SUI_game.html">Montenegro</a></td>
+    <td class="left neg"
+        data-value="-2">
       L 62&ndash;64</td>
-    <td>40.9</td>
-    <td>17.7</td>
-    <td>18.2</td>
-    <td>25.8</td>
     <td>79</td>
-    <td>78.5</td>
-    <td>81.0</td>
-    <td class="neg">
-      -2.5</td>
+    <td class="c-off">40.9</td>
+    <td class="c-off">17.7</td>
+    <td class="c-off">18.2</td>
+    <td class="c-off">25.8</td>
+    <td class="c-off">78.5</td>
+    <td class="c-def">37.5</td>
+    <td class="c-def">21.5</td>
+    <td class="c-def">84.8</td>
+    <td class="c-def">63.5</td>
+    <td class="c-def">81.0</td>
+    <td class="neg">-2.5</td>
   </tr>
   <tr>
-    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CRO flag"><rect y="0.0000" width="3" height="0.6667" fill="#ff0000"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#171796"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Croatia</td>
-    <td class="neg">
+    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CRO flag"><rect y="0.0000" width="3" height="0.6667" fill="#ff0000"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#171796"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg><a href="2026-07-26_SUI-v-CRO_game.html">Croatia</a></td>
+    <td class="left neg"
+        data-value="-6">
       L 81&ndash;87</td>
-    <td>44.1</td>
-    <td>17.7</td>
-    <td>33.3</td>
-    <td>30.3</td>
     <td>85</td>
-    <td>95.7</td>
-    <td>102.8</td>
-    <td class="neg">
-      -7.1</td>
+    <td class="c-off">44.1</td>
+    <td class="c-off">17.7</td>
+    <td class="c-off">33.3</td>
+    <td class="c-off">30.3</td>
+    <td class="c-off">95.7</td>
+    <td class="c-def">50.8</td>
+    <td class="c-def">24.8</td>
+    <td class="c-def">64.1</td>
+    <td class="c-def">47.6</td>
+    <td class="c-def">102.8</td>
+    <td class="neg">-7.1</td>
   </tr>
   <tr>
-    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NOR flag"><rect width="3" height="2" fill="#ba0c2f"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#00205b"/><rect y=".86" width="3" height=".28" fill="#00205b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Norway</td>
-    <td class="pos">
+    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NOR flag"><rect width="3" height="2" fill="#ba0c2f"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#00205b"/><rect y=".86" width="3" height=".28" fill="#00205b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg><a href="2026-07-28_NOR-v-SUI_game.html">Norway</a></td>
+    <td class="left pos"
+        data-value="31">
       W 93&ndash;62</td>
-    <td>50.7</td>
-    <td>15.3</td>
-    <td>36.4</td>
-    <td>40.5</td>
     <td>85</td>
-    <td>109.5</td>
-    <td>73.0</td>
-    <td class="pos">
-      +36.5</td>
+    <td class="c-off">50.7</td>
+    <td class="c-off">15.3</td>
+    <td class="c-off">36.4</td>
+    <td class="c-off">40.5</td>
+    <td class="c-off">109.5</td>
+    <td class="c-def">46.4</td>
+    <td class="c-def">37.7</td>
+    <td class="c-def">69.4</td>
+    <td class="c-def">40.0</td>
+    <td class="c-def">73.0</td>
+    <td class="pos">+36.5</td>
   </tr>
   <tr>
-    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="ISL flag"><rect width="3" height="2" fill="#02529c"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#dc1e35"/><rect y=".86" width="3" height=".28" fill="#dc1e35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Iceland</td>
-    <td class="pos">
+    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="ISL flag"><rect width="3" height="2" fill="#02529c"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#dc1e35"/><rect y=".86" width="3" height=".28" fill="#dc1e35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg><a href="2026-07-31_ISL-v-SUI_game.html">Iceland</a></td>
+    <td class="left pos"
+        data-value="8">
       W 83&ndash;75</td>
-    <td>50.7</td>
-    <td>25.9</td>
-    <td>41.0</td>
-    <td>22.2</td>
     <td>85</td>
-    <td>97.9</td>
-    <td>88.5</td>
-    <td class="pos">
-      +9.4</td>
+    <td class="c-off">50.7</td>
+    <td class="c-off">25.9</td>
+    <td class="c-off">41.0</td>
+    <td class="c-off">22.2</td>
+    <td class="c-off">97.9</td>
+    <td class="c-def">48.6</td>
+    <td class="c-def">23.6</td>
+    <td class="c-def">75.0</td>
+    <td class="c-def">11.1</td>
+    <td class="c-def">88.5</td>
+    <td class="pos">+9.4</td>
   </tr>
   <tr>
-    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="FIN flag"><rect width="3" height="2" fill="#ffffff"/><rect x=".78" width=".52" height="2" fill="#003580"/><rect y=".74" width="3" height=".52" fill="#003580"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Finland</td>
-    <td class="pos">
+    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="FIN flag"><rect width="3" height="2" fill="#ffffff"/><rect x=".78" width=".52" height="2" fill="#003580"/><rect y=".74" width="3" height=".52" fill="#003580"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg><a href="2026-08-01_SUI-v-FIN_game.html">Finland</a></td>
+    <td class="left pos"
+        data-value="18">
       W 84&ndash;66</td>
-    <td>51.7</td>
-    <td>18.0</td>
-    <td>20.5</td>
-    <td>60.0</td>
     <td>83</td>
-    <td>100.7</td>
-    <td>79.2</td>
-    <td class="pos">
-      +21.6</td>
+    <td class="c-off">51.7</td>
+    <td class="c-off">18.0</td>
+    <td class="c-off">20.5</td>
+    <td class="c-off">60.0</td>
+    <td class="c-off">100.7</td>
+    <td class="c-def">37.9</td>
+    <td class="c-def">24.0</td>
+    <td class="c-def">71.4</td>
+    <td class="c-def">25.7</td>
+    <td class="c-def">79.2</td>
+    <td class="pos">+21.6</td>
   </tr>
-<tr class="total">
-  <td class="left">Tournament</td>
-  <td>3&ndash;3</td>
-  <td>45.3</td>
-  <td>18.5</td>
-  <td>30.0</td>
-  <td>34.8</td>
-  <td>82</td>
-  <td>94.8</td>
-  <td>86.3</td>
-  <td class="pos">+8.5</td>
-</tr>
+  <tr class="total">
+    <td class="left">Tournament</td>
+    <td class="left">3&ndash;3</td>
+    <td>82</td>
+    <td class="c-off">45.3</td>
+    <td class="c-off">18.5</td>
+    <td class="c-off">30.0</td>
+    <td class="c-off">34.8</td>
+    <td class="c-off">94.8</td>
+    <td class="c-def">43.8</td>
+    <td class="c-def">25.0</td>
+    <td class="c-def">71.3</td>
+    <td class="c-def">37.1</td>
+    <td class="c-def">86.3</td>
+    <td class="pos">+8.5</td>
+  </tr>
 </tbody>
 </table>
 </div>
+<p class="note">Click an opponent to open that game's sheet. Defensive columns
+describe what this team allowed: Opp eFG% and Opp FTr are lower-is-better,
+TOV% forced and DREB% are higher-is-better.</p>
+
 </section>
 
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Sun 02 Aug 2026, 20:35 (Irish time)</span>
+  <span>Generated Sun 02 Aug 2026, 20:43 (Irish time)</span>
 </div>
 
 <div class="running-foot">

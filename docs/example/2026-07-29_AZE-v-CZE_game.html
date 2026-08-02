@@ -1,0 +1,2348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AZE v CZE game sheet</title>
+<style>
+/* ---------------------------------------------------------------------------
+   A printed stats report, not a dashboard.
+
+   Paper geometry is A4. On screen the sheet is drawn at A4 width on a grey
+   desk; in print it fills the page and sections break cleanly. There is no
+   dark mode by design: this is meant to look like the thing that comes out of
+   the printer.
+   --------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  --paper: #ffffff;
+  --desk: #d8d8d4;
+  --ink: #0d0d0d;
+  --ink-2: #3d3d3b;
+  --ink-3: #6f6e6a;
+  --ink-4: #9a998f;
+  --rule-heavy: #0d0d0d;
+  --rule-mid: #8f8e88;
+  --rule-hair: #d3d2cc;
+  --band: #f2f2ef;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --good: #006300;
+  --bad: #b32020;
+  --track: #e8e8e4;
+  --court-line: #9a998f;
+
+  --page-w: 210mm;
+  --page-pad: 14mm;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--desk); }
+
+body {
+  margin: 0;
+  background: var(--desk);
+  color: var(--ink);
+  font: 400 11.2px/1.38 -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet {
+  width: var(--page-w);
+  min-height: 297mm;
+  margin: 16px auto;
+  padding: var(--page-pad);
+  background: var(--paper);
+  box-shadow: 0 1px 4px rgba(0,0,0,.28);
+}
+
+/* --- Masthead ------------------------------------------------------------ */
+.masthead {
+  border-top: 3px solid var(--rule-heavy);
+  border-bottom: 1.2px solid var(--rule-heavy);
+  padding: 6px 0 9px;
+  margin-bottom: 14px;
+}
+.masthead .kicker {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px;
+  font-size: 8.6px; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.masthead h1 {
+  font-size: 21px; font-weight: 700; letter-spacing: -.012em;
+  margin: 7px 0 3px; line-height: 1.12;
+}
+.masthead .sub { font-size: 10.6px; color: var(--ink-2); margin: 0; }
+
+/* --- Sections ------------------------------------------------------------ */
+h2 {
+  font-size: 9.4px; font-weight: 700; letter-spacing: .15em;
+  text-transform: uppercase;
+  margin: 17px 0 0; padding-bottom: 3px;
+  border-bottom: 1.2px solid var(--rule-heavy);
+  break-after: avoid; page-break-after: avoid;
+}
+h3 {
+  font-size: 8.8px; font-weight: 700; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--ink-2);
+  margin: 12px 0 5px;
+  break-after: avoid; page-break-after: avoid;
+}
+/* Short blocks stay whole. Long tables are allowed to flow across a page
+   break and are protected at the row level instead, because forcing a 14-row
+   box score onto a fresh page just leaves half a page blank. */
+section.keep { break-inside: avoid-page; page-break-inside: avoid; }
+section { break-inside: auto; }
+
+/* --- Stat strip (replaces the dashboard tiles) --------------------------- */
+.statline {
+  display: flex; flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule-mid);
+  margin-top: 0;
+}
+.statline .stat {
+  flex: 1 1 0; min-width: 84px;
+  padding: 7px 9px 8px;
+  border-left: 1px solid var(--rule-hair);
+}
+.statline .stat:first-child { border-left: 0; padding-left: 0; }
+.statline .label {
+  font-size: 7.9px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-3); white-space: nowrap; margin-bottom: 3px;
+}
+.statline .figure {
+  font-size: 17px; font-weight: 700; letter-spacing: -.02em; line-height: 1.05;
+  font-variant-numeric: proportional-nums;
+}
+.statline .sub { font-size: 9.2px; color: var(--ink-3); margin-top: 2px; }
+.figure.pos { color: var(--good); }
+.figure.neg { color: var(--bad); }
+
+/* --- Tables -------------------------------------------------------------- */
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table {
+  border-collapse: collapse; width: 100%;
+  font-size: 10.2px; margin-top: 7px;
+}
+caption {
+  caption-side: top; text-align: left;
+  font-size: 8.8px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-2); padding-bottom: 4px; font-weight: 700;
+}
+th, td { padding: 2.8px 5px; text-align: right; white-space: nowrap; }
+thead th {
+  font-size: 8.2px; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-2); font-weight: 700;
+  border-top: 1.2px solid var(--rule-heavy);
+  border-bottom: 1px solid var(--rule-mid);
+  padding-top: 4px; padding-bottom: 4px;
+}
+tbody td { border-bottom: 1px solid var(--rule-hair); }
+tbody tr:last-child td { border-bottom: 1px solid var(--rule-mid); }
+th.left, td.left { text-align: left; white-space: normal; }
+td.name { font-weight: 600; white-space: nowrap; }
+tr.total td {
+  font-weight: 700; border-top: 1px solid var(--rule-mid);
+  border-bottom: 1.2px solid var(--rule-heavy); background: var(--band);
+}
+tr.highlight td { background: var(--band); font-weight: 700; }
+td.pos { color: var(--good); }
+td.neg { color: var(--bad); }
+.muted { color: var(--ink-4); }
+.unit { font-size: 8.6px; color: var(--ink-3); font-weight: 400; }
+tr { break-inside: avoid; page-break-inside: avoid; }
+
+/* --- Two column block ---------------------------------------------------- */
+.cols { display: flex; gap: 16px; align-items: flex-start; }
+.cols > * { flex: 1 1 0; min-width: 0; }
+.col-narrow { flex: 0 0 44%; }
+
+/* --- Charts -------------------------------------------------------------- */
+.viz { margin: 7px 0 0; }
+.viz svg { display: block; width: 100%; height: auto; overflow: visible; }
+.viz .track { fill: var(--track); }
+.viz .bar.series-1 { fill: var(--series-1); }
+.viz .bar.series-2 { fill: var(--series-2); }
+.viz .reference { stroke: var(--ink); stroke-width: 1.4; }
+.viz .grid { stroke: var(--rule-hair); stroke-width: 1; }
+.viz .zero { stroke: var(--rule-mid); stroke-width: 1; }
+.viz .line { fill: none; stroke: var(--ink); stroke-width: 1.2;
+             stroke-linejoin: round; }
+.viz .fill-ahead { fill: var(--series-1); opacity: .22; }
+.viz .fill-behind { fill: var(--series-2); opacity: .22; }
+.viz text { font: 8.6px -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.viz .axis-label { fill: var(--ink); font-weight: 700; }
+.viz .axis-hint { fill: var(--ink-3); font-size: 7.6px; }
+.viz .axis-tick { fill: var(--ink-3); }
+.viz .value { fill: var(--ink); font-weight: 700; }
+
+.shot.made circle { fill: var(--series-1); stroke: var(--paper); stroke-width: 1; }
+.shot.missed circle { fill: none; stroke: var(--ink-4); stroke-width: 1; }
+
+.viz-legend {
+  display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px;
+  font-size: 8.8px; color: var(--ink-2);
+}
+.viz-legend .key { display: inline-flex; align-items: center; gap: 5px; }
+.swatch { width: 9px; height: 9px; display: inline-block; }
+.swatch.series-1, .swatch.made { background: var(--series-1); }
+.swatch.series-2 { background: var(--series-2); }
+.swatch.missed { border: 1px solid var(--ink-4); background: transparent; }
+.swatch.reference { background: var(--ink); width: 2px; height: 11px; }
+.swatch.fill-ahead { background: var(--series-1); opacity: .4; }
+.swatch.fill-behind { background: var(--series-2); opacity: .4; }
+.viz-note, .note {
+  font-size: 8.8px; color: var(--ink-3); margin: 5px 0 0; line-height: 1.35;
+}
+
+/* --- Notices ------------------------------------------------------------- */
+.banner {
+  border: 1px solid var(--rule-mid); border-left: 3px solid var(--ink);
+  padding: 6px 9px; margin: 8px 0 0;
+  font-size: 9.4px; color: var(--ink-2); background: var(--band);
+}
+.banner.alert { border-left-color: var(--bad); }
+
+details.table-view { margin-top: 6px; }
+details.table-view summary {
+  cursor: pointer; font-size: 8.8px; color: var(--ink-3);
+  letter-spacing: .06em; text-transform: uppercase;
+}
+
+/* --- Index list ---------------------------------------------------------- */
+.report-list { list-style: none; padding: 0; margin: 6px 0 0; }
+.report-list li {
+  border-bottom: 1px solid var(--rule-hair); padding: 6px 0;
+  display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+}
+.report-list .when { font-size: 9px; color: var(--ink-3); white-space: nowrap; }
+a { color: var(--ink); text-underline-offset: 2px; }
+
+/* --- Colophon ------------------------------------------------------------ */
+.colophon {
+  margin-top: 18px; padding-top: 6px;
+  border-top: 1px solid var(--rule-mid);
+  font-size: 8.4px; color: var(--ink-3);
+  display: flex; justify-content: space-between; gap: 12px;
+}
+
+/* --- Print --------------------------------------------------------------- */
+@page { size: A4; margin: 12mm 13mm 14mm; }
+
+@media print {
+  html, body { background: #fff; }
+  .sheet {
+    width: auto; min-height: 0; margin: 0; padding: 0;
+    box-shadow: none;
+  }
+  .masthead { break-after: avoid; page-break-after: avoid; }
+  .no-print, .sitebar, .viewtoggle { display: none !important; }
+  /* Expanded players print; collapsed ones stay out of the way. */
+  tr.expander { cursor: auto; }
+  .twisty { display: none; }
+  .refbar {
+    display: block !important; background: none; color: var(--ink-3);
+    border-bottom: 1px solid var(--rule-mid); text-align: left; padding: 0 0 4px;
+  }
+  /* Whatever is on screen, print the full picture. */
+  table.view-off .c-def, table.view-def .c-off { display: table-cell !important; }
+  th[data-sortable]::after { content: "" !important; }
+  details.table-view { display: none; }   /* the chart already carries the data */
+  a { text-decoration: none; }
+  /* Repeat the report identity at the foot of every printed page. */
+  .running-foot {
+    display: block; position: fixed; bottom: -9mm; left: 0; right: 0;
+    font-size: 7.6px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-3);
+    border-top: 1px solid var(--rule-hair); padding-top: 2px;
+  }
+}
+.running-foot { display: none; }
+
+/* --- Reference marker ---------------------------------------------------- */
+.refbar {
+  background: var(--warning); color: #1a1a19;
+  font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+  font-weight: 700; text-align: center; padding: 5px 10px;
+}
+.refbar a { color: inherit; }
+
+/* --- Site navigation ----------------------------------------------------- */
+.sitebar {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--ink); color: #fff;
+  border-bottom: 2px solid var(--ink);
+}
+.sitebar .inner {
+  max-width: var(--page-w); margin: 0 auto; padding: 0 var(--page-pad);
+  display: flex; align-items: stretch; gap: 2px; flex-wrap: wrap;
+}
+.sitebar a, .sitebar .drop > button {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 8px 10px; color: #fff; text-decoration: none;
+  font-size: 9.4px; letter-spacing: .13em; text-transform: uppercase;
+  font-weight: 600; background: none; border: 0; cursor: pointer;
+  font-family: inherit;
+}
+.sitebar a:hover, .sitebar .drop > button:hover { background: rgba(255,255,255,.14); }
+.sitebar a.current { background: #fff; color: var(--ink); }
+.sitebar .brand { font-weight: 700; letter-spacing: .04em; opacity: .72; }
+.sitebar .spacer { flex: 1; }
+.drop { position: relative; display: inline-flex; }
+.drop-panel {
+  display: none; position: absolute; top: 100%; left: 0; min-width: 224px;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--rule-mid); box-shadow: 0 4px 14px rgba(0,0,0,.22);
+  max-height: 60vh; overflow-y: auto; padding: 3px 0;
+}
+.drop.open .drop-panel { display: block; }
+.drop-panel a {
+  display: flex; align-items: center; color: var(--ink);
+  padding: 5px 11px; font-size: 10px; letter-spacing: 0; text-transform: none;
+  font-weight: 400; white-space: nowrap;
+}
+.drop-panel a:hover { background: var(--band); }
+
+/* --- Sortable tables ----------------------------------------------------- */
+th[data-sortable] { cursor: pointer; user-select: none; position: relative; }
+th[data-sortable]:hover { color: var(--ink); }
+th[data-sortable]::after {
+  content: "\2195"; opacity: .28; margin-left: 3px; font-size: 8px;
+}
+th[data-sortable][data-dir="asc"]::after { content: "\2191"; opacity: 1; }
+th[data-sortable][data-dir="desc"]::after { content: "\2193"; opacity: 1; }
+
+/* --- View toggle --------------------------------------------------------- */
+.viewtoggle { display: flex; gap: 0; margin: 8px 0 0; }
+.viewtoggle button {
+  font: 600 8.8px/1 -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: .12em; text-transform: uppercase;
+  padding: 6px 12px; cursor: pointer;
+  background: var(--paper); color: var(--ink-2);
+  border: 1px solid var(--rule-mid); margin-left: -1px;
+}
+.viewtoggle button:first-child { margin-left: 0; }
+.viewtoggle button[aria-pressed="true"] {
+  background: var(--ink); color: #fff; border-color: var(--ink);
+}
+table.view-off .c-def, table.view-def .c-off { display: none; }
+
+/* --- Expandable player rows ---------------------------------------------- */
+tr.expander { cursor: pointer; }
+tr.expander:hover td { background: var(--band); }
+tr.expander:focus { outline: 2px solid var(--series-1); outline-offset: -2px; }
+.twisty {
+  display: inline-block; width: 9px; margin-right: 3px;
+  color: var(--ink-3); transition: transform .12s ease;
+}
+tr.expander[aria-expanded="true"] .twisty { transform: rotate(90deg); }
+tr.expander[aria-expanded="true"] td { background: var(--band); }
+.player-panel {
+  background: var(--band); border: 1px solid var(--rule-hair);
+  padding: 10px 12px 12px; margin-top: 8px;
+  break-inside: avoid-page; page-break-inside: avoid;
+}
+.player-panel h3 { margin-top: 0; }
+.detail-inner { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+/* The court needs a definite width. `.viz svg` sets width:100%, and a percentage
+   against a shrink-to-fit parent is circular, so the browser resolved it from
+   whatever space the neighbouring table left over: the same 228px chart came out
+   at 228, 460 and 464 depending on the player's zone labels. Fixing the basis
+   makes every player's chart identical and stops the panel overflowing. */
+.detail-chart { flex: 0 0 228px; width: 228px; max-width: 100%; }
+.detail-stats { flex: 1 1 240px; min-width: 0; }
+.detail-stats table { margin-top: 0; }
+.detail-stats caption { padding-bottom: 3px; }
+
+/* --- Paired charts -------------------------------------------------------
+   A grid, not flex: the two halves must be exactly equal so the courts render
+   at the same size and the tables beneath them start on the same line. Offence
+   sits on the left and defence on the right, in that order, on every page. */
+.chartpair {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 18px;
+}
+.chartpair > div { min-width: 0; }
+.chartpair h3 { margin-top: 0; }
+.chartpair .viz { margin-top: 2px; }
+/* Hold the courts to a common height so a stray legend wrap cannot nudge one
+   table out of line with the other. */
+.chartpair .viz-shotchart { width: 100%; height: auto; }
+
+/* --- Flags --------------------------------------------------------------- */
+.flag {
+  display: inline-block; vertical-align: -1px; flex: none;
+  margin-right: 5px; border-radius: 1px;
+}
+h1 .flag { vertical-align: -2px; margin: 0 6px 0 0; }
+h1 .flag.trail { margin: 0 0 0 6px; }
+td .flag, li .flag { margin-right: 5px; }
+.statline .flagrow { display: flex; align-items: center; }
+
+/* --- Small screens: keep it usable on a phone in a gym ------------------- */
+@media screen and (max-width: 820px) {
+  :root { --page-pad: 12px; }
+  .sheet { width: 100%; margin: 0; min-height: 0; box-shadow: none; }
+  .cols { display: block; }
+  .chartpair { grid-template-columns: minmax(0, 1fr); }
+  .chartpair > div + div { margin-top: 14px; }
+  .detail-chart { flex: 0 1 228px; }
+  .cols > * + * { margin-top: 12px; }
+  .col-narrow { flex: none; }
+  table { min-width: 460px; }
+  .statline .stat { flex: 1 1 33%; min-width: 33%; }
+  .sitebar .inner { padding: 0 8px; }
+  .sitebar a, .sitebar .drop > button { padding: 7px 8px; font-size: 9px; }
+}
+</style>
+<style>
+/* Team colours for this report, taken from the national flags. Checked for
+   contrast on paper and for separation under colour vision deficiency; where
+   two teams' colours are too close the second is shifted in lightness, keeping
+   its hue. Colour never carries identity alone: every chart is labelled. */
+.sheet { --series-1: #1a8fa8; --series-2: #1a3f8c; }
+</style>
+</head>
+<body>
+<div class="refbar">
+  Reference set &middot; FIBA U18 Eurobasket 2026 Division B &middot; not live U16 data
+</div>
+<nav class="sitebar no-print">
+  <div class="inner">
+    <a class="brand" href="index.html">IRL U16</a>
+    <a href="index.html" >Dashboard</a>
+      <a href="irl_tournament.html" >Ireland</a>
+    <a href="tournament_teams.html" >Teams</a>
+    <div class="drop">
+      <button type="button" aria-expanded="false">Scouting &#9662;</button>
+      <div class="drop-panel">
+          <a href="scout_AZE.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="AZE flag"><rect y="0.0000" width="3" height="0.6667" fill="#00b5e2"/><rect y="0.6667" width="3" height="0.6667" fill="#ed2939"/><rect y="1.3333" width="3" height="0.6667" fill="#3f9c35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Azerbaijan</a>
+          <a href="scout_BEL.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="BEL flag"><rect x="0.0000" width="1.0000" height="2" fill="#000000"/><rect x="1.0000" width="1.0000" height="2" fill="#fdda24"/><rect x="2.0000" width="1.0000" height="2" fill="#ef3340"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Belgium</a>
+          <a href="scout_BIH.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="BIH flag"><rect width="3" height="2" fill="#002395"/><circle cx="1.5" cy="1" r=".42" fill="#fecb00"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Bosnia and Herzegovina</a>
+          <a href="scout_CRO.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CRO flag"><rect y="0.0000" width="3" height="0.6667" fill="#ff0000"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#171796"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Croatia</a>
+          <a href="scout_CYP.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CYP flag"><rect width="3" height="2" fill="#ffffff"/><circle cx="1.5" cy="1" r=".42" fill="#d57800"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Cyprus</a>
+          <a href="scout_CZE.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CZE flag"><rect width="3" height="1" fill="#ffffff"/><rect y="1" width="3" height="1" fill="#d7141a"/><path d="M0 0 L1.5 1 L0 2 Z" fill="#11457e"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Czechia</a>
+          <a href="scout_FIN.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="FIN flag"><rect width="3" height="2" fill="#ffffff"/><rect x=".78" width=".52" height="2" fill="#003580"/><rect y=".74" width="3" height=".52" fill="#003580"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Finland</a>
+          <a href="scout_GEO.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="GEO flag"><rect width="3" height="2" fill="#ffffff"/><rect x="1.28" y=".3" width=".44" height="1.4" fill="#ff0000"/><rect x=".8" y=".78" width="1.4" height=".44" fill="#ff0000"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Georgia</a>
+          <a href="scout_GBR.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="GBR flag"><rect width="3" height="2" fill="#012169"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#ffffff" stroke-width=".44"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#c8102e" stroke-width=".22"/><path d="M1.5 0 V2 M0 1 H3" stroke="#ffffff" stroke-width=".72"/><path d="M1.5 0 V2 M0 1 H3" stroke="#c8102e" stroke-width=".42"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Great Britain</a>
+          <a href="scout_HUN.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="HUN flag"><rect y="0.0000" width="3" height="0.6667" fill="#cd2a3e"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#436f4d"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Hungary</a>
+          <a href="scout_ISL.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="ISL flag"><rect width="3" height="2" fill="#02529c"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#dc1e35"/><rect y=".86" width="3" height=".28" fill="#dc1e35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Iceland</a>
+          <a href="scout_MNE.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="MNE flag"><rect width="3" height="2" fill="#c40308"/><circle cx="1.5" cy="1" r=".42" fill="#d0aa4b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Montenegro</a>
+          <a href="scout_NED.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NED flag"><rect y="0.0000" width="3" height="0.6667" fill="#ae1c28"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#21468b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Netherlands</a>
+          <a href="scout_MKD.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="MKD flag"><rect width="3" height="2" fill="#d20000"/><circle cx="1.5" cy="1" r=".42" fill="#f8e600"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>North Macedonia</a>
+          <a href="scout_NOR.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NOR flag"><rect width="3" height="2" fill="#ba0c2f"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#00205b"/><rect y=".86" width="3" height=".28" fill="#00205b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Norway</a>
+          <a href="scout_POL.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="POL flag"><rect y="0.0000" width="3" height="1.0000" fill="#ffffff"/><rect y="1.0000" width="3" height="1.0000" fill="#dc143c"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Poland</a>
+          <a href="scout_POR.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="POR flag"><rect width="3" height="2" fill="#da291c"/><rect width="1.2000" height="2" fill="#046a38"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Portugal</a>
+          <a href="scout_ROU.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="ROU flag"><rect x="0.0000" width="1.0000" height="2" fill="#002b7f"/><rect x="1.0000" width="1.0000" height="2" fill="#fcd116"/><rect x="2.0000" width="1.0000" height="2" fill="#ce1126"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Romania</a>
+          <a href="scout_SWE.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="SWE flag"><rect width="3" height="2" fill="#006aa7"/><rect x=".78" width=".52" height="2" fill="#fecc00"/><rect y=".74" width="3" height=".52" fill="#fecc00"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Sweden</a>
+          <a href="scout_SUI.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="SUI flag"><rect width="3" height="2" fill="#d52b1e"/><rect x="1.28" y=".3" width=".44" height="1.4" fill="#ffffff"/><rect x=".8" y=".78" width="1.4" height=".44" fill="#ffffff"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Switzerland</a>
+          <a href="scout_UKR.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="UKR flag"><rect y="0.0000" width="3" height="1.0000" fill="#005bbb"/><rect y="1.0000" width="3" height="1.0000" fill="#ffd500"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Ukraine</a>
+      </div>
+    </div>
+    <span class="spacer"></span>
+    <a href="#" onclick="window.print();return false;">Print</a>
+  </div>
+</nav>
+<div class="sheet">
+
+<header class="masthead">
+  <div class="kicker">
+    <span>FIBA U18 Eurobasket 2026 Division B &middot; Game sheet</span>
+    <span>Wed 29 Jul, 17:00</span>
+  </div>
+  <h1><svg class="flag" viewBox="0 0 3 2" width="24" height="16" role="img" aria-label="AZE flag"><rect y="0.0000" width="3" height="0.6667" fill="#00b5e2"/><rect y="0.6667" width="3" height="0.6667" fill="#ed2939"/><rect y="1.3333" width="3" height="0.6667" fill="#3f9c35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Azerbaijan
+46&ndash;74 Czechia<svg class="flag" viewBox="0 0 3 2" width="24" height="16" role="img" aria-label="CZE flag"><rect width="3" height="1" fill="#ffffff"/><rect y="1" width="3" height="1" fill="#d7141a"/><path d="M0 0 L1.5 1 L0 2 Z" fill="#11457e"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg></h1>
+  <p class="sub">Dvorana Marino Cvetkovic &middot; 79 possessions &middot;
+AZE net -35.4 per 100
+</p>
+</header>
+
+
+<section class="keep">
+<h2>Result</h2>
+<div class="statline">
+  <div class="stat">
+  <div class="label">Final</div>
+  <div class="figure neg">46&ndash;74</div>
+<div class="sub">Czechia win</div></div>
+
+  <div class="stat">
+  <div class="label">AZE off rating</div>
+  <div class="figure ">58.2</div>
+<div class="sub">points / 100 poss</div></div>
+
+  <div class="stat">
+  <div class="label">CZE off rating</div>
+  <div class="figure ">93.6</div>
+<div class="sub">points / 100 poss</div></div>
+
+  <div class="stat">
+  <div class="label">Pace</div>
+  <div class="figure ">79</div>
+<div class="sub">event avg 80</div></div>
+
+</div>
+
+<div class="cols" style="margin-top:10px">
+  <div>
+    <table>
+      <caption>Score by period</caption>
+      <thead><tr><th class="left">Team</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Final</th></tr></thead>
+      <tbody>
+        <tr class="highlight"><td class="left"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="AZE flag"><rect y="0.0000" width="3" height="0.6667" fill="#00b5e2"/><rect y="0.6667" width="3" height="0.6667" fill="#ed2939"/><rect y="1.3333" width="3" height="0.6667" fill="#3f9c35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>AZE</td>
+<td>7</td><td>14</td><td>11</td><td>14</td>          <td>46</td></tr>
+        <tr><td class="left"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CZE flag"><rect width="3" height="1" fill="#ffffff"/><rect y="1" width="3" height="1" fill="#d7141a"/><path d="M0 0 L1.5 1 L0 2 Z" fill="#11457e"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>CZE</td>
+<td>25</td><td>13</td><td>20</td><td>16</td>          <td>74</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <div class="scroll-x">
+<table>
+<caption>Scoring breakdown</caption><thead><tr>
+  <th class="left">Category</th>
+<th>AZE</th><th>% of pts</th><th>CZE</th><th>% of pts</th></tr></thead>
+<tbody>
+  <tr>
+    <td class="left">Points in paint</td>
+      <td>22</td>
+      <td class="muted">47.8%</td>
+      <td>38</td>
+      <td class="muted">51.4%</td>
+  </tr>
+  <tr>
+    <td class="left">Fast break</td>
+      <td>10</td>
+      <td class="muted">21.7%</td>
+      <td>9</td>
+      <td class="muted">12.2%</td>
+  </tr>
+  <tr>
+    <td class="left">Second chance</td>
+      <td>1</td>
+      <td class="muted">2.2%</td>
+      <td>9</td>
+      <td class="muted">12.2%</td>
+  </tr>
+  <tr>
+    <td class="left">Off turnovers</td>
+      <td>9</td>
+      <td class="muted">19.6%</td>
+      <td>22</td>
+      <td class="muted">29.7%</td>
+  </tr>
+  <tr>
+    <td class="left">From the bench</td>
+      <td>13</td>
+      <td class="muted">28.3%</td>
+      <td>29</td>
+      <td class="muted">39.2%</td>
+  </tr>
+  <tr class="total">
+    <td class="left">Total points</td>
+      <td>46</td>
+      <td class="muted">&ndash;</td>
+      <td>74</td>
+      <td class="muted">&ndash;</td>
+  </tr>
+</tbody>
+</table>
+</div>
+<p class="note">These categories overlap and do not sum to the total: a
+fast-break layup counts as points in the paint too, and bench points cut across
+all of them.</p>
+
+  </div>
+</div>
+</section>
+
+<section>
+<h2>Team box score</h2>
+<div class="scroll-x">
+<table>
+<thead><tr>
+  <th class="left">Team</th><th>PTS</th>
+  <th>FG</th><th>FG%</th><th>2PT</th><th>2P%</th><th>3PT</th><th>3P%</th>
+  <th>FT</th><th>FT%</th>
+  <th>OR</th><th>DR</th><th>REB</th><th>AST</th><th>TO</th><th>STL</th>
+  <th>BLK</th><th>PF</th>
+</tr></thead>
+<tbody>
+  <tr class="highlight">
+    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="AZE flag"><rect y="0.0000" width="3" height="0.6667" fill="#00b5e2"/><rect y="0.6667" width="3" height="0.6667" fill="#ed2939"/><rect y="1.3333" width="3" height="0.6667" fill="#3f9c35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Azerbaijan</td>
+    <td>46</td>
+    <td>17/61</td>
+    <td>27.9</td>
+    <td>13/41</td>
+    <td>31.7</td>
+    <td>4/20</td>
+    <td>20.0</td>
+    <td>8/13</td>
+    <td>61.5</td>
+    <td>12</td>
+    <td>29</td>
+    <td>41</td>
+    <td>11</td>
+    <td>23</td>
+    <td>9</td>
+    <td>4</td>
+    <td>16</td>
+  </tr>
+  <tr>
+    <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CZE flag"><rect width="3" height="1" fill="#ffffff"/><rect y="1" width="3" height="1" fill="#d7141a"/><path d="M0 0 L1.5 1 L0 2 Z" fill="#11457e"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Czechia</td>
+    <td>74</td>
+    <td>29/72</td>
+    <td>40.3</td>
+    <td>22/41</td>
+    <td>53.7</td>
+    <td>7/31</td>
+    <td>22.6</td>
+    <td>9/17</td>
+    <td>52.9</td>
+    <td>16</td>
+    <td>34</td>
+    <td>50</td>
+    <td>22</td>
+    <td>17</td>
+    <td>12</td>
+    <td>1</td>
+    <td>9</td>
+  </tr>
+</tbody>
+</table>
+</div>
+
+</section>
+
+<section class="keep">
+<h2>Four factors</h2>
+<div class="scroll-x">
+<table>
+<thead><tr>
+  <th class="left">Factor</th><th>AZE</th>
+  <th>CZE</th><th>Diff</th><th>Event avg</th>
+</tr></thead>
+<tbody>
+  <tr>
+    <td class="left">eFG% <span class="unit">high is better</span></td>
+    <td>31.1</td>
+    <td>45.1</td>
+    <td class="neg">-14.0</td>
+    <td class="muted">44.3</td>
+  </tr>
+  <tr>
+    <td class="left">TOV% <span class="unit">low is better</span></td>
+    <td>29.1</td>
+    <td>21.5</td>
+    <td class="neg">+7.6</td>
+    <td class="muted">22.1</td>
+  </tr>
+  <tr>
+    <td class="left">OREB% <span class="unit">high is better</span></td>
+    <td>26.1</td>
+    <td>35.6</td>
+    <td class="neg">-9.5</td>
+    <td class="muted">33.9</td>
+  </tr>
+  <tr>
+    <td class="left">FTA/FGA <span class="unit">high is better</span></td>
+    <td>21.3</td>
+    <td>23.6</td>
+    <td class="neg">-2.3</td>
+    <td class="muted">30.6</td>
+  </tr>
+</tbody>
+</table>
+</div>
+
+<figure class="viz"><svg class="viz-factors" viewBox="0 0 640 112" width="100%" height="112" role="img" aria-label="Four factors comparison"><text x="0" y="16" class="axis-label">eFG%</text><rect x="96" y="4" width="536" height="8" rx="1" class="track" /><rect x="96" y="4" width="321.6" height="8" rx="1" class="bar series-1"><title>AZE eFG% 31.1</title></rect><rect x="96" y="15" width="536" height="8" rx="1" class="track" /><rect x="96" y="15" width="466.1" height="8" rx="1" class="bar series-2"><title>CZE eFG% 45.1</title></rect><line x1="553.2" y1="2" x2="553.2" y2="25" class="reference"><title>Event average 44.3</title></line><text x="0" y="42" class="axis-label">TOV%</text><rect x="96" y="30" width="536" height="8" rx="1" class="track" /><rect x="96" y="30" width="466.1" height="8" rx="1" class="bar series-1"><title>AZE TOV% 29.1</title></rect><rect x="96" y="41" width="536" height="8" rx="1" class="track" /><rect x="96" y="41" width="344.5" height="8" rx="1" class="bar series-2"><title>CZE TOV% 21.5</title></rect><line x1="450.5" y1="28" x2="450.5" y2="51" class="reference"><title>Event average 22.1</title></line><text x="0" y="68" class="axis-label">OREB%</text><rect x="96" y="56" width="536" height="8" rx="1" class="track" /><rect x="96" y="56" width="342.0" height="8" rx="1" class="bar series-1"><title>AZE OREB% 26.1</title></rect><rect x="96" y="67" width="536" height="8" rx="1" class="track" /><rect x="96" y="67" width="466.1" height="8" rx="1" class="bar series-2"><title>CZE OREB% 35.6</title></rect><line x1="540.4" y1="54" x2="540.4" y2="77" class="reference"><title>Event average 33.9</title></line><text x="0" y="94" class="axis-label">FTA/FGA</text><rect x="96" y="82" width="536" height="8" rx="1" class="track" /><rect x="96" y="82" width="324.4" height="8" rx="1" class="bar series-1"><title>AZE FTA/FGA 21.3</title></rect><rect x="96" y="93" width="536" height="8" rx="1" class="track" /><rect x="96" y="93" width="359.4" height="8" rx="1" class="bar series-2"><title>CZE FTA/FGA 23.6</title></rect><line x1="562.1" y1="80" x2="562.1" y2="103" class="reference"><title>Event average 30.6</title></line></svg><div class="viz-legend"><span class="key"><i class="swatch series-1"></i>AZE</span><span class="key"><i class="swatch series-2"></i>CZE</span><span class="key"><i class="swatch reference"></i>Event average</span></div></figure>
+<p class="note">Shown from Azerbaijan's side: their four factors
+against what they allowed. The vertical rule marks the competition average.</p>
+</section>
+
+<section class="keep">
+<h2>How the game moved</h2>
+<figure class="viz"><svg class="viz-timeline" viewBox="0 0 640 122" width="100%" height="122" role="img" aria-label="AZE score margin over the game"><defs><clipPath id="clip-ahead"><rect x="0" y="10" width="640" height="0.0"/></clipPath><clipPath id="clip-behind"><rect x="0" y="10.0" width="640" height="94.0"/></clipPath></defs><line x1="26" y1="10.0" x2="634" y2="10.0" class="zero" /><text x="21" y="13.5" class="axis-tick" text-anchor="end">0</text><line x1="26" y1="104.0" x2="634" y2="104.0" class="grid" /><text x="21" y="107.5" class="axis-tick" text-anchor="end">-40</text><text x="102.0" y="116" class="axis-tick" text-anchor="middle">Q1</text><line x1="178.0" y1="10" x2="178.0" y2="104" class="grid" /><text x="254.0" y="116" class="axis-tick" text-anchor="middle">Q2</text><line x1="330.0" y1="10" x2="330.0" y2="104" class="grid" /><text x="406.0" y="116" class="axis-tick" text-anchor="middle">Q3</text><line x1="482.0" y1="10" x2="482.0" y2="104" class="grid" /><text x="558.0" y="116" class="axis-tick" text-anchor="middle">Q4</text><path d="M 26,10.0 L 26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.3,10.0 26.3,10.0 26.3,10.0 26.3,10.0 27.8,10.0 27.8,10.0 29.0,10.0 29.0,10.0 32.8,10.0 32.8,10.0 32.8,10.0 32.8,10.0 37.1,10.0 37.1,14.7 37.1,14.7 37.1,14.7 39.4,14.7 39.4,14.7 42.7,14.7 42.7,14.7 43.2,14.7 43.2,14.7 44.5,14.7 44.5,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,17.1 45.8,17.1 45.8,17.1 46.5,17.1 46.5,17.1 49.8,17.1 49.8,17.1 49.8,17.1 49.8,17.1 49.8,17.1 49.8,17.1 52.1,17.1 52.1,24.1 52.1,24.1 52.1,24.1 54.1,24.1 54.1,24.1 54.1,24.1 54.1,24.1 58.9,24.1 58.9,24.1 58.9,24.1 58.9,24.1 59.4,24.1 59.4,24.1 60.7,24.1 60.7,28.8 61.7,28.8 61.7,28.8 67.0,28.8 67.0,28.8 67.8,28.8 67.8,28.8 69.6,28.8 69.6,35.9 69.6,35.9 69.6,35.9 74.6,35.9 74.6,35.9 75.1,35.9 75.1,35.9 78.4,35.9 78.4,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,38.2 83.3,38.2 83.3,38.2 87.1,38.2 87.1,45.2 87.1,45.2 87.1,45.2 91.6,45.2 91.6,45.2 92.4,45.2 92.4,45.2 95.2,45.2 95.2,50.0 95.2,50.0 95.2,50.0 101.5,50.0 101.5,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,47.6 102.0,47.6 102.0,47.6 104.8,47.6 104.8,47.6 104.8,47.6 104.8,47.6 108.6,47.6 108.6,47.6 109.9,47.6 109.9,47.6 110.1,47.6 110.1,47.6 114.2,47.6 114.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 116.4,47.6 116.4,47.6 116.4,47.6 116.4,47.6 118.5,47.6 118.5,47.6 119.0,47.6 119.0,47.6 121.3,47.6 121.3,47.6 122.3,47.6 122.3,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,50.0 124.5,50.0 124.5,50.0 124.5,50.0 124.5,50.0 124.5,50.0 124.5,52.3 129.1,52.3 129.1,52.3 130.1,52.3 130.1,52.3 131.1,52.3 131.1,52.3 136.2,52.3 136.2,59.4 136.2,59.4 136.2,59.4 140.3,59.4 140.3,59.4 140.3,59.4 140.3,59.4 143.8,59.4 143.8,59.4 145.3,59.4 145.3,59.4 145.8,59.4 145.8,59.4 145.8,59.4 145.8,59.4 147.9,59.4 147.9,59.4 147.9,59.4 147.9,59.4 151.1,59.4 151.1,59.4 151.7,59.4 151.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,57.0 153.7,57.0 153.7,54.6 153.7,54.6 153.7,54.6 153.7,54.6 153.7,54.6 156.7,54.6 156.7,54.6 158.2,54.6 158.2,54.6 159.3,54.6 159.3,54.6 160.0,54.6 160.0,54.6 160.5,54.6 160.5,54.6 160.5,54.6 160.5,54.6 161.5,54.6 161.5,59.4 166.1,59.4 166.1,59.4 166.9,59.4 166.9,59.4 169.1,59.4 169.1,59.4 170.1,59.4 170.1,59.4 171.4,59.4 171.4,52.3 171.4,52.3 171.4,52.3 173.9,52.3 173.9,52.3 173.9,52.3 173.9,52.3 175.2,52.3 175.2,52.3 176.0,52.3 176.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 183.8,52.3 183.8,47.6 183.8,47.6 183.8,47.6 186.1,47.6 186.1,47.6 186.1,47.6 186.1,47.6 187.6,47.6 187.6,47.6 188.6,47.6 188.6,47.6 195.2,47.6 195.2,47.6 195.7,47.6 195.7,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 198.8,47.6 198.8,47.6 199.5,47.6 199.5,47.6 201.3,47.6 201.3,47.6 202.1,47.6 202.1,47.6 202.8,47.6 202.8,47.6 202.8,47.6 202.8,47.6 203.8,47.6 203.8,47.6 204.1,47.6 204.1,47.6 204.6,47.6 204.6,47.6 205.9,47.6 205.9,47.6 206.4,47.6 206.4,47.6 210.9,47.6 210.9,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,50.0 211.4,50.0 211.4,52.3 215.7,52.3 215.7,52.3 217.5,52.3 217.5,52.3 217.5,52.3 217.5,52.3 220.8,52.3 220.8,52.3 220.8,52.3 220.8,52.3 223.3,52.3 223.3,52.3 225.4,52.3 225.4,59.4 225.4,59.4 225.4,59.4 233.0,59.4 233.0,59.4 233.0,59.4 233.0,59.4 235.0,59.4 235.0,59.4 235.0,59.4 235.0,59.4 236.3,59.4 236.3,59.4 236.3,59.4 236.3,59.4 239.3,59.4 239.3,59.4 239.8,59.4 239.8,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.8,59.4 241.8,59.4 244.4,59.4 244.4,59.4 244.4,59.4 244.4,59.4 245.4,59.4 245.4,64.0 248.9,64.0 248.9,59.4 248.9,59.4 248.9,59.4 255.0,59.4 255.0,64.0 255.0,64.0 255.0,64.0 260.8,64.0 260.8,59.4 264.6,59.4 264.6,64.0 264.6,64.0 264.6,64.0 271.5,64.0 271.5,59.4 271.5,59.4 271.5,59.4 274.3,59.4 274.3,59.4 274.8,59.4 274.8,59.4 275.5,59.4 275.5,54.6 280.3,54.6 280.3,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 288.7,54.6 288.7,54.6 289.7,54.6 289.7,54.6 290.0,54.6 290.0,54.6 294.0,54.6 294.0,54.6 294.0,54.6 294.0,54.6 295.5,54.6 295.5,54.6 296.3,54.6 296.3,54.6 297.1,54.6 297.1,50.0 297.1,50.0 297.1,50.0 304.7,50.0 304.7,54.6 304.7,54.6 304.7,54.6 308.7,54.6 308.7,54.6 311.8,54.6 311.8,54.6 312.3,54.6 312.3,54.6 314.5,54.6 314.5,54.6 315.1,54.6 315.1,54.6 317.6,54.6 317.6,54.6 317.6,54.6 317.6,54.6 323.4,54.6 323.4,50.0 328.5,50.0 328.5,50.0 329.0,50.0 329.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 334.1,50.0 334.1,54.6 338.1,54.6 338.1,50.0 338.1,50.0 338.1,50.0 342.9,50.0 342.9,50.0 343.7,50.0 343.7,50.0 343.9,50.0 343.9,50.0 343.9,50.0 343.9,50.0 343.9,50.0 343.9,47.6 343.9,47.6 343.9,45.2 348.2,45.2 348.2,45.2 348.2,45.2 348.2,45.2 349.3,45.2 349.3,45.2 350.5,45.2 350.5,45.2 352.0,45.2 352.0,45.2 352.0,45.2 352.0,45.2 355.8,45.2 355.8,52.3 355.8,52.3 355.8,52.3 361.4,52.3 361.4,52.3 362.2,52.3 362.2,52.3 362.4,52.3 362.4,52.3 362.4,52.3 362.4,52.3 362.4,52.3 362.4,52.3 363.9,52.3 363.9,52.3 365.0,52.3 365.0,52.3 366.2,52.3 366.2,52.3 366.7,52.3 366.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 370.5,52.3 370.5,52.3 371.0,52.3 371.0,52.3 372.1,52.3 372.1,52.3 372.1,52.3 372.1,52.3 372.1,52.3 372.1,50.0 372.3,50.0 372.3,50.0 372.6,50.0 372.6,50.0 375.1,50.0 375.1,54.6 375.1,54.6 375.1,54.6 378.1,54.6 378.1,50.0 378.1,50.0 378.1,50.0 380.4,50.0 380.4,54.6 384.0,54.6 384.0,54.6 384.0,54.6 384.0,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.7,54.6 384.7,54.6 385.5,54.6 385.5,54.6 390.8,54.6 390.8,54.6 392.1,54.6 392.1,54.6 392.1,54.6 392.1,54.6 392.1,54.6 392.1,54.6 393.3,54.6 393.3,54.6 394.1,54.6 394.1,54.6 394.6,54.6 394.6,54.6 395.1,54.6 395.1,54.6 396.9,54.6 396.9,54.6 397.9,54.6 397.9,54.6 399.9,54.6 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,61.7 405.7,61.7 405.7,61.7 406.3,61.7 406.3,61.7 409.3,61.7 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 413.3,66.4 413.3,61.7 417.7,61.7 417.7,61.7 417.9,61.7 417.9,61.7 418.2,61.7 418.2,66.4 423.7,66.4 423.7,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 426.0,66.4 426.0,66.4 426.0,66.4 426.0,66.4 428.8,66.4 428.8,66.4 428.8,66.4 428.8,66.4 429.6,66.4 429.6,66.4 432.1,66.4 432.1,66.4 432.6,66.4 432.6,66.4 434.4,66.4 434.4,66.4 434.4,66.4 434.4,66.4 434.4,66.4 434.4,68.8 434.4,68.8 434.4,71.1 437.2,71.1 437.2,71.1 437.2,71.1 437.2,71.1 437.2,71.1 437.2,71.1 440.2,71.1 440.2,71.1 440.7,71.1 440.7,71.1 444.3,71.1 444.3,71.1 444.3,71.1 444.3,71.1 444.3,71.1 444.3,71.1 448.6,71.1 448.6,71.1 449.1,71.1 449.1,71.1 451.9,71.1 451.9,71.1 451.9,71.1 451.9,71.1 457.9,71.1 457.9,75.8 463.0,75.8 463.0,75.8 463.5,75.8 463.5,75.8 466.3,75.8 466.3,75.8 467.1,75.8 467.1,75.8 470.1,75.8 470.1,71.1 474.9,71.1 474.9,71.1 475.2,71.1 475.2,71.1 480.2,71.1 480.2,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 485.0,71.1 485.0,78.2 485.0,78.2 485.0,78.2 488.3,78.2 488.3,78.2 488.8,78.2 488.8,78.2 492.4,78.2 492.4,82.8 492.4,82.8 492.4,82.8 496.4,82.8 496.4,82.8 496.9,82.8 496.9,82.8 496.9,82.8 496.9,82.8 499.7,82.8 499.7,82.8 500.2,82.8 500.2,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,85.2 505.3,85.2 505.3,85.2 506.3,85.2 506.3,85.2 508.9,85.2 508.9,85.2 509.4,85.2 509.4,85.2 509.6,85.2 509.6,85.2 510.4,85.2 510.4,85.2 511.4,85.2 511.4,89.9 511.4,89.9 511.4,89.9 517.5,89.9 517.5,89.9 518.0,89.9 518.0,89.9 520.3,89.9 520.3,94.6 520.3,94.6 520.3,94.6 526.1,94.6 526.1,94.6 526.1,94.6 526.1,94.6 528.6,94.6 528.6,99.3 528.6,99.3 528.6,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 531.4,99.3 531.4,99.3 533.9,99.3 533.9,99.3 541.3,99.3 541.3,92.2 541.3,92.2 541.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 544.6,92.2 544.6,97.0 544.6,97.0 544.6,97.0 549.9,97.0 549.9,97.0 549.9,97.0 549.9,97.0 551.7,97.0 551.7,97.0 551.7,97.0 551.7,97.0 551.7,97.0 551.7,94.6 551.9,94.6 551.9,94.6 551.9,94.6 551.9,94.6 553.2,94.6 553.2,94.6 553.2,94.6 553.2,94.6 553.2,94.6 553.2,94.6 555.0,94.6 555.0,94.6 555.7,94.6 555.7,94.6 558.0,94.6 558.0,94.6 559.8,94.6 559.8,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 564.8,94.6 564.8,89.9 570.7,89.9 570.7,89.9 571.2,89.9 571.2,89.9 573.2,89.9 573.2,89.9 574.0,89.9 574.0,89.9 574.5,89.9 574.5,89.9 574.5,89.9 574.5,89.9 577.3,89.9 577.3,89.9 577.3,89.9 577.3,89.9 578.0,89.9 578.0,89.9 581.6,89.9 581.6,89.9 581.6,89.9 581.6,89.9 582.6,89.9 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 583.3,94.6 583.3,94.6 588.7,94.6 588.7,94.6 589.2,94.6 589.2,94.6 589.4,94.6 589.4,94.6 592.7,94.6 592.7,94.6 592.7,94.6 592.7,94.6 595.0,94.6 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.5,89.9 595.5,89.9 599.5,89.9 599.5,89.9 599.5,89.9 599.5,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 601.1,89.9 601.1,89.9 602.8,89.9 602.8,89.9 606.4,89.9 606.4,89.9 606.9,89.9 606.9,89.9 606.9,89.9 606.9,89.9 606.9,89.9 606.9,89.9 608.9,89.9 608.9,89.9 609.9,89.9 609.9,89.9 610.7,89.9 610.7,82.8 614.5,82.8 614.5,82.8 615.3,82.8 615.3,82.8 617.5,82.8 617.5,75.8 620.8,75.8 620.8,75.8 624.1,75.8 624.1,75.8 624.9,75.8 624.9,75.8 629.2,75.8 629.2,75.8 629.4,75.8 629.4,75.8 629.4,75.8 629.4,75.8 631.2,75.8 631.2,75.8 631.2,75.8 631.2,75.8 634.0,75.8 634.0,75.8 634.0,75.8 634.0,75.8 634.0,75.8 634.0,75.8 L 634.0,10.0 Z" class="fill-ahead" clip-path="url(#clip-ahead)" /><path d="M 26,10.0 L 26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.3,10.0 26.3,10.0 26.3,10.0 26.3,10.0 27.8,10.0 27.8,10.0 29.0,10.0 29.0,10.0 32.8,10.0 32.8,10.0 32.8,10.0 32.8,10.0 37.1,10.0 37.1,14.7 37.1,14.7 37.1,14.7 39.4,14.7 39.4,14.7 42.7,14.7 42.7,14.7 43.2,14.7 43.2,14.7 44.5,14.7 44.5,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,17.1 45.8,17.1 45.8,17.1 46.5,17.1 46.5,17.1 49.8,17.1 49.8,17.1 49.8,17.1 49.8,17.1 49.8,17.1 49.8,17.1 52.1,17.1 52.1,24.1 52.1,24.1 52.1,24.1 54.1,24.1 54.1,24.1 54.1,24.1 54.1,24.1 58.9,24.1 58.9,24.1 58.9,24.1 58.9,24.1 59.4,24.1 59.4,24.1 60.7,24.1 60.7,28.8 61.7,28.8 61.7,28.8 67.0,28.8 67.0,28.8 67.8,28.8 67.8,28.8 69.6,28.8 69.6,35.9 69.6,35.9 69.6,35.9 74.6,35.9 74.6,35.9 75.1,35.9 75.1,35.9 78.4,35.9 78.4,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,38.2 83.3,38.2 83.3,38.2 87.1,38.2 87.1,45.2 87.1,45.2 87.1,45.2 91.6,45.2 91.6,45.2 92.4,45.2 92.4,45.2 95.2,45.2 95.2,50.0 95.2,50.0 95.2,50.0 101.5,50.0 101.5,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,47.6 102.0,47.6 102.0,47.6 104.8,47.6 104.8,47.6 104.8,47.6 104.8,47.6 108.6,47.6 108.6,47.6 109.9,47.6 109.9,47.6 110.1,47.6 110.1,47.6 114.2,47.6 114.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 116.4,47.6 116.4,47.6 116.4,47.6 116.4,47.6 118.5,47.6 118.5,47.6 119.0,47.6 119.0,47.6 121.3,47.6 121.3,47.6 122.3,47.6 122.3,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,50.0 124.5,50.0 124.5,50.0 124.5,50.0 124.5,50.0 124.5,50.0 124.5,52.3 129.1,52.3 129.1,52.3 130.1,52.3 130.1,52.3 131.1,52.3 131.1,52.3 136.2,52.3 136.2,59.4 136.2,59.4 136.2,59.4 140.3,59.4 140.3,59.4 140.3,59.4 140.3,59.4 143.8,59.4 143.8,59.4 145.3,59.4 145.3,59.4 145.8,59.4 145.8,59.4 145.8,59.4 145.8,59.4 147.9,59.4 147.9,59.4 147.9,59.4 147.9,59.4 151.1,59.4 151.1,59.4 151.7,59.4 151.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,57.0 153.7,57.0 153.7,54.6 153.7,54.6 153.7,54.6 153.7,54.6 153.7,54.6 156.7,54.6 156.7,54.6 158.2,54.6 158.2,54.6 159.3,54.6 159.3,54.6 160.0,54.6 160.0,54.6 160.5,54.6 160.5,54.6 160.5,54.6 160.5,54.6 161.5,54.6 161.5,59.4 166.1,59.4 166.1,59.4 166.9,59.4 166.9,59.4 169.1,59.4 169.1,59.4 170.1,59.4 170.1,59.4 171.4,59.4 171.4,52.3 171.4,52.3 171.4,52.3 173.9,52.3 173.9,52.3 173.9,52.3 173.9,52.3 175.2,52.3 175.2,52.3 176.0,52.3 176.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 183.8,52.3 183.8,47.6 183.8,47.6 183.8,47.6 186.1,47.6 186.1,47.6 186.1,47.6 186.1,47.6 187.6,47.6 187.6,47.6 188.6,47.6 188.6,47.6 195.2,47.6 195.2,47.6 195.7,47.6 195.7,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 198.8,47.6 198.8,47.6 199.5,47.6 199.5,47.6 201.3,47.6 201.3,47.6 202.1,47.6 202.1,47.6 202.8,47.6 202.8,47.6 202.8,47.6 202.8,47.6 203.8,47.6 203.8,47.6 204.1,47.6 204.1,47.6 204.6,47.6 204.6,47.6 205.9,47.6 205.9,47.6 206.4,47.6 206.4,47.6 210.9,47.6 210.9,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,50.0 211.4,50.0 211.4,52.3 215.7,52.3 215.7,52.3 217.5,52.3 217.5,52.3 217.5,52.3 217.5,52.3 220.8,52.3 220.8,52.3 220.8,52.3 220.8,52.3 223.3,52.3 223.3,52.3 225.4,52.3 225.4,59.4 225.4,59.4 225.4,59.4 233.0,59.4 233.0,59.4 233.0,59.4 233.0,59.4 235.0,59.4 235.0,59.4 235.0,59.4 235.0,59.4 236.3,59.4 236.3,59.4 236.3,59.4 236.3,59.4 239.3,59.4 239.3,59.4 239.8,59.4 239.8,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.8,59.4 241.8,59.4 244.4,59.4 244.4,59.4 244.4,59.4 244.4,59.4 245.4,59.4 245.4,64.0 248.9,64.0 248.9,59.4 248.9,59.4 248.9,59.4 255.0,59.4 255.0,64.0 255.0,64.0 255.0,64.0 260.8,64.0 260.8,59.4 264.6,59.4 264.6,64.0 264.6,64.0 264.6,64.0 271.5,64.0 271.5,59.4 271.5,59.4 271.5,59.4 274.3,59.4 274.3,59.4 274.8,59.4 274.8,59.4 275.5,59.4 275.5,54.6 280.3,54.6 280.3,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 288.7,54.6 288.7,54.6 289.7,54.6 289.7,54.6 290.0,54.6 290.0,54.6 294.0,54.6 294.0,54.6 294.0,54.6 294.0,54.6 295.5,54.6 295.5,54.6 296.3,54.6 296.3,54.6 297.1,54.6 297.1,50.0 297.1,50.0 297.1,50.0 304.7,50.0 304.7,54.6 304.7,54.6 304.7,54.6 308.7,54.6 308.7,54.6 311.8,54.6 311.8,54.6 312.3,54.6 312.3,54.6 314.5,54.6 314.5,54.6 315.1,54.6 315.1,54.6 317.6,54.6 317.6,54.6 317.6,54.6 317.6,54.6 323.4,54.6 323.4,50.0 328.5,50.0 328.5,50.0 329.0,50.0 329.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 334.1,50.0 334.1,54.6 338.1,54.6 338.1,50.0 338.1,50.0 338.1,50.0 342.9,50.0 342.9,50.0 343.7,50.0 343.7,50.0 343.9,50.0 343.9,50.0 343.9,50.0 343.9,50.0 343.9,50.0 343.9,47.6 343.9,47.6 343.9,45.2 348.2,45.2 348.2,45.2 348.2,45.2 348.2,45.2 349.3,45.2 349.3,45.2 350.5,45.2 350.5,45.2 352.0,45.2 352.0,45.2 352.0,45.2 352.0,45.2 355.8,45.2 355.8,52.3 355.8,52.3 355.8,52.3 361.4,52.3 361.4,52.3 362.2,52.3 362.2,52.3 362.4,52.3 362.4,52.3 362.4,52.3 362.4,52.3 362.4,52.3 362.4,52.3 363.9,52.3 363.9,52.3 365.0,52.3 365.0,52.3 366.2,52.3 366.2,52.3 366.7,52.3 366.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 370.5,52.3 370.5,52.3 371.0,52.3 371.0,52.3 372.1,52.3 372.1,52.3 372.1,52.3 372.1,52.3 372.1,52.3 372.1,50.0 372.3,50.0 372.3,50.0 372.6,50.0 372.6,50.0 375.1,50.0 375.1,54.6 375.1,54.6 375.1,54.6 378.1,54.6 378.1,50.0 378.1,50.0 378.1,50.0 380.4,50.0 380.4,54.6 384.0,54.6 384.0,54.6 384.0,54.6 384.0,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.7,54.6 384.7,54.6 385.5,54.6 385.5,54.6 390.8,54.6 390.8,54.6 392.1,54.6 392.1,54.6 392.1,54.6 392.1,54.6 392.1,54.6 392.1,54.6 393.3,54.6 393.3,54.6 394.1,54.6 394.1,54.6 394.6,54.6 394.6,54.6 395.1,54.6 395.1,54.6 396.9,54.6 396.9,54.6 397.9,54.6 397.9,54.6 399.9,54.6 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,61.7 405.7,61.7 405.7,61.7 406.3,61.7 406.3,61.7 409.3,61.7 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 413.3,66.4 413.3,61.7 417.7,61.7 417.7,61.7 417.9,61.7 417.9,61.7 418.2,61.7 418.2,66.4 423.7,66.4 423.7,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 426.0,66.4 426.0,66.4 426.0,66.4 426.0,66.4 428.8,66.4 428.8,66.4 428.8,66.4 428.8,66.4 429.6,66.4 429.6,66.4 432.1,66.4 432.1,66.4 432.6,66.4 432.6,66.4 434.4,66.4 434.4,66.4 434.4,66.4 434.4,66.4 434.4,66.4 434.4,68.8 434.4,68.8 434.4,71.1 437.2,71.1 437.2,71.1 437.2,71.1 437.2,71.1 437.2,71.1 437.2,71.1 440.2,71.1 440.2,71.1 440.7,71.1 440.7,71.1 444.3,71.1 444.3,71.1 444.3,71.1 444.3,71.1 444.3,71.1 444.3,71.1 448.6,71.1 448.6,71.1 449.1,71.1 449.1,71.1 451.9,71.1 451.9,71.1 451.9,71.1 451.9,71.1 457.9,71.1 457.9,75.8 463.0,75.8 463.0,75.8 463.5,75.8 463.5,75.8 466.3,75.8 466.3,75.8 467.1,75.8 467.1,75.8 470.1,75.8 470.1,71.1 474.9,71.1 474.9,71.1 475.2,71.1 475.2,71.1 480.2,71.1 480.2,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 485.0,71.1 485.0,78.2 485.0,78.2 485.0,78.2 488.3,78.2 488.3,78.2 488.8,78.2 488.8,78.2 492.4,78.2 492.4,82.8 492.4,82.8 492.4,82.8 496.4,82.8 496.4,82.8 496.9,82.8 496.9,82.8 496.9,82.8 496.9,82.8 499.7,82.8 499.7,82.8 500.2,82.8 500.2,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,85.2 505.3,85.2 505.3,85.2 506.3,85.2 506.3,85.2 508.9,85.2 508.9,85.2 509.4,85.2 509.4,85.2 509.6,85.2 509.6,85.2 510.4,85.2 510.4,85.2 511.4,85.2 511.4,89.9 511.4,89.9 511.4,89.9 517.5,89.9 517.5,89.9 518.0,89.9 518.0,89.9 520.3,89.9 520.3,94.6 520.3,94.6 520.3,94.6 526.1,94.6 526.1,94.6 526.1,94.6 526.1,94.6 528.6,94.6 528.6,99.3 528.6,99.3 528.6,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 531.4,99.3 531.4,99.3 533.9,99.3 533.9,99.3 541.3,99.3 541.3,92.2 541.3,92.2 541.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 544.6,92.2 544.6,97.0 544.6,97.0 544.6,97.0 549.9,97.0 549.9,97.0 549.9,97.0 549.9,97.0 551.7,97.0 551.7,97.0 551.7,97.0 551.7,97.0 551.7,97.0 551.7,94.6 551.9,94.6 551.9,94.6 551.9,94.6 551.9,94.6 553.2,94.6 553.2,94.6 553.2,94.6 553.2,94.6 553.2,94.6 553.2,94.6 555.0,94.6 555.0,94.6 555.7,94.6 555.7,94.6 558.0,94.6 558.0,94.6 559.8,94.6 559.8,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 564.8,94.6 564.8,89.9 570.7,89.9 570.7,89.9 571.2,89.9 571.2,89.9 573.2,89.9 573.2,89.9 574.0,89.9 574.0,89.9 574.5,89.9 574.5,89.9 574.5,89.9 574.5,89.9 577.3,89.9 577.3,89.9 577.3,89.9 577.3,89.9 578.0,89.9 578.0,89.9 581.6,89.9 581.6,89.9 581.6,89.9 581.6,89.9 582.6,89.9 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 583.3,94.6 583.3,94.6 588.7,94.6 588.7,94.6 589.2,94.6 589.2,94.6 589.4,94.6 589.4,94.6 592.7,94.6 592.7,94.6 592.7,94.6 592.7,94.6 595.0,94.6 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.5,89.9 595.5,89.9 599.5,89.9 599.5,89.9 599.5,89.9 599.5,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 601.1,89.9 601.1,89.9 602.8,89.9 602.8,89.9 606.4,89.9 606.4,89.9 606.9,89.9 606.9,89.9 606.9,89.9 606.9,89.9 606.9,89.9 606.9,89.9 608.9,89.9 608.9,89.9 609.9,89.9 609.9,89.9 610.7,89.9 610.7,82.8 614.5,82.8 614.5,82.8 615.3,82.8 615.3,82.8 617.5,82.8 617.5,75.8 620.8,75.8 620.8,75.8 624.1,75.8 624.1,75.8 624.9,75.8 624.9,75.8 629.2,75.8 629.2,75.8 629.4,75.8 629.4,75.8 629.4,75.8 629.4,75.8 631.2,75.8 631.2,75.8 631.2,75.8 631.2,75.8 634.0,75.8 634.0,75.8 634.0,75.8 634.0,75.8 634.0,75.8 634.0,75.8 L 634.0,10.0 Z" class="fill-behind" clip-path="url(#clip-behind)" /><polyline points="26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.0,10.0 26.3,10.0 26.3,10.0 26.3,10.0 26.3,10.0 27.8,10.0 27.8,10.0 29.0,10.0 29.0,10.0 32.8,10.0 32.8,10.0 32.8,10.0 32.8,10.0 37.1,10.0 37.1,14.7 37.1,14.7 37.1,14.7 39.4,14.7 39.4,14.7 42.7,14.7 42.7,14.7 43.2,14.7 43.2,14.7 44.5,14.7 44.5,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,14.7 45.8,17.1 45.8,17.1 45.8,17.1 46.5,17.1 46.5,17.1 49.8,17.1 49.8,17.1 49.8,17.1 49.8,17.1 49.8,17.1 49.8,17.1 52.1,17.1 52.1,24.1 52.1,24.1 52.1,24.1 54.1,24.1 54.1,24.1 54.1,24.1 54.1,24.1 58.9,24.1 58.9,24.1 58.9,24.1 58.9,24.1 59.4,24.1 59.4,24.1 60.7,24.1 60.7,28.8 61.7,28.8 61.7,28.8 67.0,28.8 67.0,28.8 67.8,28.8 67.8,28.8 69.6,28.8 69.6,35.9 69.6,35.9 69.6,35.9 74.6,35.9 74.6,35.9 75.1,35.9 75.1,35.9 78.4,35.9 78.4,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,40.5 83.3,38.2 83.3,38.2 83.3,38.2 87.1,38.2 87.1,45.2 87.1,45.2 87.1,45.2 91.6,45.2 91.6,45.2 92.4,45.2 92.4,45.2 95.2,45.2 95.2,50.0 95.2,50.0 95.2,50.0 101.5,50.0 101.5,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,50.0 102.0,47.6 102.0,47.6 102.0,47.6 104.8,47.6 104.8,47.6 104.8,47.6 104.8,47.6 108.6,47.6 108.6,47.6 109.9,47.6 109.9,47.6 110.1,47.6 110.1,47.6 114.2,47.6 114.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 115.2,47.6 116.4,47.6 116.4,47.6 116.4,47.6 116.4,47.6 118.5,47.6 118.5,47.6 119.0,47.6 119.0,47.6 121.3,47.6 121.3,47.6 122.3,47.6 122.3,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,47.6 124.5,50.0 124.5,50.0 124.5,50.0 124.5,50.0 124.5,50.0 124.5,50.0 124.5,52.3 129.1,52.3 129.1,52.3 130.1,52.3 130.1,52.3 131.1,52.3 131.1,52.3 136.2,52.3 136.2,59.4 136.2,59.4 136.2,59.4 140.3,59.4 140.3,59.4 140.3,59.4 140.3,59.4 143.8,59.4 143.8,59.4 145.3,59.4 145.3,59.4 145.8,59.4 145.8,59.4 145.8,59.4 145.8,59.4 147.9,59.4 147.9,59.4 147.9,59.4 147.9,59.4 151.1,59.4 151.1,59.4 151.7,59.4 151.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,59.4 153.7,57.0 153.7,57.0 153.7,54.6 153.7,54.6 153.7,54.6 153.7,54.6 153.7,54.6 156.7,54.6 156.7,54.6 158.2,54.6 158.2,54.6 159.3,54.6 159.3,54.6 160.0,54.6 160.0,54.6 160.5,54.6 160.5,54.6 160.5,54.6 160.5,54.6 161.5,54.6 161.5,59.4 166.1,59.4 166.1,59.4 166.9,59.4 166.9,59.4 169.1,59.4 169.1,59.4 170.1,59.4 170.1,59.4 171.4,59.4 171.4,52.3 171.4,52.3 171.4,52.3 173.9,52.3 173.9,52.3 173.9,52.3 173.9,52.3 175.2,52.3 175.2,52.3 176.0,52.3 176.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 178.0,52.3 183.8,52.3 183.8,47.6 183.8,47.6 183.8,47.6 186.1,47.6 186.1,47.6 186.1,47.6 186.1,47.6 187.6,47.6 187.6,47.6 188.6,47.6 188.6,47.6 195.2,47.6 195.2,47.6 195.7,47.6 195.7,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 197.0,47.6 198.8,47.6 198.8,47.6 199.5,47.6 199.5,47.6 201.3,47.6 201.3,47.6 202.1,47.6 202.1,47.6 202.8,47.6 202.8,47.6 202.8,47.6 202.8,47.6 203.8,47.6 203.8,47.6 204.1,47.6 204.1,47.6 204.6,47.6 204.6,47.6 205.9,47.6 205.9,47.6 206.4,47.6 206.4,47.6 210.9,47.6 210.9,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,47.6 211.4,50.0 211.4,50.0 211.4,52.3 215.7,52.3 215.7,52.3 217.5,52.3 217.5,52.3 217.5,52.3 217.5,52.3 220.8,52.3 220.8,52.3 220.8,52.3 220.8,52.3 223.3,52.3 223.3,52.3 225.4,52.3 225.4,59.4 225.4,59.4 225.4,59.4 233.0,59.4 233.0,59.4 233.0,59.4 233.0,59.4 235.0,59.4 235.0,59.4 235.0,59.4 235.0,59.4 236.3,59.4 236.3,59.4 236.3,59.4 236.3,59.4 239.3,59.4 239.3,59.4 239.8,59.4 239.8,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.3,59.4 241.8,59.4 241.8,59.4 244.4,59.4 244.4,59.4 244.4,59.4 244.4,59.4 245.4,59.4 245.4,64.0 248.9,64.0 248.9,59.4 248.9,59.4 248.9,59.4 255.0,59.4 255.0,64.0 255.0,64.0 255.0,64.0 260.8,64.0 260.8,59.4 264.6,59.4 264.6,64.0 264.6,64.0 264.6,64.0 271.5,64.0 271.5,59.4 271.5,59.4 271.5,59.4 274.3,59.4 274.3,59.4 274.8,59.4 274.8,59.4 275.5,59.4 275.5,54.6 280.3,54.6 280.3,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 281.4,54.6 288.7,54.6 288.7,54.6 289.7,54.6 289.7,54.6 290.0,54.6 290.0,54.6 294.0,54.6 294.0,54.6 294.0,54.6 294.0,54.6 295.5,54.6 295.5,54.6 296.3,54.6 296.3,54.6 297.1,54.6 297.1,50.0 297.1,50.0 297.1,50.0 304.7,50.0 304.7,54.6 304.7,54.6 304.7,54.6 308.7,54.6 308.7,54.6 311.8,54.6 311.8,54.6 312.3,54.6 312.3,54.6 314.5,54.6 314.5,54.6 315.1,54.6 315.1,54.6 317.6,54.6 317.6,54.6 317.6,54.6 317.6,54.6 323.4,54.6 323.4,50.0 328.5,50.0 328.5,50.0 329.0,50.0 329.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 330.0,50.0 334.1,50.0 334.1,54.6 338.1,54.6 338.1,50.0 338.1,50.0 338.1,50.0 342.9,50.0 342.9,50.0 343.7,50.0 343.7,50.0 343.9,50.0 343.9,50.0 343.9,50.0 343.9,50.0 343.9,50.0 343.9,47.6 343.9,47.6 343.9,45.2 348.2,45.2 348.2,45.2 348.2,45.2 348.2,45.2 349.3,45.2 349.3,45.2 350.5,45.2 350.5,45.2 352.0,45.2 352.0,45.2 352.0,45.2 352.0,45.2 355.8,45.2 355.8,52.3 355.8,52.3 355.8,52.3 361.4,52.3 361.4,52.3 362.2,52.3 362.2,52.3 362.4,52.3 362.4,52.3 362.4,52.3 362.4,52.3 362.4,52.3 362.4,52.3 363.9,52.3 363.9,52.3 365.0,52.3 365.0,52.3 366.2,52.3 366.2,52.3 366.7,52.3 366.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 367.7,52.3 370.5,52.3 370.5,52.3 371.0,52.3 371.0,52.3 372.1,52.3 372.1,52.3 372.1,52.3 372.1,52.3 372.1,52.3 372.1,50.0 372.3,50.0 372.3,50.0 372.6,50.0 372.6,50.0 375.1,50.0 375.1,54.6 375.1,54.6 375.1,54.6 378.1,54.6 378.1,50.0 378.1,50.0 378.1,50.0 380.4,50.0 380.4,54.6 384.0,54.6 384.0,54.6 384.0,54.6 384.0,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.5,54.6 384.7,54.6 384.7,54.6 385.5,54.6 385.5,54.6 390.8,54.6 390.8,54.6 392.1,54.6 392.1,54.6 392.1,54.6 392.1,54.6 392.1,54.6 392.1,54.6 393.3,54.6 393.3,54.6 394.1,54.6 394.1,54.6 394.6,54.6 394.6,54.6 395.1,54.6 395.1,54.6 396.9,54.6 396.9,54.6 397.9,54.6 397.9,54.6 399.9,54.6 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,59.4 399.9,61.7 405.7,61.7 405.7,61.7 406.3,61.7 406.3,61.7 409.3,61.7 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 409.3,66.4 413.3,66.4 413.3,61.7 417.7,61.7 417.7,61.7 417.9,61.7 417.9,61.7 418.2,61.7 418.2,66.4 423.7,66.4 423.7,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 424.0,66.4 426.0,66.4 426.0,66.4 426.0,66.4 426.0,66.4 428.8,66.4 428.8,66.4 428.8,66.4 428.8,66.4 429.6,66.4 429.6,66.4 432.1,66.4 432.1,66.4 432.6,66.4 432.6,66.4 434.4,66.4 434.4,66.4 434.4,66.4 434.4,66.4 434.4,66.4 434.4,68.8 434.4,68.8 434.4,71.1 437.2,71.1 437.2,71.1 437.2,71.1 437.2,71.1 437.2,71.1 437.2,71.1 440.2,71.1 440.2,71.1 440.7,71.1 440.7,71.1 444.3,71.1 444.3,71.1 444.3,71.1 444.3,71.1 444.3,71.1 444.3,71.1 448.6,71.1 448.6,71.1 449.1,71.1 449.1,71.1 451.9,71.1 451.9,71.1 451.9,71.1 451.9,71.1 457.9,71.1 457.9,75.8 463.0,75.8 463.0,75.8 463.5,75.8 463.5,75.8 466.3,75.8 466.3,75.8 467.1,75.8 467.1,75.8 470.1,75.8 470.1,71.1 474.9,71.1 474.9,71.1 475.2,71.1 475.2,71.1 480.2,71.1 480.2,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 482.0,71.1 485.0,71.1 485.0,78.2 485.0,78.2 485.0,78.2 488.3,78.2 488.3,78.2 488.8,78.2 488.8,78.2 492.4,78.2 492.4,82.8 492.4,82.8 492.4,82.8 496.4,82.8 496.4,82.8 496.9,82.8 496.9,82.8 496.9,82.8 496.9,82.8 499.7,82.8 499.7,82.8 500.2,82.8 500.2,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,82.8 500.7,85.2 505.3,85.2 505.3,85.2 506.3,85.2 506.3,85.2 508.9,85.2 508.9,85.2 509.4,85.2 509.4,85.2 509.6,85.2 509.6,85.2 510.4,85.2 510.4,85.2 511.4,85.2 511.4,89.9 511.4,89.9 511.4,89.9 517.5,89.9 517.5,89.9 518.0,89.9 518.0,89.9 520.3,89.9 520.3,94.6 520.3,94.6 520.3,94.6 526.1,94.6 526.1,94.6 526.1,94.6 526.1,94.6 528.6,94.6 528.6,99.3 528.6,99.3 528.6,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 528.9,99.3 531.4,99.3 531.4,99.3 533.9,99.3 533.9,99.3 541.3,99.3 541.3,92.2 541.3,92.2 541.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 543.3,92.2 544.6,92.2 544.6,97.0 544.6,97.0 544.6,97.0 549.9,97.0 549.9,97.0 549.9,97.0 549.9,97.0 551.7,97.0 551.7,97.0 551.7,97.0 551.7,97.0 551.7,97.0 551.7,94.6 551.9,94.6 551.9,94.6 551.9,94.6 551.9,94.6 553.2,94.6 553.2,94.6 553.2,94.6 553.2,94.6 553.2,94.6 553.2,94.6 555.0,94.6 555.0,94.6 555.7,94.6 555.7,94.6 558.0,94.6 558.0,94.6 559.8,94.6 559.8,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 561.0,94.6 564.8,94.6 564.8,89.9 570.7,89.9 570.7,89.9 571.2,89.9 571.2,89.9 573.2,89.9 573.2,89.9 574.0,89.9 574.0,89.9 574.5,89.9 574.5,89.9 574.5,89.9 574.5,89.9 577.3,89.9 577.3,89.9 577.3,89.9 577.3,89.9 578.0,89.9 578.0,89.9 581.6,89.9 581.6,89.9 581.6,89.9 581.6,89.9 582.6,89.9 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 582.6,94.6 583.3,94.6 583.3,94.6 588.7,94.6 588.7,94.6 589.2,94.6 589.2,94.6 589.4,94.6 589.4,94.6 592.7,94.6 592.7,94.6 592.7,94.6 592.7,94.6 595.0,94.6 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.0,89.9 595.5,89.9 595.5,89.9 599.5,89.9 599.5,89.9 599.5,89.9 599.5,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 599.8,89.9 601.1,89.9 601.1,89.9 602.8,89.9 602.8,89.9 606.4,89.9 606.4,89.9 606.9,89.9 606.9,89.9 606.9,89.9 606.9,89.9 606.9,89.9 606.9,89.9 608.9,89.9 608.9,89.9 609.9,89.9 609.9,89.9 610.7,89.9 610.7,82.8 614.5,82.8 614.5,82.8 615.3,82.8 615.3,82.8 617.5,82.8 617.5,75.8 620.8,75.8 620.8,75.8 624.1,75.8 624.1,75.8 624.9,75.8 624.9,75.8 629.2,75.8 629.2,75.8 629.4,75.8 629.4,75.8 629.4,75.8 629.4,75.8 631.2,75.8 631.2,75.8 631.2,75.8 631.2,75.8 634.0,75.8 634.0,75.8 634.0,75.8 634.0,75.8 634.0,75.8 634.0,75.8" class="line" /><text x="634" y="69.8" class="value" text-anchor="end">-28</text></svg><div class="viz-legend"><span class="key"><i class="swatch fill-ahead"></i>AZE ahead</span><span class="key"><i class="swatch fill-behind"></i>AZE behind</span></div></figure>
+</section>
+
+<section class="keep">
+<h2>Shooting</h2>
+<div class="chartpair">
+  <div>
+    <h3>Shots Azerbaijan took</h3>
+    <figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="300" height="219" role="img" aria-label="Shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="143.2" cy="146.9" r="3.6"><title>layup missed</title></circle><circle cx="112.2" cy="94.9" r="3.6"><title>2pt driving layup missed</title></circle><circle cx="49.2" cy="57.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="30.2" cy="73.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="68.2" cy="53.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="263.2" cy="136.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="154.2" cy="157.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="59.2" cy="114.9" r="3.6"><title>2PtsFG inside left, jump shot missed</title></circle><circle cx="218.2" cy="84.9" r="3.6"><title>2PtsFG inside right, jump shot missed</title></circle><circle cx="111.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="78.2" cy="44.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="148.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, points after turnover, layup missed</title></circle><circle cx="112.2" cy="111.9" r="3.6"><title>2pt turnaround jump shot missed</title></circle><circle cx="148.2" cy="164.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="188.2" cy="43.9" r="3.6"><title>3pt step back jump shot missed</title></circle><circle cx="47.2" cy="58.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="130.2" cy="148.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="40.2" cy="66.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="132.2" cy="167.9" r="3.6"><title>2PtsFG under the basket, points after turnover, dunk missed</title></circle><circle cx="187.2" cy="45.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="113.2" cy="156.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="83.2" cy="118.9" r="3.6"><title>2PtsFG inside left, jump shot missed</title></circle><circle cx="157.2" cy="153.9" r="3.6"><title>layup missed</title></circle><circle cx="141.2" cy="123.9" r="3.6"><title>layup missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="154.2" cy="27.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="3.6" cy="149.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="149.2" cy="152.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="120.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="114.2" cy="162.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="160.2" cy="105.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="152.2" cy="168.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="91.2" cy="34.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="4.2" cy="157.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="29.2" cy="165.9" r="3.6"><title>2pt step back jump shot missed</title></circle><circle cx="172.2" cy="157.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="111.2" cy="157.9" r="3.6"><title>layup missed</title></circle><circle cx="181.2" cy="139.9" r="3.6"><title>2PtsFG inside right, jump shot missed</title></circle><circle cx="258.2" cy="124.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="141.2" cy="79.9" r="3.6"><title>2PtsFG inside center, jump shot missed</title></circle><circle cx="139.2" cy="34.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="138.2" cy="119.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="54.2" cy="46.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="7.2" cy="161.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="125.2" cy="166.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="153.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="75.2" cy="157.9" r="3.6"><title>2pt turnaround jump shot made</title></circle><circle cx="144.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="143.2" cy="157.9" r="3.6"><title>2PtsFG under the basket, fast break, layup made</title></circle><circle cx="134.2" cy="168.9" r="3.6"><title>2PtsFG under the basket, fast break, dunk made</title></circle><circle cx="107.2" cy="141.9" r="3.6"><title>2pt pullup jump shot made</title></circle><circle cx="145.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="147.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="90.2" cy="102.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="55.2" cy="104.9" r="3.6"><title>2PtsFG inside left, jump shot made</title></circle><circle cx="264.9" cy="157.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="162.2" cy="142.9" r="3.6"><title>2pt driving layup made</title></circle><circle cx="134.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, points after turnover, dunk made</title></circle><circle cx="202.2" cy="46.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="45.2" cy="61.9" r="3.6"><title>3pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (17)</span><span class="key"><i class="swatch missed"></i>Missed (44)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure>
+    <div class="scroll-x">
+<table>
+<caption></caption>
+<thead><tr><th class="left">Zone</th><th data-sortable>M</th><th data-sortable>A</th>
+<th data-sortable>FG%</th><th data-sortable>Share</th><th data-sortable>Pts/att</th></tr></thead>
+<tbody>
+  <tr>
+    <td class="left">Rim</td>
+    <td>8</td>
+    <td>24</td>
+    <td>33.3</td>
+    <td>39.3</td>
+    <td>0.67</td>
+  </tr>
+  <tr>
+    <td class="left">Paint</td>
+    <td>2</td>
+    <td>8</td>
+    <td>25.0</td>
+    <td>13.1</td>
+    <td>0.50</td>
+  </tr>
+  <tr>
+    <td class="left">Mid-range</td>
+    <td>3</td>
+    <td>9</td>
+    <td>33.3</td>
+    <td>14.8</td>
+    <td>0.67</td>
+  </tr>
+  <tr>
+    <td class="left">Corner 3</td>
+    <td>2</td>
+    <td>6</td>
+    <td>33.3</td>
+    <td>9.8</td>
+    <td>1.00</td>
+  </tr>
+  <tr>
+    <td class="left">Wing 3</td>
+    <td>1</td>
+    <td>6</td>
+    <td>16.7</td>
+    <td>9.8</td>
+    <td>0.50</td>
+  </tr>
+  <tr>
+    <td class="left">Top 3</td>
+    <td>1</td>
+    <td>8</td>
+    <td>12.5</td>
+    <td>13.1</td>
+    <td>0.38</td>
+  </tr>
+</tbody>
+</table>
+</div>
+
+  </div>
+  <div>
+    <h3>Shots Czechia took</h3>
+    <figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="300" height="219" role="img" aria-label="Shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="25.2" cy="81.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="159.2" cy="165.9" r="3.6"><title>layup missed</title></circle><circle cx="61.2" cy="52.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="115.2" cy="134.9" r="3.6"><title>2pt hook shot missed</title></circle><circle cx="251.2" cy="103.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="225.2" cy="63.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="79.2" cy="38.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="136.2" cy="26.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="7.2" cy="156.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="264.2" cy="144.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="145.2" cy="101.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="25.2" cy="90.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="145.2" cy="150.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="116.2" cy="155.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="166.2" cy="159.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="122.2" cy="150.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="35.2" cy="69.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="248.2" cy="125.9" r="3.6"><title>2PtsFG inside right, points after turnover, jump shot missed</title></circle><circle cx="137.2" cy="145.9" r="3.6"><title>layup missed</title></circle><circle cx="41.2" cy="66.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="39.2" cy="66.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="247.2" cy="91.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="260.2" cy="116.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="143.2" cy="162.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="132.2" cy="153.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="5.2" cy="162.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="150.2" cy="165.9" r="3.6"><title>2PtsFG under the basket, points after turnover, layup missed</title></circle><circle cx="217.2" cy="65.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="67.2" cy="146.9" r="3.6"><title>2pt step back jump shot missed</title></circle><circle cx="97.2" cy="128.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="29.2" cy="82.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="113.2" cy="32.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="131.2" cy="78.9" r="3.6"><title>2PtsFG inside center, jump shot missed</title></circle><circle cx="227.2" cy="69.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="51.2" cy="59.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="239.2" cy="84.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="156.2" cy="171.9" r="3.6"><title>2PtsFG under the basket, points after turnover, layup missed</title></circle><circle cx="165.2" cy="155.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="211.2" cy="98.9" r="3.6"><title>2PtsFG inside right, jump shot missed</title></circle><circle cx="217.2" cy="57.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="199.2" cy="44.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="160.2" cy="157.9" r="3.6"><title>layup missed</title></circle><circle cx="264.9" cy="162.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="121.2" cy="149.9" r="3.6"><title>2PtsFG under the basket, points after turnover, jump shot made</title></circle><circle cx="28.2" cy="73.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="37.2" cy="158.9" r="3.6"><title>2pt step back jump shot made</title></circle><circle cx="202.2" cy="49.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="164.2" cy="151.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="262.2" cy="120.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="130.2" cy="152.9" r="3.6"><title>2PtsFG under the basket, turnaround jump shot made</title></circle><circle cx="3.6" cy="164.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="140.2" cy="166.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle><circle cx="5.2" cy="162.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="143.2" cy="159.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle><circle cx="137.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, alley oop dunk made</title></circle><circle cx="169.2" cy="91.9" r="3.6"><title>2PtsFG inside center, jump shot made</title></circle><circle cx="137.2" cy="125.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="129.2" cy="113.9" r="3.6"><title>2pt driving layup made</title></circle><circle cx="58.2" cy="52.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="118.2" cy="159.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="142.2" cy="156.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="154.2" cy="167.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="149.2" cy="160.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="124.2" cy="149.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="62.2" cy="78.9" r="3.6"><title>2pt turnaround jump shot made</title></circle><circle cx="172.2" cy="31.9" r="3.6"><title>3pt jump shot from center made</title></circle><circle cx="133.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, dunk made</title></circle><circle cx="132.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, fast break, alley oop dunk made</title></circle><circle cx="140.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="134.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, points after turnover, alley oop dunk made</title></circle><circle cx="165.2" cy="150.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="154.2" cy="164.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (29)</span><span class="key"><i class="swatch missed"></i>Missed (43)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure>
+    <div class="scroll-x">
+<table>
+<caption></caption>
+<thead><tr><th class="left">Zone</th><th data-sortable>M</th><th data-sortable>A</th>
+<th data-sortable>FG%</th><th data-sortable>Share</th><th data-sortable>Pts/att</th></tr></thead>
+<tbody>
+  <tr>
+    <td class="left">Rim</td>
+    <td>15</td>
+    <td>25</td>
+    <td>60.0</td>
+    <td>34.7</td>
+    <td>1.20</td>
+  </tr>
+  <tr>
+    <td class="left">Paint</td>
+    <td>4</td>
+    <td>9</td>
+    <td>44.4</td>
+    <td>12.5</td>
+    <td>0.89</td>
+  </tr>
+  <tr>
+    <td class="left">Mid-range</td>
+    <td>3</td>
+    <td>7</td>
+    <td>42.9</td>
+    <td>9.7</td>
+    <td>0.86</td>
+  </tr>
+  <tr>
+    <td class="left">Corner 3</td>
+    <td>2</td>
+    <td>6</td>
+    <td>33.3</td>
+    <td>8.3</td>
+    <td>1.00</td>
+  </tr>
+  <tr>
+    <td class="left">Wing 3</td>
+    <td>3</td>
+    <td>19</td>
+    <td>15.8</td>
+    <td>26.4</td>
+    <td>0.47</td>
+  </tr>
+  <tr>
+    <td class="left">Top 3</td>
+    <td>2</td>
+    <td>6</td>
+    <td>33.3</td>
+    <td>8.3</td>
+    <td>1.00</td>
+  </tr>
+</tbody>
+</table>
+</div>
+
+  </div>
+</div>
+</section>
+
+<section>
+<h2>Box score &mdash; Azerbaijan</h2>
+<div class="scroll-x">
+<table class="expandable">
+<thead>
+  <tr>
+    <th class="left">#</th><th class="left" data-sortable>Player</th>
+      <th data-sortable>MIN</th><th data-sortable>PTS</th><th data-sortable>REB</th>
+      <th data-sortable>AST</th><th data-sortable>+/&ndash;</th>
+    <th>FG</th><th data-sortable>FG%</th>
+    <th>3PT</th><th data-sortable>3P%</th>
+    <th>FT</th><th data-sortable>FT%</th>
+    <th data-sortable>Pts/att</th>
+    <th data-sortable>USG%</th>
+    <th data-sortable>REB%</th><th data-sortable>AST%</th>
+    <th data-sortable>TOV%</th><th data-sortable>FD/40</th>
+  </tr>
+</thead>
+<tbody>
+  <tr class="expander" data-target="pd-369567" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-369567">
+    <td class="left">3</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Emmanuel Agbason</td>
+      <td>36.9</td>
+      <td>13</td>
+      <td>18</td>
+      <td>2</td>
+      <td class="neg">-16</td>
+    <td>6/13</td>
+    <td>46.2</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>1/3</td>
+    <td>33.3</td>
+    <td>0.92</td>
+    <td>22.1</td>
+    <td>21.4</td>
+    <td>20.6</td>
+    <td>21.8</td>
+    <td>3.3</td>
+  </tr>
+  <tr class="expander" data-target="pd-343499" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-343499">
+    <td class="left">1</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Ismayil Abdullayev</td>
+      <td>35.2</td>
+      <td>15</td>
+      <td>6</td>
+      <td>3</td>
+      <td class="neg">-36</td>
+    <td>4/17</td>
+    <td>23.5</td>
+    <td>1/9</td>
+    <td>11.1</td>
+    <td>6/8</td>
+    <td>75.0</td>
+    <td>0.53</td>
+    <td>26.0</td>
+    <td>7.5</td>
+    <td>27.4</td>
+    <td>0.0</td>
+    <td>4.5</td>
+  </tr>
+  <tr class="expander" data-target="pd-394147" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-394147">
+    <td class="left">0</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Musa Isayev</td>
+      <td>30.8</td>
+      <td>7</td>
+      <td>5</td>
+      <td>0</td>
+      <td class="neg">-20</td>
+    <td>3/7</td>
+    <td>42.9</td>
+    <td>1/1</td>
+    <td>100.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>1.00</td>
+    <td>13.0</td>
+    <td>7.1</td>
+    <td>0.0</td>
+    <td>22.2</td>
+    <td>0.0</td>
+  </tr>
+  <tr class="expander" data-target="pd-343504" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-343504">
+    <td class="left">17</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Oghuzkhan Guliyev</td>
+      <td>29.4</td>
+      <td>2</td>
+      <td>1</td>
+      <td>3</td>
+      <td class="neg">-18</td>
+    <td>1/7</td>
+    <td>14.3</td>
+    <td>0/2</td>
+    <td>0.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0.29</td>
+    <td>21.2</td>
+    <td>1.5</td>
+    <td>26.1</td>
+    <td>50.0</td>
+    <td>1.4</td>
+  </tr>
+  <tr class="expander" data-target="pd-333797" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-333797">
+    <td class="left">18</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Huseyn Gaflanov</td>
+      <td>24.4</td>
+      <td>3</td>
+      <td>3</td>
+      <td>1</td>
+      <td class="neg">-23</td>
+    <td>1/8</td>
+    <td>12.5</td>
+    <td>0/4</td>
+    <td>0.0</td>
+    <td>1/2</td>
+    <td>50.0</td>
+    <td>0.25</td>
+    <td>21.8</td>
+    <td>5.4</td>
+    <td>10.7</td>
+    <td>25.3</td>
+    <td>1.6</td>
+  </tr>
+  <tr class="expander" data-target="pd-369566" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-369566">
+    <td class="left">11</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Azar Ibrahimov</td>
+      <td>22.7</td>
+      <td>6</td>
+      <td>1</td>
+      <td>2</td>
+      <td class="neg">-15</td>
+    <td>2/8</td>
+    <td>25.0</td>
+    <td>2/4</td>
+    <td>50.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0.75</td>
+    <td>19.6</td>
+    <td>1.9</td>
+    <td>26.2</td>
+    <td>20.0</td>
+    <td>0.0</td>
+  </tr>
+  <tr class="expander" data-target="pd-343507" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-343507">
+    <td class="left">27</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Hajisamad Oghuz</td>
+      <td>11.1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td class="pos">+8</td>
+    <td>0/1</td>
+    <td>0.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0.00</td>
+    <td>8.0</td>
+    <td>3.9</td>
+    <td>0.0</td>
+    <td>50.0</td>
+    <td>0.0</td>
+  </tr>
+  <tr class="expander" data-target="pd-394146" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-394146">
+    <td class="left">14</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Tunar Hajizada</td>
+      <td>3.8</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td class="neg">-13</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>11.8</td>
+    <td>11.7</td>
+    <td>0.0</td>
+    <td>100.0</td>
+    <td>0.0</td>
+  </tr>
+  <tr class="expander" data-target="pd-415107" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-415107">
+    <td class="left">29</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Aykhan Aslanov</td>
+      <td>2.0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td class="neg">-5</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>22.7</td>
+    <td>0.0</td>
+    <td>0.0</td>
+    <td>100.0</td>
+    <td>0.0</td>
+  </tr>
+</tbody>
+</table>
+</div>
+<p class="note">Click a player for their shot chart and shooting breakdown.</p>
+<div class="player-panels">
+  <div class="player-panel" id="pd-369567" hidden>
+    <h3>Emmanuel Agbason &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Emmanuel Agbason shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="143.2" cy="146.9" r="3.6"><title>layup missed</title></circle><circle cx="148.2" cy="164.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="132.2" cy="167.9" r="3.6"><title>2PtsFG under the basket, points after turnover, dunk missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="149.2" cy="152.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="114.2" cy="162.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle></g><g class="shot made"><circle cx="153.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="144.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="134.2" cy="168.9" r="3.6"><title>2PtsFG under the basket, fast break, dunk made</title></circle><circle cx="145.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="147.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="134.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, points after turnover, dunk made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (6)</span><span class="key"><i class="swatch missed"></i>Missed (7)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>6</td>
+                <td>13</td><td>46.2</td>
+                <td>100.0</td>
+                <td>0.92</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>6</td><td>13</td>
+              <td>46.2</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 1/3
+          &middot; eFG 46.2% &middot; TS 45.4%
+          &middot; usage 22.1%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-343499" hidden>
+    <h3>Ismayil Abdullayev &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Ismayil Abdullayev shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="68.2" cy="53.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="154.2" cy="157.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="78.2" cy="44.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="188.2" cy="43.9" r="3.6"><title>3pt step back jump shot missed</title></circle><circle cx="47.2" cy="58.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="130.2" cy="148.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="40.2" cy="66.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="113.2" cy="156.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="154.2" cy="27.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="3.6" cy="149.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="120.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="91.2" cy="34.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="29.2" cy="165.9" r="3.6"><title>2pt step back jump shot missed</title></circle></g><g class="shot made"><circle cx="7.2" cy="161.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="143.2" cy="157.9" r="3.6"><title>2PtsFG under the basket, fast break, layup made</title></circle><circle cx="90.2" cy="102.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="55.2" cy="104.9" r="3.6"><title>2PtsFG inside left, jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (4)</span><span class="key"><i class="swatch missed"></i>Missed (13)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>1</td>
+                <td>5</td><td>20.0</td>
+                <td>29.4</td>
+                <td>0.40</td></tr>
+            <tr><td class="left">Mid-range</td><td>2</td>
+                <td>3</td><td>66.7</td>
+                <td>17.6</td>
+                <td>1.33</td></tr>
+            <tr><td class="left">Corner 3</td><td>1</td>
+                <td>2</td><td>50.0</td>
+                <td>11.8</td>
+                <td>1.50</td></tr>
+            <tr><td class="left">Wing 3</td><td>0</td>
+                <td>2</td><td>0.0</td>
+                <td>11.8</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Top 3</td><td>0</td>
+                <td>5</td><td>0.0</td>
+                <td>29.4</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>4</td><td>17</td>
+              <td>23.5</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 6/8
+          &middot; eFG 26.5% &middot; TS 36.5%
+          &middot; usage 26.0%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-394147" hidden>
+    <h3>Musa Isayev &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Musa Isayev shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="111.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="112.2" cy="111.9" r="3.6"><title>2pt turnaround jump shot missed</title></circle><circle cx="141.2" cy="123.9" r="3.6"><title>layup missed</title></circle><circle cx="111.2" cy="157.9" r="3.6"><title>layup missed</title></circle></g><g class="shot made"><circle cx="125.2" cy="166.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="107.2" cy="141.9" r="3.6"><title>2pt pullup jump shot made</title></circle><circle cx="264.9" cy="157.9" r="3.6"><title>3pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (3)</span><span class="key"><i class="swatch missed"></i>Missed (4)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>1</td>
+                <td>3</td><td>33.3</td>
+                <td>42.9</td>
+                <td>0.67</td></tr>
+            <tr><td class="left">Paint</td><td>1</td>
+                <td>3</td><td>33.3</td>
+                <td>42.9</td>
+                <td>0.67</td></tr>
+            <tr><td class="left">Corner 3</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>14.3</td>
+                <td>3.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>3</td><td>7</td>
+              <td>42.9</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 50.0% &middot; TS 50.0%
+          &middot; usage 13.0%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-343504" hidden>
+    <h3>Oghuzkhan Guliyev &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Oghuzkhan Guliyev shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="263.2" cy="136.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="59.2" cy="114.9" r="3.6"><title>2PtsFG inside left, jump shot missed</title></circle><circle cx="157.2" cy="153.9" r="3.6"><title>layup missed</title></circle><circle cx="160.2" cy="105.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="141.2" cy="79.9" r="3.6"><title>2PtsFG inside center, jump shot missed</title></circle><circle cx="139.2" cy="34.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="162.2" cy="142.9" r="3.6"><title>2pt driving layup made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (1)</span><span class="key"><i class="swatch missed"></i>Missed (6)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>14.3</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Paint</td><td>1</td>
+                <td>2</td><td>50.0</td>
+                <td>28.6</td>
+                <td>1.00</td></tr>
+            <tr><td class="left">Mid-range</td><td>0</td>
+                <td>2</td><td>0.0</td>
+                <td>28.6</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Corner 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>14.3</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Top 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>14.3</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>1</td><td>7</td>
+              <td>14.3</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 14.3% &middot; TS 14.3%
+          &middot; usage 21.2%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-333797" hidden>
+    <h3>Huseyn Gaflanov &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Huseyn Gaflanov shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="49.2" cy="57.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="30.2" cy="73.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="187.2" cy="45.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="83.2" cy="118.9" r="3.6"><title>2PtsFG inside left, jump shot missed</title></circle><circle cx="4.2" cy="157.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="172.2" cy="157.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="181.2" cy="139.9" r="3.6"><title>2PtsFG inside right, jump shot missed</title></circle></g><g class="shot made"><circle cx="75.2" cy="157.9" r="3.6"><title>2pt turnaround jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (1)</span><span class="key"><i class="swatch missed"></i>Missed (7)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Paint</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>12.5</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Mid-range</td><td>1</td>
+                <td>3</td><td>33.3</td>
+                <td>37.5</td>
+                <td>0.67</td></tr>
+            <tr><td class="left">Corner 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>12.5</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>0</td>
+                <td>2</td><td>0.0</td>
+                <td>25.0</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Top 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>12.5</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>1</td><td>8</td>
+              <td>12.5</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 1/2
+          &middot; eFG 12.5% &middot; TS 16.9%
+          &middot; usage 21.8%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-369566" hidden>
+    <h3>Azar Ibrahimov &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Azar Ibrahimov shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="112.2" cy="94.9" r="3.6"><title>2pt driving layup missed</title></circle><circle cx="218.2" cy="84.9" r="3.6"><title>2PtsFG inside right, jump shot missed</title></circle><circle cx="148.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, points after turnover, layup missed</title></circle><circle cx="152.2" cy="168.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="258.2" cy="124.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="54.2" cy="46.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="202.2" cy="46.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="45.2" cy="61.9" r="3.6"><title>3pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (2)</span><span class="key"><i class="swatch missed"></i>Missed (6)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>0</td>
+                <td>2</td><td>0.0</td>
+                <td>25.0</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Paint</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>12.5</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Mid-range</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>12.5</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Corner 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>12.5</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>1</td>
+                <td>2</td><td>50.0</td>
+                <td>25.0</td>
+                <td>1.50</td></tr>
+            <tr><td class="left">Top 3</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>12.5</td>
+                <td>3.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>2</td><td>8</td>
+              <td>25.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 37.5% &middot; TS 37.5%
+          &middot; usage 19.6%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-343507" hidden>
+    <h3>Hajisamad Oghuz &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Hajisamad Oghuz shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="138.2" cy="119.9" r="3.6"><title>2pt jump shot missed</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (0)</span><span class="key"><i class="swatch missed"></i>Missed (1)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Paint</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>100.0</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>0</td><td>1</td>
+              <td>0.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 0.0% &middot; TS 0.0%
+          &middot; usage 8.0%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-394146" hidden>
+    <h3>Tunar Hajizada &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Tunar Hajizada shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (0)</span><span class="key"><i class="swatch missed"></i>Missed (0)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>0</td><td>0</td>
+              <td><span class="muted">&ndash;</span></td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG <span class="muted">&ndash;</span>% &middot; TS <span class="muted">&ndash;</span>%
+          &middot; usage 11.8%
+ &middot; no field goal attempts recorded        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-415107" hidden>
+    <h3>Aykhan Aslanov &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Aykhan Aslanov shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (0)</span><span class="key"><i class="swatch missed"></i>Missed (0)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>0</td><td>0</td>
+              <td><span class="muted">&ndash;</span></td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG <span class="muted">&ndash;</span>% &middot; TS <span class="muted">&ndash;</span>%
+          &middot; usage 22.7%
+ &middot; no field goal attempts recorded        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="note">USG% is the share of team possessions used while on court.
+FD/40 is fouls drawn per 40 minutes. Click any player for their shot chart, zone
+splits and true shooting.</p>
+</section>
+<section>
+<h2>Box score &mdash; Czechia</h2>
+<div class="scroll-x">
+<table class="expandable">
+<thead>
+  <tr>
+    <th class="left">#</th><th class="left" data-sortable>Player</th>
+      <th data-sortable>MIN</th><th data-sortable>PTS</th><th data-sortable>REB</th>
+      <th data-sortable>AST</th><th data-sortable>+/&ndash;</th>
+    <th>FG</th><th data-sortable>FG%</th>
+    <th>3PT</th><th data-sortable>3P%</th>
+    <th>FT</th><th data-sortable>FT%</th>
+    <th data-sortable>Pts/att</th>
+    <th data-sortable>USG%</th>
+    <th data-sortable>REB%</th><th data-sortable>AST%</th>
+    <th data-sortable>TOV%</th><th data-sortable>FD/40</th>
+  </tr>
+</thead>
+<tbody>
+  <tr class="expander" data-target="pd-396487" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-396487">
+    <td class="left">15</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Marek Houska</td>
+      <td>25.0</td>
+      <td>9</td>
+      <td>4</td>
+      <td>11</td>
+      <td class="pos">+28</td>
+    <td>3/11</td>
+    <td>27.3</td>
+    <td>2/5</td>
+    <td>40.0</td>
+    <td>1/4</td>
+    <td>25.0</td>
+    <td>0.73</td>
+    <td>29.5</td>
+    <td>7.0</td>
+    <td>72.8</td>
+    <td>28.2</td>
+    <td>4.8</td>
+  </tr>
+  <tr class="expander" data-target="pd-419439" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-419439">
+    <td class="left">4</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Vavrinec Zahorik</td>
+      <td>21.8</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+      <td class="neg">-7</td>
+    <td>1/7</td>
+    <td>14.3</td>
+    <td>0/6</td>
+    <td>0.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0.29</td>
+    <td>13.3</td>
+    <td>2.0</td>
+    <td>6.8</td>
+    <td>0.0</td>
+    <td>1.8</td>
+  </tr>
+  <tr class="expander" data-target="pd-372170" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-372170">
+    <td class="left">13</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Alexandr Krob</td>
+      <td>20.6</td>
+      <td>10</td>
+      <td>2</td>
+      <td>4</td>
+      <td class="pos">+20</td>
+    <td>4/13</td>
+    <td>30.8</td>
+    <td>2/8</td>
+    <td>25.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0.77</td>
+    <td>28.1</td>
+    <td>4.3</td>
+    <td>36.5</td>
+    <td>7.1</td>
+    <td>0.0</td>
+  </tr>
+  <tr class="expander" data-target="pd-396494" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-396494">
+    <td class="left">1</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Teodor Kacirek</td>
+      <td>20.1</td>
+      <td>5</td>
+      <td>4</td>
+      <td>1</td>
+      <td class="pos">+5</td>
+    <td>2/3</td>
+    <td>66.7</td>
+    <td>1/1</td>
+    <td>100.0</td>
+    <td>0/1</td>
+    <td>0.0</td>
+    <td>1.67</td>
+    <td>13.3</td>
+    <td>8.7</td>
+    <td>8.0</td>
+    <td>46.6</td>
+    <td>2.0</td>
+  </tr>
+  <tr class="expander" data-target="pd-343447" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-343447">
+    <td class="left">77</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Samuel Nohel</td>
+      <td>18.4</td>
+      <td>5</td>
+      <td>9</td>
+      <td>0</td>
+      <td class="pos">+26</td>
+    <td>1/4</td>
+    <td>25.0</td>
+    <td>1/3</td>
+    <td>33.3</td>
+    <td>2/2</td>
+    <td>100.0</td>
+    <td>0.75</td>
+    <td>11.0</td>
+    <td>21.5</td>
+    <td>0.0</td>
+    <td>0.0</td>
+    <td>4.4</td>
+  </tr>
+  <tr class="expander" data-target="pd-372171" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-372171">
+    <td class="left">10</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Matej Buben</td>
+      <td>18.1</td>
+      <td>6</td>
+      <td>4</td>
+      <td>1</td>
+      <td class="">+0</td>
+    <td>1/4</td>
+    <td>25.0</td>
+    <td>0/3</td>
+    <td>0.0</td>
+    <td>4/5</td>
+    <td>80.0</td>
+    <td>0.50</td>
+    <td>16.5</td>
+    <td>9.7</td>
+    <td>8.3</td>
+    <td>13.9</td>
+    <td>6.6</td>
+  </tr>
+  <tr class="expander" data-target="pd-419766" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-419766">
+    <td class="left">32</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Stepan Ides</td>
+      <td>17.4</td>
+      <td>2</td>
+      <td>4</td>
+      <td>0</td>
+      <td class="neg">-6</td>
+    <td>1/4</td>
+    <td>25.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0.50</td>
+    <td>14.3</td>
+    <td>10.1</td>
+    <td>0.0</td>
+    <td>33.3</td>
+    <td>0.0</td>
+  </tr>
+  <tr class="expander" data-target="pd-396491" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-396491">
+    <td class="left">12</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Jakub Chaloupka</td>
+      <td>16.4</td>
+      <td>3</td>
+      <td>4</td>
+      <td>4</td>
+      <td class="pos">+20</td>
+    <td>1/4</td>
+    <td>25.0</td>
+    <td>0/1</td>
+    <td>0.0</td>
+    <td>1/2</td>
+    <td>50.0</td>
+    <td>0.50</td>
+    <td>20.0</td>
+    <td>10.8</td>
+    <td>36.9</td>
+    <td>38.1</td>
+    <td>4.9</td>
+  </tr>
+  <tr class="expander" data-target="pd-362387" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-362387">
+    <td class="left">6</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Krystof Davidek</td>
+      <td>16.2</td>
+      <td>15</td>
+      <td>6</td>
+      <td>0</td>
+      <td class="pos">+18</td>
+    <td>7/12</td>
+    <td>58.3</td>
+    <td>1/3</td>
+    <td>33.3</td>
+    <td>0/2</td>
+    <td>0.0</td>
+    <td>1.25</td>
+    <td>33.0</td>
+    <td>16.3</td>
+    <td>0.0</td>
+    <td>0.0</td>
+    <td>7.4</td>
+  </tr>
+  <tr class="expander" data-target="pd-372161" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-372161">
+    <td class="left">34</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Ondrej Pospichal</td>
+      <td>14.6</td>
+      <td>6</td>
+      <td>3</td>
+      <td>0</td>
+      <td class="pos">+36</td>
+    <td>3/4</td>
+    <td>75.0</td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>0/0</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>1.50</td>
+    <td>14.2</td>
+    <td>9.0</td>
+    <td>0.0</td>
+    <td>20.0</td>
+    <td>0.0</td>
+  </tr>
+  <tr class="expander" data-target="pd-372167" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-372167">
+    <td class="left">31</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Lukas Sadovsky</td>
+      <td>11.6</td>
+      <td>11</td>
+      <td>4</td>
+      <td>0</td>
+      <td class="">+0</td>
+    <td>5/6</td>
+    <td>83.3</td>
+    <td>0/1</td>
+    <td>0.0</td>
+    <td>1/1</td>
+    <td>100.0</td>
+    <td>1.67</td>
+    <td>26.6</td>
+    <td>15.2</td>
+    <td>0.0</td>
+    <td>13.4</td>
+    <td>3.4</td>
+  </tr>
+</tbody>
+</table>
+</div>
+<p class="note">Click a player for their shot chart and shooting breakdown.</p>
+<div class="player-panels">
+  <div class="player-panel" id="pd-396487" hidden>
+    <h3>Marek Houska &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Marek Houska shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="145.2" cy="101.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="145.2" cy="150.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="260.2" cy="116.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="165.2" cy="155.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="211.2" cy="98.9" r="3.6"><title>2PtsFG inside right, jump shot missed</title></circle><circle cx="199.2" cy="44.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="160.2" cy="157.9" r="3.6"><title>layup missed</title></circle><circle cx="264.9" cy="162.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="262.2" cy="120.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="143.2" cy="159.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle><circle cx="172.2" cy="31.9" r="3.6"><title>3pt jump shot from center made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (3)</span><span class="key"><i class="swatch missed"></i>Missed (8)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>1</td>
+                <td>3</td><td>33.3</td>
+                <td>27.3</td>
+                <td>0.67</td></tr>
+            <tr><td class="left">Paint</td><td>0</td>
+                <td>2</td><td>0.0</td>
+                <td>18.2</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Mid-range</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>9.1</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Corner 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>9.1</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>1</td>
+                <td>2</td><td>50.0</td>
+                <td>18.2</td>
+                <td>1.50</td></tr>
+            <tr><td class="left">Top 3</td><td>1</td>
+                <td>2</td><td>50.0</td>
+                <td>18.2</td>
+                <td>1.50</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>3</td><td>11</td>
+              <td>27.3</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 1/4
+          &middot; eFG 36.4% &middot; TS 35.3%
+          &middot; usage 29.5%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-419439" hidden>
+    <h3>Vavrinec Zahorik &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Vavrinec Zahorik shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="251.2" cy="103.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="35.2" cy="69.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="41.2" cy="66.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="5.2" cy="162.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="239.2" cy="84.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="217.2" cy="57.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="137.2" cy="125.9" r="3.6"><title>2pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (1)</span><span class="key"><i class="swatch missed"></i>Missed (6)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Paint</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>14.3</td>
+                <td>2.00</td></tr>
+            <tr><td class="left">Corner 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>14.3</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>0</td>
+                <td>5</td><td>0.0</td>
+                <td>71.4</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>1</td><td>7</td>
+              <td>14.3</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 14.3% &middot; TS 14.3%
+          &middot; usage 13.3%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-372170" hidden>
+    <h3>Alexandr Krob &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Alexandr Krob shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="25.2" cy="81.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="225.2" cy="63.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="79.2" cy="38.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="264.2" cy="144.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="248.2" cy="125.9" r="3.6"><title>2PtsFG inside right, points after turnover, jump shot missed</title></circle><circle cx="67.2" cy="146.9" r="3.6"><title>2pt step back jump shot missed</title></circle><circle cx="97.2" cy="128.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="113.2" cy="32.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="227.2" cy="69.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="28.2" cy="73.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="37.2" cy="158.9" r="3.6"><title>2pt step back jump shot made</title></circle><circle cx="3.6" cy="164.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="62.2" cy="78.9" r="3.6"><title>2pt turnaround jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (4)</span><span class="key"><i class="swatch missed"></i>Missed (9)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Paint</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>7.7</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Mid-range</td><td>2</td>
+                <td>4</td><td>50.0</td>
+                <td>30.8</td>
+                <td>1.00</td></tr>
+            <tr><td class="left">Corner 3</td><td>1</td>
+                <td>2</td><td>50.0</td>
+                <td>15.4</td>
+                <td>1.50</td></tr>
+            <tr><td class="left">Wing 3</td><td>1</td>
+                <td>4</td><td>25.0</td>
+                <td>30.8</td>
+                <td>0.75</td></tr>
+            <tr><td class="left">Top 3</td><td>0</td>
+                <td>2</td><td>0.0</td>
+                <td>15.4</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>4</td><td>13</td>
+              <td>30.8</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 38.5% &middot; TS 38.5%
+          &middot; usage 28.1%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-396494" hidden>
+    <h3>Teodor Kacirek &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Teodor Kacirek shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="156.2" cy="171.9" r="3.6"><title>2PtsFG under the basket, points after turnover, layup missed</title></circle></g><g class="shot made"><circle cx="5.2" cy="162.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="154.2" cy="164.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (2)</span><span class="key"><i class="swatch missed"></i>Missed (1)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>1</td>
+                <td>2</td><td>50.0</td>
+                <td>66.7</td>
+                <td>1.00</td></tr>
+            <tr><td class="left">Corner 3</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>33.3</td>
+                <td>3.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>2</td><td>3</td>
+              <td>66.7</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/1
+          &middot; eFG 83.3% &middot; TS 72.7%
+          &middot; usage 13.3%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-343447" hidden>
+    <h3>Samuel Nohel &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Samuel Nohel shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="61.2" cy="52.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="166.2" cy="159.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="29.2" cy="82.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="202.2" cy="49.9" r="3.6"><title>3pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (1)</span><span class="key"><i class="swatch missed"></i>Missed (3)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Paint</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>25.0</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>0</td>
+                <td>2</td><td>0.0</td>
+                <td>50.0</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Top 3</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>25.0</td>
+                <td>3.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>1</td><td>4</td>
+              <td>25.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 2/2
+          &middot; eFG 37.5% &middot; TS 51.2%
+          &middot; usage 11.0%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-372171" hidden>
+    <h3>Matej Buben &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Matej Buben shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="136.2" cy="26.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="217.2" cy="65.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="51.2" cy="59.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="124.2" cy="149.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (1)</span><span class="key"><i class="swatch missed"></i>Missed (3)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>25.0</td>
+                <td>2.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>0</td>
+                <td>2</td><td>0.0</td>
+                <td>50.0</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Top 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>25.0</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>1</td><td>4</td>
+              <td>25.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 4/5
+          &middot; eFG 25.0% &middot; TS 48.4%
+          &middot; usage 16.5%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-419766" hidden>
+    <h3>Stepan Ides &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Stepan Ides shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="122.2" cy="150.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="137.2" cy="145.9" r="3.6"><title>layup missed</title></circle><circle cx="150.2" cy="165.9" r="3.6"><title>2PtsFG under the basket, points after turnover, layup missed</title></circle></g><g class="shot made"><circle cx="169.2" cy="91.9" r="3.6"><title>2PtsFG inside center, jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (1)</span><span class="key"><i class="swatch missed"></i>Missed (3)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>0</td>
+                <td>3</td><td>0.0</td>
+                <td>75.0</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Mid-range</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>25.0</td>
+                <td>2.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>1</td><td>4</td>
+              <td>25.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 25.0% &middot; TS 25.0%
+          &middot; usage 14.3%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-396491" hidden>
+    <h3>Jakub Chaloupka &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Jakub Chaloupka shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="115.2" cy="134.9" r="3.6"><title>2pt hook shot missed</title></circle><circle cx="25.2" cy="90.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="131.2" cy="78.9" r="3.6"><title>2PtsFG inside center, jump shot missed</title></circle></g><g class="shot made"><circle cx="129.2" cy="113.9" r="3.6"><title>2pt driving layup made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (1)</span><span class="key"><i class="swatch missed"></i>Missed (3)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Paint</td><td>1</td>
+                <td>2</td><td>50.0</td>
+                <td>50.0</td>
+                <td>1.00</td></tr>
+            <tr><td class="left">Mid-range</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>25.0</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>25.0</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>1</td><td>4</td>
+              <td>25.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 1/2
+          &middot; eFG 25.0% &middot; TS 30.7%
+          &middot; usage 20.0%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-362387" hidden>
+    <h3>Krystof Davidek &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Krystof Davidek shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="159.2" cy="165.9" r="3.6"><title>layup missed</title></circle><circle cx="7.2" cy="156.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="247.2" cy="91.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="143.2" cy="162.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="132.2" cy="153.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle></g><g class="shot made"><circle cx="164.2" cy="151.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="137.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, alley oop dunk made</title></circle><circle cx="58.2" cy="52.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="142.2" cy="156.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="132.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, fast break, alley oop dunk made</title></circle><circle cx="140.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="134.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, points after turnover, alley oop dunk made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (7)</span><span class="key"><i class="swatch missed"></i>Missed (5)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>5</td>
+                <td>8</td><td>62.5</td>
+                <td>66.7</td>
+                <td>1.25</td></tr>
+            <tr><td class="left">Paint</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>8.3</td>
+                <td>2.00</td></tr>
+            <tr><td class="left">Corner 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>8.3</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>1</td>
+                <td>2</td><td>50.0</td>
+                <td>16.7</td>
+                <td>1.50</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>7</td><td>12</td>
+              <td>58.3</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/2
+          &middot; eFG 62.5% &middot; TS 58.2%
+          &middot; usage 33.0%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-372161" hidden>
+    <h3>Ondrej Pospichal &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Ondrej Pospichal shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="116.2" cy="155.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle></g><g class="shot made"><circle cx="121.2" cy="149.9" r="3.6"><title>2PtsFG under the basket, points after turnover, jump shot made</title></circle><circle cx="130.2" cy="152.9" r="3.6"><title>2PtsFG under the basket, turnaround jump shot made</title></circle><circle cx="133.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, dunk made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (3)</span><span class="key"><i class="swatch missed"></i>Missed (1)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>3</td>
+                <td>4</td><td>75.0</td>
+                <td>100.0</td>
+                <td>1.50</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>3</td><td>4</td>
+              <td>75.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 75.0% &middot; TS 75.0%
+          &middot; usage 14.2%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-372167" hidden>
+    <h3>Lukas Sadovsky &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Lukas Sadovsky shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="39.2" cy="66.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="140.2" cy="166.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle><circle cx="118.2" cy="159.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="154.2" cy="167.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="149.2" cy="160.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="165.2" cy="150.9" r="3.6"><title>2pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (5)</span><span class="key"><i class="swatch missed"></i>Missed (1)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>4</td>
+                <td>4</td><td>100.0</td>
+                <td>66.7</td>
+                <td>2.00</td></tr>
+            <tr><td class="left">Paint</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>16.7</td>
+                <td>2.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>16.7</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>5</td><td>6</td>
+              <td>83.3</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 1/1
+          &middot; eFG 83.3% &middot; TS 85.4%
+          &middot; usage 26.6%
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</section>
+
+<section>
+<h2>Lineups</h2>
+<div class="cols">
+  <div>
+    <h3>Azerbaijan</h3>
+    <div class="scroll-x">
+<table>
+<thead>
+  <tr>
+    <th class="left">Lineup</th><th data-sortable>MIN</th><th data-sortable>Gm</th>
+    <th data-sortable>PF</th><th data-sortable>PA</th><th data-sortable>+/&ndash;</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="left">18 Gaflanov &middot; 1 Abdullayev &middot; 17 Guliyev &middot; 3 Agbason &middot; 0 Isayev</td>
+    <td>9.4</td>
+    <td>1</td>
+    <td>13</td>
+    <td>18</td>
+    <td class="neg">-5</td>
+  </tr>
+  <tr>
+    <td class="left">1 Abdullayev &middot; 17 Guliyev &middot; 3 Agbason &middot; 0 Isayev &middot; 9 Novruzlu</td>
+    <td>3.8</td>
+    <td>1</td>
+    <td>2</td>
+    <td>4</td>
+    <td class="neg">-2</td>
+  </tr>
+  <tr>
+    <td class="left">1 Abdullayev &middot; 27 Oghuz &middot; 11 Ibrahimov &middot; 3 Agbason &middot; 0 Isayev</td>
+    <td>3.8</td>
+    <td>1</td>
+    <td>5</td>
+    <td>2</td>
+    <td class="pos">+3</td>
+  </tr>
+  <tr>
+    <td class="left">18 Gaflanov &middot; 17 Guliyev &middot; 27 Oghuz &middot; 11 Ibrahimov &middot; 3 Agbason</td>
+    <td>3.4</td>
+    <td>1</td>
+    <td>8</td>
+    <td>0</td>
+    <td class="pos">+8</td>
+  </tr>
+  <tr>
+    <td class="left">18 Gaflanov &middot; 1 Abdullayev &middot; 17 Guliyev &middot; 11 Ibrahimov &middot; 0 Isayev</td>
+    <td>3.1</td>
+    <td>1</td>
+    <td>0</td>
+    <td>12</td>
+    <td class="neg">-12</td>
+  </tr>
+  <tr>
+    <td class="left">18 Gaflanov &middot; 1 Abdullayev &middot; 11 Ibrahimov &middot; 3 Agbason &middot; 0 Isayev</td>
+    <td>2.6</td>
+    <td>1</td>
+    <td>8</td>
+    <td>6</td>
+    <td class="pos">+2</td>
+  </tr>
+  <tr>
+    <td class="left">1 Abdullayev &middot; 17 Guliyev &middot; 27 Oghuz &middot; 3 Agbason &middot; 0 Isayev</td>
+    <td>2.5</td>
+    <td>1</td>
+    <td>2</td>
+    <td>5</td>
+    <td class="neg">-3</td>
+  </tr>
+  <tr>
+    <td class="left">18 Gaflanov &middot; 1 Abdullayev &middot; 11 Ibrahimov &middot; 3 Agbason &middot; 14 Hajizada</td>
+    <td>2.2</td>
+    <td>1</td>
+    <td>0</td>
+    <td>10</td>
+    <td class="neg">-10</td>
+  </tr>
+  <tr>
+    <td class="left">1 Abdullayev &middot; 17 Guliyev &middot; 11 Ibrahimov &middot; 3 Agbason &middot; 0 Isayev</td>
+    <td>2.1</td>
+    <td>1</td>
+    <td>4</td>
+    <td>2</td>
+    <td class="pos">+2</td>
+  </tr>
+  <tr>
+    <td class="left">18 Gaflanov &middot; 1 Abdullayev &middot; 17 Guliyev &middot; 11 Ibrahimov &middot; 3 Agbason</td>
+    <td>2.1</td>
+    <td>1</td>
+    <td>2</td>
+    <td>5</td>
+    <td class="neg">-3</td>
+  </tr>
+  <tr>
+    <td class="left">1 Abdullayev &middot; 11 Ibrahimov &middot; 3 Agbason &middot; 0 Isayev &middot; 29 Aslanov</td>
+    <td>2.0</td>
+    <td>1</td>
+    <td>0</td>
+    <td>5</td>
+    <td class="neg">-5</td>
+  </tr>
+  <tr>
+    <td class="left">18 Gaflanov &middot; 1 Abdullayev &middot; 17 Guliyev &middot; 3 Agbason &middot; 14 Hajizada</td>
+    <td>1.6</td>
+    <td>1</td>
+    <td>0</td>
+    <td>3</td>
+    <td class="neg">-3</td>
+  </tr>
+</tbody>
+</table>
+</div>
+<p class="note">PF and PA are points scored and allowed while that five
+was on court. Minutes are the sample each lineup is judged on, so read a large
+plus-minus over two minutes as noise.</p>
+
+  </div>
+  <div>
+    <h3>Czechia</h3>
+    <div class="scroll-x">
+<table>
+<thead>
+  <tr>
+    <th class="left">Lineup</th><th data-sortable>MIN</th><th data-sortable>Gm</th>
+    <th data-sortable>PF</th><th data-sortable>PA</th><th data-sortable>+/&ndash;</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="left">13 Krob &middot; 10 Buben &middot; 1 Kacirek &middot; 4 Zahorik &middot; 32 Ides</td>
+    <td>7.4</td>
+    <td>1</td>
+    <td>11</td>
+    <td>6</td>
+    <td class="pos">+5</td>
+  </tr>
+  <tr>
+    <td class="left">77 Nohel &middot; 34 Pospichal &middot; 15 Houska &middot; 12 Chaloupka &middot; 1 Kacirek</td>
+    <td>3.8</td>
+    <td>1</td>
+    <td>10</td>
+    <td>0</td>
+    <td class="pos">+10</td>
+  </tr>
+  <tr>
+    <td class="left">77 Nohel &middot; 6 Davidek &middot; 34 Pospichal &middot; 13 Krob &middot; 15 Houska</td>
+    <td>3.8</td>
+    <td>1</td>
+    <td>13</td>
+    <td>0</td>
+    <td class="pos">+13</td>
+  </tr>
+  <tr>
+    <td class="left">6 Davidek &middot; 34 Pospichal &middot; 31 Sadovsky &middot; 15 Houska &middot; 12 Chaloupka</td>
+    <td>3.6</td>
+    <td>1</td>
+    <td>9</td>
+    <td>7</td>
+    <td class="pos">+2</td>
+  </tr>
+  <tr>
+    <td class="left">77 Nohel &middot; 6 Davidek &middot; 15 Houska &middot; 4 Zahorik &middot; 32 Ides</td>
+    <td>2.6</td>
+    <td>1</td>
+    <td>6</td>
+    <td>8</td>
+    <td class="neg">-2</td>
+  </tr>
+  <tr>
+    <td class="left">77 Nohel &middot; 13 Krob &middot; 1 Kacirek &middot; 4 Zahorik &middot; 32 Ides</td>
+    <td>2.5</td>
+    <td>1</td>
+    <td>2</td>
+    <td>2</td>
+    <td class="">+0</td>
+  </tr>
+  <tr>
+    <td class="left">77 Nohel &middot; 15 Houska &middot; 1 Kacirek &middot; 4 Zahorik &middot; 32 Ides</td>
+    <td>2.2</td>
+    <td>1</td>
+    <td>0</td>
+    <td>6</td>
+    <td class="neg">-6</td>
+  </tr>
+  <tr>
+    <td class="left">77 Nohel &middot; 6 Davidek &middot; 34 Pospichal &middot; 15 Houska &middot; 12 Chaloupka</td>
+    <td>1.9</td>
+    <td>1</td>
+    <td>7</td>
+    <td>0</td>
+    <td class="pos">+7</td>
+  </tr>
+  <tr>
+    <td class="left">6 Davidek &middot; 31 Sadovsky &middot; 13 Krob &middot; 10 Buben &middot; 4 Zahorik</td>
+    <td>1.6</td>
+    <td>1</td>
+    <td>2</td>
+    <td>5</td>
+    <td class="neg">-3</td>
+  </tr>
+</tbody>
+</table>
+</div>
+<p class="note">PF and PA are points scored and allowed while that five
+was on court. Minutes are the sample each lineup is judged on, so read a large
+plus-minus over two minutes as noise.</p>
+
+  </div>
+</div>
+</section>
+
+
+<div class="colophon">
+  <span>Derived from the official FIBA box score and play-by-play.</span>
+  <span>Generated Sun 02 Aug 2026, 20:43 (Irish time)</span>
+</div>
+
+<div class="running-foot">
+  FIBA U18 Eurobasket 2026 Division B &middot; AZE v CZE game sheet</div>
+
+</div>
+
+<script>
+/* Site behaviour. Kept to plain DOM work so a report stays one self-contained
+   file: no build step, no dependencies, and the page is fully readable with
+   JavaScript switched off. */
+(function () {
+  // Dropdown menus in the nav bar.
+  document.addEventListener('click', function (e) {
+    var button = e.target.closest('.drop > button');
+    document.querySelectorAll('.drop.open').forEach(function (d) {
+      if (!button || d !== button.parentNode) {
+        d.classList.remove('open');
+        d.querySelector('button').setAttribute('aria-expanded', 'false');
+      }
+    });
+    if (button) {
+      var drop = button.parentNode;
+      var open = drop.classList.toggle('open');
+      button.setAttribute('aria-expanded', open ? 'true' : 'false');
+      e.preventDefault();
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.drop.open').forEach(function (d) {
+        d.classList.remove('open');
+      });
+    }
+  });
+
+  // Sortable tables. A cell may carry data-value to sort on something other
+  // than what it displays, which is how "3-4" sorts by win percentage.
+  function cellValue(row, index) {
+    var cell = row.children[index];
+    if (!cell) return { n: null, s: '' };
+    if (cell.dataset.value !== undefined) {
+      var explicit = parseFloat(cell.dataset.value);
+      return { n: isNaN(explicit) ? null : explicit, s: cell.dataset.value };
+    }
+    var text = cell.textContent.trim();
+    var cleaned = text.replace(/[+,%\s]/g, '').replace(/\u2212/g, '-');
+    var number = parseFloat(cleaned);
+    var numeric = /^[-+]?[0-9.]+$/.test(cleaned) && !isNaN(number);
+    return { n: numeric ? number : null, s: text.toLowerCase() };
+  }
+
+  document.addEventListener('click', function (e) {
+    var th = e.target.closest('th[data-sortable]');
+    if (!th) return;
+    var table = th.closest('table');
+    var head = th.parentNode;
+    var index = Array.prototype.indexOf.call(head.children, th);
+    var dir = th.dataset.dir === 'desc' ? 'asc' : 'desc';
+
+    head.querySelectorAll('th[data-sortable]').forEach(function (other) {
+      if (other !== th) other.removeAttribute('data-dir');
+    });
+    th.dataset.dir = dir;
+
+    var body = table.tBodies[0];
+    var rows = Array.prototype.filter.call(body.rows, function (r) {
+      return !r.classList.contains('total');   // aggregate rows stay pinned
+    });
+    var pinned = Array.prototype.filter.call(body.rows, function (r) {
+      return r.classList.contains('total');
+    });
+
+    rows.sort(function (a, b) {
+      var x = cellValue(a, index), y = cellValue(b, index);
+      var result;
+      if (x.n !== null && y.n !== null) result = x.n - y.n;
+      else if (x.n !== null) result = 1;      // blanks sort to the bottom
+      else if (y.n !== null) result = -1;
+      else result = x.s.localeCompare(y.s);
+      return dir === 'asc' ? result : -result;
+    });
+
+    rows.concat(pinned).forEach(function (r) { body.appendChild(r); });
+
+    // Renumber a leading rank column if the table has one.
+    if (table.dataset.rankColumn !== undefined) {
+      var col = parseInt(table.dataset.rankColumn, 10);
+      rows.forEach(function (r, i) {
+        if (r.children[col]) r.children[col].textContent = i + 1;
+      });
+    }
+  });
+
+  // Expandable player rows.
+  function toggleRow(row) {
+    var detail = document.getElementById(row.dataset.target);
+    if (!detail) return;
+    var open = detail.hasAttribute('hidden');
+
+    // The panels stack under the table, so showing more than one at a time
+    // pushes the player you clicked off screen. Close the others first.
+    var group = detail.parentNode;
+    group.querySelectorAll('.player-panel').forEach(function (panel) {
+      if (panel !== detail) panel.setAttribute('hidden', '');
+    });
+    var table = row.closest('table');
+    if (table) {
+      table.querySelectorAll('tr.expander[aria-expanded="true"]').forEach(function (r) {
+        if (r !== row) r.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    if (open) detail.removeAttribute('hidden');
+    else detail.setAttribute('hidden', '');
+    row.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  document.addEventListener('click', function (e) {
+    var row = e.target.closest('tr.expander');
+    if (!row || e.target.closest('a')) return;
+    toggleRow(row);
+  });
+
+  // Keyboard parity: the rows are focusable, so Enter and Space must work.
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var row = e.target.closest && e.target.closest('tr.expander');
+    if (!row) return;
+    e.preventDefault();
+    toggleRow(row);
+  });
+
+  // Offence / defence / combined toggle.
+  document.addEventListener('click', function (e) {
+    var button = e.target.closest('.viewtoggle button[data-view]');
+    if (!button) return;
+    var group = button.closest('.viewtoggle');
+    var table = document.querySelector(group.dataset.target);
+    if (!table) return;
+    group.querySelectorAll('button').forEach(function (b) {
+      b.setAttribute('aria-pressed', b === button ? 'true' : 'false');
+    });
+    table.classList.remove('view-off', 'view-def', 'view-all');
+    table.classList.add('view-' + button.dataset.view);
+  });
+})();
+</script>
+</body>
+</html>

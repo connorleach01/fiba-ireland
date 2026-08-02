@@ -25,10 +25,11 @@
             '%d games'|format(p.games_played)) }}
   {{ m.stat('Off rating', '%.1f'|format(ff.off_rating or 0), 'per 100 poss') }}
   {{ m.stat('Def rating', '%.1f'|format(ff.def_rating or 0), 'per 100 poss') }}
-  {{ m.stat('Net', '%+.1f'|format(ff.net_rating or 0), 'per 100 poss',
+  {{ m.stat('Net', '%+.1f'|format(ff.net_rating or 0),
+            m.rank_note(ranks, 'net_rating') or 'per 100 poss',
             'pos' if (ff.net_rating or 0) > 0 else 'neg') }}
   {{ m.stat('Pace', '%.1f'|format(p.pace or 0),
-            'event %.1f'|format(league.pace or 0)) }}
+            m.rank_note(ranks, 'pace', 'fastest ') or 'poss/game') }}
 </div>
 </section>
 
@@ -40,54 +41,13 @@
 
 <section class="keep">
 <h2>Four factors, all games</h2>
-{{ m.four_factor_table(ff, p.opp_four_factors, league, p.identity.code, 'Opponents') }}
+{{ m.four_factor_table(ff, p.opp_four_factors, league, p.identity.code, 'Opponents', ranks=ranks) }}
 {{ charts.four_factors }}
 </section>
 
 <section>
 <h2>Game by game</h2>
-<p class="note">Click an opponent to open that game's full review.</p>
-<div class="scroll-x">
-<table>
-<thead>
-  <tr><th class="left" data-sortable>Opponent</th><th data-sortable>Result</th>
-      <th data-sortable>eFG%</th><th data-sortable>TOV%</th>
-      <th data-sortable>OREB%</th><th data-sortable>FTA/FGA</th>
-      <th data-sortable>Poss</th><th data-sortable>ORtg</th>
-      <th data-sortable>DRtg</th><th data-sortable>Net/100</th></tr>
-</thead>
-<tbody>
-{% for g in p.games %}
-  <tr>
-    <td class="left name">{{ flag(g.opponent_identity.code) }}{% if g.review_href %}<a href="{{ g.review_href }}">{{ g.opponent_identity.name }}</a>{% else %}{{ g.opponent_identity.name }}{% endif %}</td>
-    <td class="{{ 'pos' if g.won else 'neg' }}">
-      {{ 'W' if g.won else 'L' }} {{ g.score }}&ndash;{{ g.opp_score }}</td>
-    <td>{{ m.num(g.four_factors.efg_pct) }}</td>
-    <td>{{ m.num(g.four_factors.tov_pct) }}</td>
-    <td>{{ m.num(g.four_factors.oreb_pct) }}</td>
-    <td>{{ m.num(g.four_factors.ft_rate) }}</td>
-    <td>{{ m.num(g.four_factors.possessions, 0) }}</td>
-    <td>{{ m.num(g.four_factors.off_rating) }}</td>
-    <td>{{ m.num(g.four_factors.def_rating) }}</td>
-    <td class="{{ m.tone(g.four_factors.net_rating) }}">
-      {{ m.signed(g.four_factors.net_rating) }}</td>
-  </tr>
-{% endfor %}
-<tr class="total">
-  <td class="left">Tournament</td>
-  <td>{{ p.wins }}&ndash;{{ p.losses }}</td>
-  <td>{{ m.num(ff.efg_pct) }}</td>
-  <td>{{ m.num(ff.tov_pct) }}</td>
-  <td>{{ m.num(ff.oreb_pct) }}</td>
-  <td>{{ m.num(ff.ft_rate) }}</td>
-  <td>{{ m.num(p.pace, 0) }}</td>
-  <td>{{ m.num(ff.off_rating) }}</td>
-  <td>{{ m.num(ff.def_rating) }}</td>
-  <td class="{{ m.tone(ff.net_rating) }}">{{ m.signed(ff.net_rating) }}</td>
-</tr>
-</tbody>
-</table>
-</div>
+{{ m.game_log(p.games, "ireland-log", totals={"own": ff, "opp": p.opp_four_factors, "pace": p.pace, "record": "%d&ndash;%d"|format(p.wins, p.losses)}) }}
 </section>
 
 <section>

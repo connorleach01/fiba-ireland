@@ -33,10 +33,6 @@ def scout_filename(code: str) -> str:
     return f"scout_{code}.html"
 
 
-def review_filename(date_part: str, us_code: str, them_code: str) -> str:
-    return f"{date_part}_{us_code}-v-{them_code}_review.html"
-
-
 def build_nav(conn, event_slug: str, org_id: int) -> dict:
     """The site's navigation model.
 
@@ -65,12 +61,11 @@ def build_nav(conn, event_slug: str, org_id: int) -> dict:
         (event_slug, org_id),
     ):
         other = analysis.team_identity(conn, event_slug, row["opp_org_id"])
-        date_part = (row["game_utc"] or "")[:10] or str(row["game_id"])
         reviews.append({
             "code": other["code"],
             "label": f"v {other['name']} "
                      f"({'W' if row['won'] else 'L'} {row['score']}-{row['opp_score']})",
-            "href": review_filename(date_part, subject["code"], other["code"]),
+            "href": game_filename(conn, event_slug, row["game_id"]),
         })
 
     tournament = (f"{subject['code'].lower()}_tournament.html"
@@ -79,6 +74,12 @@ def build_nav(conn, event_slug: str, org_id: int) -> dict:
 
     return {"subject": subject, "scouts": scouts, "reviews": reviews,
             "tournament": tournament, "teams": "tournament_teams.html"}
+
+
+def _played_in(conn, event_slug: str, game_id: int, org_id: int) -> bool:
+    return conn.execute(
+        "SELECT 1 FROM team_game_stats WHERE event_slug=? AND game_id=? AND org_id=?",
+        (event_slug, game_id, org_id)).fetchone() is not None
 
 
 def _box_rows(entries) -> list[dict]:
@@ -189,6 +190,9 @@ def build_scout(conn, event_slug: str, org_id: int,
     lineups_available = any(
         g["lineups_ok"] for g in profile["games"] if g["lineups_ok"] is not None
     )
+    # Every game in the event has a sheet, so this team's log links out as well.
+    for game in profile["games"]:
+        game["review_href"] = game_filename(conn, event_slug, game["game_id"])
 
     html = _env.get_template("scout.html.j2").render(
         event_name=_event_name(conn, event_slug),
@@ -205,6 +209,7 @@ def build_scout(conn, event_slug: str, org_id: int,
         lineups_available=lineups_available,
         bench=bench,
         fixture=fixture_text,
+        ranks=analysis.event_ranks(conn, event_slug).get(org_id, {}),
         nav=nav, page="scout", reference=reference,
         **_inks(profile["identity"]["code"], None),
         charts={
@@ -223,81 +228,113 @@ def build_scout(conn, event_slug: str, org_id: int,
     return _write(f"scout_{code}.html", html)
 
 
-def build_review(conn, event_slug: str, game_id: int,
-                 org_id: int = IRELAND_ORG_ID, nav: dict | None = None,
-                 reference: str | None = None) -> str | None:
-    """Self-scout for one game."""
+def game_filename(conn, event_slug: str, game_id: int) -> str:
+    """One file per game, named from the fixture rather than from a viewpoint.
+
+    Both teams' game logs link here, so the name must not depend on who is
+    looking at it.
+    """
+    row = conn.execute(
+        "SELECT game_utc, game_datetime, team_a_code, team_b_code "
+        "FROM games WHERE event_slug=? AND game_id=?",
+        (event_slug, game_id)).fetchone()
+    if row is None:
+        return f"game_{game_id}.html"
+    date_part = (row["game_utc"] or row["game_datetime"] or "")[:10] or str(game_id)
+    return f"{date_part}_{row['team_a_code']}-v-{row['team_b_code']}_game.html"
+
+
+def _side(conn, event_slug: str, game_id: int, org_id: int, opp_org_id: int) -> dict:
+    """Everything one team contributes to a game sheet."""
     row = conn.execute(
         "SELECT * FROM team_game_stats WHERE event_slug=? AND game_id=? AND org_id=?",
         (event_slug, game_id, org_id)).fetchone()
-    if row is None:
-        return None
-    opp_row = conn.execute(
+    opp = conn.execute(
         "SELECT * FROM team_game_stats WHERE event_slug=? AND game_id=? AND org_id=?",
-        (event_slug, game_id, row["opp_org_id"])).fetchone()
-    game = conn.execute(
-        "SELECT * FROM games WHERE event_slug=? AND game_id=?",
-        (event_slug, game_id)).fetchone()
+        (event_slug, game_id, opp_org_id)).fetchone()
+    totals, opp_totals = dict(row), dict(opp)
+    players = analysis.player_profile(conn, event_slug, org_id, [game_id])
+    shots = analysis.shots(conn, event_slug, org_id, [game_id])
+    return {
+        "identity": analysis.team_identity(conn, event_slug, org_id),
+        "totals": totals,
+        "opp_totals": opp_totals,
+        "score": row["score"],
+        "opp_score": row["opp_score"],
+        "won": bool(row["won"]),
+        "ff": metrics.four_factors(totals, opp_totals),
+        "off": metrics.four_factors(opp_totals, totals),
+        "players": players,
+        "details": _player_details(conn, event_slug, org_id, players, [game_id]),
+        "zones": metrics.zone_breakdown(shots),
+        "chart": _mark(charts.shot_chart(shots, width=300)),
+        "lineups": analysis.lineup_profile(conn, event_slug, org_id, [game_id],
+                                           min_seconds=90),
+        "bench": analysis.starters_vs_bench(conn, event_slug, org_id, [game_id]),
+    }
 
-    totals, opp_totals = dict(row), dict(opp_row)
-    us = analysis.team_identity(conn, event_slug, org_id)
-    them = analysis.team_identity(conn, event_slug, row["opp_org_id"])
+
+def build_review(conn, event_slug: str, game_id: int,
+                 org_id: int = IRELAND_ORG_ID, nav: dict | None = None,
+                 reference: str | None = None) -> str | None:
+    """A sheet for one game, covering both teams.
+
+    Built once per game rather than once per viewpoint: every team's game log
+    links to the same page, and a coach looking at a fixture wants both sides of
+    it anyway. `org_id` only decides which team is listed first, so Ireland leads
+    on its own games.
+    """
+    game = conn.execute(
+        "SELECT * FROM games WHERE event_slug=? AND game_id=? AND parsed_at IS NOT NULL",
+        (event_slug, game_id)).fetchone()
+    if game is None:
+        return None
+
+    a_id, b_id = game["team_a_org_id"], game["team_b_org_id"]
+    # Put the subject team first when it played, otherwise keep fixture order.
+    if org_id == b_id:
+        a_id, b_id = b_id, a_id
+
+    home = _side(conn, event_slug, game_id, a_id, b_id)
+    away = _side(conn, event_slug, game_id, b_id, a_id)
     league = analysis.event_averages(conn, event_slug)
 
-    players = analysis.player_profile(conn, event_slug, org_id, [game_id])
-    team_shots = analysis.shots(conn, event_slug, org_id, [game_id])
-    faced_shots = analysis.shots_faced(conn, event_slug, org_id, [game_id])
-    zones = metrics.zone_breakdown(team_shots)
-    faced_zones = metrics.zone_breakdown(faced_shots)
-    lineups = analysis.lineup_profile(conn, event_slug, org_id, [game_id],
-                                      min_seconds=90)
-    on_off = analysis.on_off(conn, event_slug, org_id, [game_id])
-    bench = analysis.starters_vs_bench(conn, event_slug, org_id, [game_id])
     quarters = analysis.quarter_scores(conn, event_slug, game_id)
-    timeline = analysis.score_timeline(conn, event_slug, game_id, org_id)
+    home_periods = quarters.get(a_id, {})
+    away_periods = quarters.get(b_id, {})
+    period_labels = sorted(set(home_periods) | set(away_periods))
 
-    our_periods = quarters.get(org_id, {})
-    their_periods = quarters.get(row["opp_org_id"], {})
-    period_labels = sorted(set(our_periods) | set(their_periods))
+    box_rows = _box_rows([(home["identity"], home["totals"], 1, True),
+                          (away["identity"], away["totals"], 1, False)])
 
     html = _env.get_template("review.html.j2").render(
         event_name=_event_name(conn, event_slug),
         generated_at=_now_text(),
-        us=us, them=them,
-        score=row["score"], opp_score=row["opp_score"], won=bool(row["won"]),
+        home=home, away=away,
+        us=home["identity"], them=away["identity"],
+        score=home["score"], opp_score=home["opp_score"], won=home["won"],
+        ff=home["ff"], off=home["off"],
+        totals=home["totals"], opp_totals=home["opp_totals"],
         played_at=_local(game["game_utc"], game["game_datetime"]),
         venue=game["venue_name"],
-        ff=metrics.four_factors(totals, opp_totals),
-        off=metrics.four_factors(opp_totals, totals),
-        league=league,
-        totals=totals, opp_totals=opp_totals,
-        box_rows=_box_rows([(us, totals, 1, True), (them, opp_totals, 1, False)]),
-        players=players, zones=zones, faced_zones=faced_zones,
-        player_details=_player_details(conn, event_slug, org_id, players, [game_id]),
-        lineups=lineups, on_off=on_off, bench=bench,
-        lineups_available=bool(game["lineups_ok"]),
+        league=league, box_rows=box_rows,
         periods=period_labels,
-        our_periods=our_periods, their_periods=their_periods,
+        our_periods=home_periods, their_periods=away_periods,
+        lineups_available=bool(game["lineups_ok"]),
         nav=nav, page="review", reference=reference,
-        **_inks(us["code"], them["code"]),
         charts={
             "four_factors": _mark(charts.four_factor_bars(
-                metrics.four_factors(totals, opp_totals),
-                metrics.four_factors(opp_totals, totals),
-                league, team_label=us["code"], opp_label=them["code"])),
-            "zones": _mark(charts.zone_bars(zones)),
-            "shots": _mark(charts.shot_chart(team_shots,
-                                             title=f"{us['name']} shot chart")),
-            "shots_faced": _mark(charts.shot_chart(
-                faced_shots, made_label=f"{them['code']} made",
-                title=f"Shots allowed by {us['name']}")),
+                home["ff"], away["ff"], league,
+                team_label=home["identity"]["code"],
+                opp_label=away["identity"]["code"])),
             "timeline": _mark(charts.margin_timeline(
-                timeline, team_label=us["code"],
+                analysis.score_timeline(conn, event_slug, game_id, a_id),
+                team_label=home["identity"]["code"],
                 periods=max(4, len(period_labels)))),
         },
+        **_inks(home["identity"]["code"], away["identity"]["code"]),
     )
-    date_part = (game["game_utc"] or "")[:10] or str(game_id)
-    return _write(f"{date_part}_{us['code']}-v-{them['code']}_review.html", html)
+    return _write(game_filename(conn, event_slug, game_id), html)
 
 
 def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
@@ -319,9 +356,7 @@ def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
     # The game log is the way back into an individual game now that the nav
     # carries no Games menu, so each row links to its own review.
     for game in profile["games"]:
-        game["review_href"] = review_filename(
-            (game["game_utc"] or "")[:10] or str(game["game_id"]),
-            profile["identity"]["code"], game["opponent_identity"]["code"])
+        game["review_href"] = game_filename(conn, event_slug, game["game_id"])
 
     lineups_available = any(
         g["lineups_ok"] for g in profile["games"] if g["lineups_ok"] is not None)
@@ -331,6 +366,7 @@ def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
         generated_at=_now_text(),
         profile=profile, league=league, players=players, zones=zones,
         faced_zones=faced_zones,
+        ranks=analysis.event_ranks(conn, event_slug).get(org_id, {}),
         player_details=_player_details(conn, event_slug, org_id, players),
         box_rows=_box_rows([
             (profile["identity"], profile["totals"], profile["games_played"], True),
@@ -429,9 +465,7 @@ def build_index(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
             "opp_score": game["opp_score"],
             "net_rating": game["four_factors"].get("net_rating"),
             "when": _local(game["game_utc"], game["game_datetime"]),
-            "href": review_filename(
-                (game["game_utc"] or "")[:10] or str(game["game_id"]),
-                profile["identity"]["code"], game["opponent_identity"]["code"]),
+            "href": game_filename(conn, event_slug, game["game_id"]),
         })
 
     html = _env.get_template("index.html.j2").render(
@@ -521,23 +555,27 @@ def build_all(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
     written["scouts"].sort(
         key=lambda r: (0 if r["is_next"] else 1, -(r["net_rating"] or -999)))
 
+    # A sheet for every finished game in the event. Scouting reports link into
+    # them from any team's game log, so building only Ireland's would leave most
+    # of those links dead.
     for row in conn.execute(
-        "SELECT g.game_id, g.game_utc, g.game_datetime FROM games g "
-        "JOIN team_game_stats t ON t.event_slug=g.event_slug AND t.game_id=g.game_id "
-        "WHERE g.event_slug=? AND t.org_id=? AND g.parsed_at IS NOT NULL "
-        "ORDER BY g.game_utc DESC",
-        (event_slug, org_id),
+        "SELECT game_id, game_utc, game_datetime, team_a_org_id "
+        "FROM games WHERE event_slug=? AND parsed_at IS NOT NULL "
+        "ORDER BY game_utc DESC",
+        (event_slug,),
     ):
-        name = _safe(f"review {row['game_id']}", build_review, conn, event_slug,
-                     row["game_id"], org_id, nav=nav, reference=reference)
-        if name:
+        subject = org_id if _played_in(conn, event_slug, row["game_id"], org_id) \
+            else row["team_a_org_id"]
+        name = _safe(f"game {row['game_id']}", build_review, conn, event_slug,
+                     row["game_id"], subject, nav=nav, reference=reference)
+        if name and subject == org_id:
             opponent = conn.execute(
                 "SELECT opp_org_id FROM team_game_stats "
                 "WHERE event_slug=? AND game_id=? AND org_id=?",
                 (event_slug, row["game_id"], org_id)).fetchone()["opp_org_id"]
             identity = analysis.team_identity(conn, event_slug, opponent)
             written["reviews"].append(
-                {"href": name, "title": f"Review: Ireland v {identity['name']}",
+                {"href": name, "title": f"Ireland v {identity['name']}",
                  "when": _local(row["game_utc"], row["game_datetime"])})
 
     _safe("index", build_index, conn, event_slug, org_id, written, nav=nav,
