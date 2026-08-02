@@ -251,19 +251,42 @@ def player_profile(conn, event_slug: str, org_id: int,
 
 
 def shots(conn, event_slug: str, org_id: int,
-          game_ids: list[int] | None = None) -> list[dict]:
-    """Field goal attempts with usable coordinates."""
+          game_ids: list[int] | None = None,
+          person_id: int | None = None) -> list[dict]:
+    """Field goal attempts taken by a team, or by one player."""
     query = (
         "SELECT * FROM pbp_events WHERE event_slug=? AND org_id=? "
         "AND action_code IN ('P2','P3')"
     )
     params: list = [event_slug, org_id]
+    if person_id is not None:
+        query += " AND person_id=?"
+        params.append(person_id)
     if game_ids is not None:
         if not game_ids:
             return []
         query += f" AND game_id IN ({','.join('?' * len(game_ids))})"
         params.extend(game_ids)
     return [dict(r) for r in conn.execute(query, params)]
+
+
+def shots_faced(conn, event_slug: str, org_id: int,
+                game_ids: list[int] | None = None) -> list[dict]:
+    """Field goal attempts opponents took against this team.
+
+    The defensive twin of `shots`: same games, everyone except us. Where a team
+    is allowed to shoot from says as much as where it chooses to shoot.
+    """
+    if game_ids is None:
+        game_ids = [g["game_id"] for g in team_games(conn, event_slug, org_id)]
+    if not game_ids:
+        return []
+    placeholders = ",".join("?" * len(game_ids))
+    query = (
+        f"SELECT * FROM pbp_events WHERE event_slug=? AND org_id!=? "
+        f"AND action_code IN ('P2','P3') AND game_id IN ({placeholders})"
+    )
+    return [dict(r) for r in conn.execute(query, [event_slug, org_id, *game_ids])]
 
 
 def lineup_profile(conn, event_slug: str, org_id: int,

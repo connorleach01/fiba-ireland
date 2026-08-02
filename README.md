@@ -48,8 +48,10 @@ Other commands:
 
 `docs/` is the published site, served by GitHub Pages straight off the main
 branch. Every page carries a navigation bar (Dashboard, Ireland, Teams, and
-dropdowns for every scouting report and game review), so any page reaches any
-other. Tables sort by clicking a column header, and the team leaderboard toggles
+a dropdown of every scouting report), so any page reaches any other. Individual
+games are reached from the team they belong to: Ireland's game log links each
+opponent to that game's full review, and the dashboard lists recent results the
+same way. Tables sort by clicking a column header, and the team leaderboard toggles
 between Offence, Defence and Combined. All of that is a few dozen lines of plain
 DOM code inlined in the page: no framework, no build step, and every page is
 fully readable with JavaScript off.
@@ -135,6 +137,18 @@ before nudging the first, so Ireland against Portugal becomes green against
 Portugal red rather than green against darker green. All 380 orderings in this
 22-team field keep both countries' colours. Flags are inline SVG, simplified to
 field colours and the major device because they render about 16px wide.
+
+**Every team gets both halves of the picture.** Alongside the shots a team took,
+each report shows the shots it allowed, with matching zone tables. Where a team
+lets opponents shoot from reads its defence more directly than any single number:
+a high rim share means the paint is open, a high three share means they run
+shooters off the line but concede space outside.
+
+**Player rows expand.** Clicking a player opens their shot chart and zone splits
+beneath the table, scoped to the page: all games on a scouting report, that game
+alone on a game review. The panels are rendered at build time rather than fetched
+on click, so the page stays one self-contained file that works offline and prints
+whatever is open.
 
 **Charts do not repeat what the table already says.** Every figure has one home.
 The four factors table carries the numbers and the bars beside it carry the shape;

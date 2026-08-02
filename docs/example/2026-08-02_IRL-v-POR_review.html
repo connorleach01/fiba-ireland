@@ -241,6 +241,9 @@ a { color: var(--ink); text-underline-offset: 2px; }
   }
   .masthead { break-after: avoid; page-break-after: avoid; }
   .no-print, .sitebar, .viewtoggle { display: none !important; }
+  /* Expanded players print; collapsed ones stay out of the way. */
+  tr.expander { cursor: auto; }
+  .twisty { display: none; }
   .refbar {
     display: block !important; background: none; color: var(--ink-3);
     border-bottom: 1px solid var(--rule-mid); text-align: left; padding: 0 0 4px;
@@ -328,6 +331,33 @@ th[data-sortable][data-dir="desc"]::after { content: "\2193"; opacity: 1; }
 }
 table.view-off .c-def, table.view-def .c-off { display: none; }
 
+/* --- Expandable player rows ---------------------------------------------- */
+tr.expander { cursor: pointer; }
+tr.expander:hover td { background: var(--band); }
+tr.expander:focus { outline: 2px solid var(--series-1); outline-offset: -2px; }
+.twisty {
+  display: inline-block; width: 9px; margin-right: 3px;
+  color: var(--ink-3); transition: transform .12s ease;
+}
+tr.expander[aria-expanded="true"] .twisty { transform: rotate(90deg); }
+tr.expander[aria-expanded="true"] td { background: var(--band); }
+.player-panel {
+  background: var(--band); border: 1px solid var(--rule-hair);
+  padding: 10px 12px 12px; margin-top: 8px;
+  break-inside: avoid-page; page-break-inside: avoid;
+}
+.player-panel h3 { margin-top: 0; }
+.detail-inner { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.detail-chart { flex: 0 0 auto; }
+.detail-stats { flex: 1 1 260px; min-width: 240px; }
+.detail-stats table { margin-top: 0; }
+.detail-stats caption { padding-bottom: 3px; }
+
+/* --- Paired charts ------------------------------------------------------- */
+.chartpair { display: flex; gap: 18px; flex-wrap: wrap; }
+.chartpair > figure, .chartpair > div { flex: 1 1 240px; min-width: 0; }
+.chartpair h3 { margin-top: 0; }
+
 /* --- Flags --------------------------------------------------------------- */
 .flag {
   display: inline-block; vertical-align: -1px; flex: none;
@@ -395,18 +425,6 @@ td .flag, li .flag { margin-right: 5px; }
           <a href="scout_UKR.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="UKR flag"><rect y="0.0000" width="3" height="1.0000" fill="#005bbb"/><rect y="1.0000" width="3" height="1.0000" fill="#ffd500"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Ukraine</a>
       </div>
     </div>
-    <div class="drop">
-      <button type="button" aria-expanded="false">Games &#9662;</button>
-      <div class="drop-panel">
-          <a href="2026-08-02_IRL-v-POR_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="POR flag"><rect width="3" height="2" fill="#da291c"/><rect width="1.2000" height="2" fill="#046a38"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Portugal (W 82-60)</a>
-          <a href="2026-08-01_IRL-v-SWE_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="SWE flag"><rect width="3" height="2" fill="#006aa7"/><rect x=".78" width=".52" height="2" fill="#fecc00"/><rect y=".74" width="3" height=".52" fill="#fecc00"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Sweden (L 105-106)</a>
-          <a href="2026-07-29_IRL-v-NED_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NED flag"><rect y="0.0000" width="3" height="0.6667" fill="#ae1c28"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#21468b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Netherlands (L 67-89)</a>
-          <a href="2026-07-28_IRL-v-GBR_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="GBR flag"><rect width="3" height="2" fill="#012169"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#ffffff" stroke-width=".44"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#c8102e" stroke-width=".22"/><path d="M1.5 0 V2 M0 1 H3" stroke="#ffffff" stroke-width=".72"/><path d="M1.5 0 V2 M0 1 H3" stroke="#c8102e" stroke-width=".42"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Great Britain (L 63-70)</a>
-          <a href="2026-07-26_IRL-v-BEL_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="BEL flag"><rect x="0.0000" width="1.0000" height="2" fill="#000000"/><rect x="1.0000" width="1.0000" height="2" fill="#fdda24"/><rect x="2.0000" width="1.0000" height="2" fill="#ef3340"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Belgium (L 63-88)</a>
-          <a href="2026-07-25_IRL-v-CYP_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CYP flag"><rect width="3" height="2" fill="#ffffff"/><circle cx="1.5" cy="1" r=".42" fill="#d57800"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Cyprus (W 80-60)</a>
-          <a href="2026-07-24_IRL-v-FIN_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="FIN flag"><rect width="3" height="2" fill="#ffffff"/><rect x=".78" width=".52" height="2" fill="#003580"/><rect y=".74" width="3" height=".52" fill="#003580"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Finland (W 78-76)</a>
-      </div>
-    </div>
     <span class="spacer"></span>
     <a href="#" onclick="window.print();return false;">Print</a>
   </div>
@@ -453,11 +471,6 @@ td .flag, li .flag { margin-right: 5px; }
   <div class="label">Pace</div>
   <div class="figure ">84</div>
 <div class="sub">event avg 80</div></div>
-
-  <div class="stat">
-  <div class="label">True shooting</div>
-  <div class="figure ">47.1%</div>
-<div class="sub">TS%</div></div>
 
 </div>
 
@@ -562,11 +575,24 @@ vertical rule marks the competition average for that factor.</p>
 
 <section class="keep">
 <h2>Shooting</h2>
-<div class="cols">
+<div class="chartpair">
   <div>
-    <div class="scroll-x">
+    <h3>IRL shots taken</h3>
+    <figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="300" height="219" role="img" aria-label="Ireland shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="231.2" cy="58.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="268.2" cy="179.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="267.2" cy="140.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="150.2" cy="177.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="123.2" cy="148.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="261.2" cy="109.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="181.2" cy="4.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="110.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="264.2" cy="147.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="147.2" cy="176.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="73.2" cy="44.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="217.2" cy="45.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="245.2" cy="70.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="144.2" cy="167.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="147.2" cy="163.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="67.2" cy="10.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="169.2" cy="153.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="60.2" cy="139.9" r="3.6"><title>2PtsFG inside left, jump shot missed</title></circle><circle cx="152.2" cy="154.9" r="3.6"><title>2PtsFG under the basket, points after turnover, jump shot missed</title></circle><circle cx="158.2" cy="152.9" r="3.6"><title>layup missed</title></circle><circle cx="105.2" cy="165.9" r="3.6"><title>layup missed</title></circle><circle cx="141.2" cy="108.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="108.2" cy="139.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="243.2" cy="67.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="158.2" cy="176.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="252.2" cy="88.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="112.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, points after turnover, jump shot missed</title></circle><circle cx="206.2" cy="53.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="27.2" cy="171.9" r="3.6"><title>2PtsFG inside left wing, jump shot missed</title></circle><circle cx="170.2" cy="173.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="112.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="143.2" cy="160.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="131.2" cy="139.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="139.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="165.2" cy="159.9" r="3.6"><title>layup missed</title></circle><circle cx="61.2" cy="29.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="155.2" cy="6.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="125.2" cy="133.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="40.2" cy="65.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="6.2" cy="106.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="93.2" cy="140.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="150.2" cy="180.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="-0.8" cy="174.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="154.2" cy="156.9" r="3.6"><title>2PtsFG under the basket, alley oop lay-up missed</title></circle></g><g class="shot made"><circle cx="163.2" cy="154.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="125.2" cy="133.9" r="3.6"><title>2pt floating jump shot made</title></circle><circle cx="-0.8" cy="171.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="235.2" cy="43.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="109.2" cy="171.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle><circle cx="266.2" cy="96.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="147.2" cy="150.9" r="3.6"><title>2PtsFG under the basket, fast break, dunk made</title></circle><circle cx="28.2" cy="70.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="145.2" cy="157.9" r="3.6"><title>2PtsFG under the basket, points from second chance + fastbreak, jump shot made</title></circle><circle cx="26.2" cy="161.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="106.2" cy="166.9" r="3.6"><title>layup made</title></circle><circle cx="109.2" cy="154.9" r="3.6"><title>layup made</title></circle><circle cx="165.2" cy="161.9" r="3.6"><title>2PtsFG inside paint, points from fastbreak + after turnover, jump shot made</title></circle><circle cx="264.2" cy="184.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="112.2" cy="155.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="198.2" cy="35.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="146.2" cy="164.9" r="3.6"><title>2PtsFG under the basket, points from second chance + fastbreak + after turnover, jump shot made</title></circle><circle cx="140.2" cy="153.9" r="3.6"><title>2PtsFG under the basket, jump shot made</title></circle><circle cx="120.2" cy="178.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="139.2" cy="143.9" r="3.6"><title>dunk made</title></circle><circle cx="157.2" cy="154.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="108.2" cy="166.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="112.2" cy="174.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle><circle cx="165.2" cy="171.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="237.2" cy="63.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="109.2" cy="163.9" r="3.6"><title>2pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (26)</span><span class="key"><i class="swatch missed"></i>Missed (47)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure>
+  </div>
+  <div>
+    <h3>Shots allowed to POR</h3>
+    <figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="300" height="219" role="img" aria-label="Shots allowed by Ireland" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="139.2" cy="152.9" r="3.6"><title>2PtsFG under the basket, alley oop dunk missed</title></circle><circle cx="157.2" cy="165.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="124.2" cy="117.9" r="3.6"><title>2pt turnaround jump shot missed</title></circle><circle cx="84.2" cy="23.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="56.2" cy="23.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="43.2" cy="51.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="162.2" cy="142.9" r="3.6"><title>layup missed</title></circle><circle cx="139.2" cy="150.9" r="3.6"><title>2PtsFG under the basket, points after turnover, jump shot missed</title></circle><circle cx="237.2" cy="51.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="177.2" cy="84.9" r="3.6"><title>2PtsFG inside center, jump shot missed</title></circle><circle cx="188.2" cy="64.9" r="3.6"><title>2PtsFG inside center, jump shot missed</title></circle><circle cx="112.2" cy="142.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="146.2" cy="179.9" r="3.6"><title>layup missed</title></circle><circle cx="108.2" cy="175.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="113.2" cy="167.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="60.2" cy="38.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="203.2" cy="46.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="153.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, points after turnover, layup missed</title></circle><circle cx="107.2" cy="173.9" r="3.6"><title>layup missed</title></circle><circle cx="125.2" cy="22.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="101.2" cy="173.9" r="3.6"><title>layup missed</title></circle><circle cx="196.2" cy="132.9" r="3.6"><title>2PtsFG inside right, points after turnover, jump shot missed</title></circle><circle cx="24.2" cy="65.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="144.2" cy="106.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="264.2" cy="166.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="160.2" cy="169.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="116.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, points from second chance + after turnover, jump shot missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket, points from second chance + after turnover missed</title></circle><circle cx="177.2" cy="4.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="4.2" cy="157.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="3.2" cy="131.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="120.2" cy="10.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="155.2" cy="167.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="67.2" cy="140.9" r="3.6"><title>2PtsFG inside left, points after turnover, jump shot missed</title></circle><circle cx="184.2" cy="12.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="134.2" cy="118.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="71.2" cy="31.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="133.2" cy="165.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="220.2" cy="59.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="103.2" cy="24.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="22.2" cy="72.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="203.2" cy="50.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="152.2" cy="166.9" r="3.6"><title>2PtsFG under the basket, points after turnover, jump shot missed</title></circle><circle cx="142.2" cy="132.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="35.2" cy="158.9" r="3.6"><title>2pt floating jump shot missed</title></circle><circle cx="2.2" cy="147.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="106.2" cy="174.9" r="3.6"><title>layup missed</title></circle><circle cx="113.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="110.2" cy="152.9" r="3.6"><title>dunk missed</title></circle></g><g class="shot made"><circle cx="164.2" cy="147.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="104.2" cy="163.9" r="3.6"><title>layup made</title></circle><circle cx="153.2" cy="168.9" r="3.6"><title>2PtsFG under the basket, jump shot made</title></circle><circle cx="129.2" cy="134.9" r="3.6"><title>2pt floating jump shot made</title></circle><circle cx="160.2" cy="137.9" r="3.6"><title>2PtsFG inside paint, points from fastbreak + after turnover, alley oop dunk made</title></circle><circle cx="110.2" cy="130.9" r="3.6"><title>dunk made</title></circle><circle cx="137.2" cy="126.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="260.2" cy="119.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="260.2" cy="156.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="145.2" cy="168.9" r="3.6"><title>2PtsFG under the basket, dunk made</title></circle><circle cx="142.2" cy="62.9" r="3.6"><title>2PtsFG inside center, points after turnover, jump shot made</title></circle><circle cx="120.2" cy="158.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle><circle cx="30.2" cy="38.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="147.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle><circle cx="140.2" cy="142.9" r="3.6"><title>dunk made</title></circle><circle cx="166.2" cy="145.9" r="3.6"><title>layup made</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket, points from second chance + after turnover made</title></circle><circle cx="260.2" cy="118.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="144.2" cy="153.9" r="3.6"><title>2PtsFG under the basket, fast break, layup made</title></circle><circle cx="106.2" cy="151.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="131.2" cy="140.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="164.2" cy="156.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="113.2" cy="158.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, jump shot made</title></circle><circle cx="104.2" cy="172.9" r="3.6"><title>2PtsFG inside paint, points from fastbreak + after turnover, jump shot made</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket made</title></circle><circle cx="168.2" cy="173.9" r="3.6"><title>layup made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>POR made (26)</span><span class="key"><i class="swatch missed"></i>Missed (49)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure>
+  </div>
+</div>
+</section>
+
+<section>
+<h2>Shooting by zone</h2>
+<div class="cols">
+  <div><div class="scroll-x">
 <table>
-<caption>Shooting by zone</caption>
+<caption>IRL offence</caption>
 <thead><tr><th class="left">Zone</th><th data-sortable>M</th><th data-sortable>A</th>
 <th data-sortable>FG%</th><th data-sortable>Share</th><th data-sortable>Pts/att</th></tr></thead>
 <tbody>
@@ -621,19 +647,72 @@ vertical rule marks the competition average for that factor.</p>
 </tbody>
 </table>
 </div>
-
-  </div>
-  <div class="col-narrow">
-    <h3>IRL shot chart</h3>
-    <figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="300" height="219" role="img" aria-label="Ireland shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="231.2" cy="58.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="268.2" cy="179.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="267.2" cy="140.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="150.2" cy="177.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="123.2" cy="148.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="261.2" cy="109.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="181.2" cy="4.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="110.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="264.2" cy="147.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="147.2" cy="176.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="73.2" cy="44.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="217.2" cy="45.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="245.2" cy="70.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="144.2" cy="167.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="147.2" cy="163.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="67.2" cy="10.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="169.2" cy="153.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="60.2" cy="139.9" r="3.6"><title>2PtsFG inside left, jump shot missed</title></circle><circle cx="152.2" cy="154.9" r="3.6"><title>2PtsFG under the basket, points after turnover, jump shot missed</title></circle><circle cx="158.2" cy="152.9" r="3.6"><title>layup missed</title></circle><circle cx="105.2" cy="165.9" r="3.6"><title>layup missed</title></circle><circle cx="141.2" cy="108.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="108.2" cy="139.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="243.2" cy="67.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="158.2" cy="176.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="252.2" cy="88.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="112.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, points after turnover, jump shot missed</title></circle><circle cx="206.2" cy="53.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="27.2" cy="171.9" r="3.6"><title>2PtsFG inside left wing, jump shot missed</title></circle><circle cx="170.2" cy="173.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="112.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="143.2" cy="160.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="131.2" cy="139.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="139.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="165.2" cy="159.9" r="3.6"><title>layup missed</title></circle><circle cx="61.2" cy="29.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="155.2" cy="6.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="125.2" cy="133.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="40.2" cy="65.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="6.2" cy="106.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="93.2" cy="140.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="150.2" cy="180.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="-0.8" cy="174.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="154.2" cy="156.9" r="3.6"><title>2PtsFG under the basket, alley oop lay-up missed</title></circle></g><g class="shot made"><circle cx="163.2" cy="154.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="125.2" cy="133.9" r="3.6"><title>2pt floating jump shot made</title></circle><circle cx="-0.8" cy="171.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="235.2" cy="43.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="109.2" cy="171.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle><circle cx="266.2" cy="96.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="147.2" cy="150.9" r="3.6"><title>2PtsFG under the basket, fast break, dunk made</title></circle><circle cx="28.2" cy="70.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="145.2" cy="157.9" r="3.6"><title>2PtsFG under the basket, points from second chance + fastbreak, jump shot made</title></circle><circle cx="26.2" cy="161.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="106.2" cy="166.9" r="3.6"><title>layup made</title></circle><circle cx="109.2" cy="154.9" r="3.6"><title>layup made</title></circle><circle cx="165.2" cy="161.9" r="3.6"><title>2PtsFG inside paint, points from fastbreak + after turnover, jump shot made</title></circle><circle cx="264.2" cy="184.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="112.2" cy="155.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="198.2" cy="35.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="146.2" cy="164.9" r="3.6"><title>2PtsFG under the basket, points from second chance + fastbreak + after turnover, jump shot made</title></circle><circle cx="140.2" cy="153.9" r="3.6"><title>2PtsFG under the basket, jump shot made</title></circle><circle cx="120.2" cy="178.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="139.2" cy="143.9" r="3.6"><title>dunk made</title></circle><circle cx="157.2" cy="154.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="108.2" cy="166.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="112.2" cy="174.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle><circle cx="165.2" cy="171.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="237.2" cy="63.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="109.2" cy="163.9" r="3.6"><title>2pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (26)</span><span class="key"><i class="swatch missed"></i>Missed (47)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure>
-  </div>
+</div>
+  <div><div class="scroll-x">
+<table>
+<caption>POR offence, what we allowed</caption>
+<thead><tr><th class="left">Zone</th><th data-sortable>M</th><th data-sortable>A</th>
+<th data-sortable>FG%</th><th data-sortable>Share</th><th data-sortable>Pts/att</th></tr></thead>
+<tbody>
+  <tr>
+    <td class="left">Rim</td>
+    <td>10</td>
+    <td>26</td>
+    <td>38.5</td>
+    <td>34.7</td>
+    <td>0.77</td>
+  </tr>
+  <tr>
+    <td class="left">Paint</td>
+    <td>11</td>
+    <td>19</td>
+    <td>57.9</td>
+    <td>25.3</td>
+    <td>1.16</td>
+  </tr>
+  <tr>
+    <td class="left">Mid-range</td>
+    <td>1</td>
+    <td>6</td>
+    <td>16.7</td>
+    <td>8.0</td>
+    <td>0.33</td>
+  </tr>
+  <tr>
+    <td class="left">Corner 3</td>
+    <td>1</td>
+    <td>5</td>
+    <td>20.0</td>
+    <td>6.7</td>
+    <td>0.60</td>
+  </tr>
+  <tr>
+    <td class="left">Wing 3</td>
+    <td>3</td>
+    <td>9</td>
+    <td>33.3</td>
+    <td>12.0</td>
+    <td>1.00</td>
+  </tr>
+  <tr>
+    <td class="left">Top 3</td>
+    <td>0</td>
+    <td>10</td>
+    <td>0.0</td>
+    <td>13.3</td>
+    <td>0.00</td>
+  </tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 </section>
 
 <section>
 <h2>Box score &mdash; Ireland</h2>
 <div class="scroll-x">
-<table>
+<table class="expandable">
 <thead>
   <tr>
     <th class="left">#</th><th class="left" data-sortable>Player</th>
@@ -641,15 +720,17 @@ vertical rule marks the competition average for that factor.</p>
       <th data-sortable>MIN</th><th data-sortable>PTS</th><th data-sortable>REB</th>
       <th data-sortable>AST</th><th data-sortable>+/&ndash;</th>
     <th>FG</th><th>3PT</th><th>FT</th>
-    <th data-sortable>USG%</th><th data-sortable>TS%</th><th data-sortable>eFG%</th>
+    <th data-sortable>USG%</th><th data-sortable>eFG%</th>
     <th data-sortable>REB%</th><th data-sortable>AST%</th>
     <th data-sortable>TOV%</th><th data-sortable>FD/40</th>
   </tr>
 </thead>
 <tbody>
-  <tr>
+  <tr class="expander" data-target="pd-369067" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-369067">
     <td class="left">30</td>
-    <td class="left name">Mark Burns</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Mark Burns</td>
     <td class="left muted">G</td>
       <td>28.1</td>
       <td>18</td>
@@ -660,16 +741,17 @@ vertical rule marks the competition average for that factor.</p>
     <td>1/6</td>
     <td>9/12</td>
     <td>26.8</td>
-    <td>49.2</td>
     <td>34.6</td>
     <td>7.9</td>
     <td>21.1</td>
     <td>9.9</td>
     <td>8.6</td>
   </tr>
-  <tr>
+  <tr class="expander" data-target="pd-346218" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-346218">
     <td class="left">4</td>
-    <td class="left name">Nathan Gbinigie</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Nathan Gbinigie</td>
     <td class="left muted">F</td>
       <td>24.4</td>
       <td>8</td>
@@ -681,15 +763,16 @@ vertical rule marks the competition average for that factor.</p>
     <td>0/0</td>
     <td>9.1</td>
     <td>66.7</td>
-    <td>66.7</td>
     <td>4.6</td>
     <td>8.4</td>
     <td>0.0</td>
     <td>0.0</td>
   </tr>
-  <tr>
+  <tr class="expander" data-target="pd-368742" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-368742">
     <td class="left">9</td>
-    <td class="left name">Fryderyk Klimas</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Fryderyk Klimas</td>
     <td class="left muted">SG</td>
       <td>23.0</td>
       <td>6</td>
@@ -700,16 +783,17 @@ vertical rule marks the competition average for that factor.</p>
     <td>1/3</td>
     <td>1/2</td>
     <td>17.5</td>
-    <td>51.0</td>
     <td>50.0</td>
     <td>3.2</td>
     <td>54.0</td>
     <td>46.0</td>
     <td>3.5</td>
   </tr>
-  <tr>
+  <tr class="expander" data-target="pd-368739" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-368739">
     <td class="left">2</td>
-    <td class="left name">Declan Ehigie</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Declan Ehigie</td>
     <td class="left muted">G</td>
       <td>21.8</td>
       <td>12</td>
@@ -720,16 +804,17 @@ vertical rule marks the competition average for that factor.</p>
     <td>2/5</td>
     <td>2/4</td>
     <td>25.0</td>
-    <td>43.6</td>
     <td>41.7</td>
     <td>13.6</td>
     <td>9.8</td>
     <td>6.8</td>
     <td>5.5</td>
   </tr>
-  <tr>
+  <tr class="expander" data-target="pd-346752" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-346752">
     <td class="left">0</td>
-    <td class="left name">Kieran Quinn</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Kieran Quinn</td>
     <td class="left muted">F</td>
       <td>19.3</td>
       <td>3</td>
@@ -741,15 +826,16 @@ vertical rule marks the competition average for that factor.</p>
     <td>0/0</td>
     <td>11.5</td>
     <td>30.0</td>
-    <td>30.0</td>
     <td>9.6</td>
     <td>17.3</td>
     <td>16.7</td>
     <td>0.0</td>
   </tr>
-  <tr>
+  <tr class="expander" data-target="pd-356513" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-356513">
     <td class="left">13</td>
-    <td class="left name">Aivaras Buzas</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Aivaras Buzas</td>
     <td class="left muted">G</td>
       <td>17.6</td>
       <td>13</td>
@@ -760,16 +846,17 @@ vertical rule marks the competition average for that factor.</p>
     <td>1/1</td>
     <td>2/2</td>
     <td>20.8</td>
-    <td>82.5</td>
     <td>78.6</td>
     <td>2.1</td>
     <td>0.0</td>
     <td>20.2</td>
     <td>2.3</td>
   </tr>
-  <tr>
+  <tr class="expander" data-target="pd-368749" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-368749">
     <td class="left">21</td>
-    <td class="left name">Sean Patterson</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Sean Patterson</td>
     <td class="left muted">G</td>
       <td>16.1</td>
       <td>5</td>
@@ -780,16 +867,17 @@ vertical rule marks the competition average for that factor.</p>
     <td>0/1</td>
     <td>3/4</td>
     <td>26.9</td>
-    <td>43.4</td>
     <td>25.0</td>
     <td>11.5</td>
     <td>73.7</td>
     <td>51.0</td>
     <td>9.9</td>
   </tr>
-  <tr>
+  <tr class="expander" data-target="pd-393548" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-393548">
     <td class="left">24</td>
-    <td class="left name">Aidan McGrath</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Aidan McGrath</td>
     <td class="left muted">F</td>
       <td>15.0</td>
       <td>4</td>
@@ -800,16 +888,17 @@ vertical rule marks the competition average for that factor.</p>
     <td>0/1</td>
     <td>4/4</td>
     <td>16.7</td>
-    <td>29.6</td>
     <td>0.0</td>
     <td>2.5</td>
     <td>0.0</td>
     <td>0.0</td>
     <td>5.3</td>
   </tr>
-  <tr>
+  <tr class="expander" data-target="pd-417148" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-417148">
     <td class="left">8</td>
-    <td class="left name">Michael Cunningham Smyth</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Michael Cunningham Smyth</td>
     <td class="left muted"></td>
       <td>14.0</td>
       <td>6</td>
@@ -820,16 +909,17 @@ vertical rule marks the competition average for that factor.</p>
     <td>0/1</td>
     <td>2/4</td>
     <td>20.5</td>
-    <td>38.7</td>
     <td>33.3</td>
     <td>10.6</td>
     <td>0.0</td>
     <td>0.0</td>
     <td>8.6</td>
   </tr>
-  <tr>
+  <tr class="expander" data-target="pd-368756" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-368756">
     <td class="left">15</td>
-    <td class="left name">Patrick O'Keeffe</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Patrick O'Keeffe</td>
     <td class="left muted">F</td>
       <td>10.1</td>
       <td>4</td>
@@ -841,15 +931,16 @@ vertical rule marks the competition average for that factor.</p>
     <td>0/0</td>
     <td>18.4</td>
     <td>66.7</td>
-    <td>66.7</td>
     <td>18.4</td>
     <td>22.0</td>
     <td>40.0</td>
     <td>0.0</td>
   </tr>
-  <tr>
+  <tr class="expander" data-target="pd-368752" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-368752">
     <td class="left">3</td>
-    <td class="left name">Shareef Elmahi</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Shareef Elmahi</td>
     <td class="left muted">SG</td>
       <td>9.3</td>
       <td>3</td>
@@ -861,15 +952,16 @@ vertical rule marks the competition average for that factor.</p>
     <td>0/0</td>
     <td>23.8</td>
     <td>25.0</td>
-    <td>25.0</td>
     <td>15.9</td>
     <td>39.6</td>
     <td>0.0</td>
     <td>0.0</td>
   </tr>
-  <tr>
+  <tr class="expander" data-target="pd-417960" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-417960">
     <td class="left">5</td>
-    <td class="left name">Jayden Umeh</td>
+    <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Jayden Umeh</td>
     <td class="left muted"></td>
       <td>1.3</td>
       <td>0</td>
@@ -885,14 +977,409 @@ vertical rule marks the competition average for that factor.</p>
     <td>0.0</td>
     <td>0.0</td>
     <td>0.0</td>
-    <td>0.0</td>
   </tr>
 </tbody>
 </table>
 </div>
+<p class="note">Click a player for their shot chart and shooting breakdown.</p>
+<div class="player-panels">
+  <div class="player-panel" id="pd-369067" hidden>
+    <h3>Mark Burns &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Mark Burns shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="268.2" cy="179.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="181.2" cy="4.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="217.2" cy="45.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="245.2" cy="70.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="169.2" cy="153.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="105.2" cy="165.9" r="3.6"><title>layup missed</title></circle><circle cx="131.2" cy="139.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="61.2" cy="29.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="125.2" cy="133.9" r="3.6"><title>2pt jump shot missed</title></circle></g><g class="shot made"><circle cx="28.2" cy="70.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="109.2" cy="154.9" r="3.6"><title>layup made</title></circle><circle cx="165.2" cy="161.9" r="3.6"><title>2PtsFG inside paint, points from fastbreak + after turnover, jump shot made</title></circle><circle cx="109.2" cy="163.9" r="3.6"><title>2pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (4)</span><span class="key"><i class="swatch missed"></i>Missed (9)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>7.7</td>
+                <td>2.00</td></tr>
+            <tr><td class="left">Paint</td><td>2</td>
+                <td>6</td><td>33.3</td>
+                <td>46.2</td>
+                <td>0.67</td></tr>
+            <tr><td class="left">Corner 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>7.7</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>1</td>
+                <td>3</td><td>33.3</td>
+                <td>23.1</td>
+                <td>1.00</td></tr>
+            <tr><td class="left">Top 3</td><td>0</td>
+                <td>2</td><td>0.0</td>
+                <td>15.4</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>4</td><td>13</td>
+              <td>30.8</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 9/12
+          &middot; eFG 34.6% &middot; TS 49.2%
+          &middot; usage 26.8%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-346218" hidden>
+    <h3>Nathan Gbinigie &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Nathan Gbinigie shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="60.2" cy="139.9" r="3.6"><title>2PtsFG inside left, jump shot missed</title></circle><circle cx="152.2" cy="154.9" r="3.6"><title>2PtsFG under the basket, points after turnover, jump shot missed</title></circle></g><g class="shot made"><circle cx="125.2" cy="133.9" r="3.6"><title>2pt floating jump shot made</title></circle><circle cx="109.2" cy="171.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle><circle cx="146.2" cy="164.9" r="3.6"><title>2PtsFG under the basket, points from second chance + fastbreak + after turnover, jump shot made</title></circle><circle cx="165.2" cy="171.9" r="3.6"><title>2pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (4)</span><span class="key"><i class="swatch missed"></i>Missed (2)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>2</td>
+                <td>3</td><td>66.7</td>
+                <td>50.0</td>
+                <td>1.33</td></tr>
+            <tr><td class="left">Paint</td><td>2</td>
+                <td>2</td><td>100.0</td>
+                <td>33.3</td>
+                <td>2.00</td></tr>
+            <tr><td class="left">Mid-range</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>16.7</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>4</td><td>6</td>
+              <td>66.7</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 66.7% &middot; TS 66.7%
+          &middot; usage 9.1%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-368742" hidden>
+    <h3>Fryderyk Klimas &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Fryderyk Klimas shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="267.2" cy="140.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="67.2" cy="10.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="165.2" cy="159.9" r="3.6"><title>layup missed</title></circle></g><g class="shot made"><circle cx="-0.8" cy="171.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="140.2" cy="153.9" r="3.6"><title>2PtsFG under the basket, jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (2)</span><span class="key"><i class="swatch missed"></i>Missed (3)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>20.0</td>
+                <td>2.00</td></tr>
+            <tr><td class="left">Paint</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>20.0</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Corner 3</td><td>1</td>
+                <td>2</td><td>50.0</td>
+                <td>40.0</td>
+                <td>1.50</td></tr>
+            <tr><td class="left">Top 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>20.0</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>2</td><td>5</td>
+              <td>40.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 1/2
+          &middot; eFG 50.0% &middot; TS 51.0%
+          &middot; usage 17.5%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-368739" hidden>
+    <h3>Declan Ehigie &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Declan Ehigie shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="150.2" cy="177.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="123.2" cy="148.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="261.2" cy="109.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="147.2" cy="176.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="73.2" cy="44.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="206.2" cy="53.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="170.2" cy="173.9" r="3.6"><title>2pt jump shot missed</title></circle></g><g class="shot made"><circle cx="266.2" cy="96.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="147.2" cy="150.9" r="3.6"><title>2PtsFG under the basket, fast break, dunk made</title></circle><circle cx="264.2" cy="184.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="120.2" cy="178.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (4)</span><span class="key"><i class="swatch missed"></i>Missed (8)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>2</td>
+                <td>6</td><td>33.3</td>
+                <td>50.0</td>
+                <td>0.67</td></tr>
+            <tr><td class="left">Paint</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>8.3</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Corner 3</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>8.3</td>
+                <td>3.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>1</td>
+                <td>3</td><td>33.3</td>
+                <td>25.0</td>
+                <td>1.00</td></tr>
+            <tr><td class="left">Top 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>8.3</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>4</td><td>12</td>
+              <td>33.3</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 2/4
+          &middot; eFG 41.7% &middot; TS 43.6%
+          &middot; usage 25.0%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-346752" hidden>
+    <h3>Kieran Quinn &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Kieran Quinn shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="231.2" cy="58.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="141.2" cy="108.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="108.2" cy="139.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="243.2" cy="67.9" r="3.6"><title>3pt jump shot missed</title></circle></g><g class="shot made"><circle cx="235.2" cy="43.9" r="3.6"><title>3pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (1)</span><span class="key"><i class="swatch missed"></i>Missed (4)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Paint</td><td>0</td>
+                <td>2</td><td>0.0</td>
+                <td>40.0</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>1</td>
+                <td>3</td><td>33.3</td>
+                <td>60.0</td>
+                <td>1.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>1</td><td>5</td>
+              <td>20.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 30.0% &middot; TS 30.0%
+          &middot; usage 11.5%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-356513" hidden>
+    <h3>Aivaras Buzas &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Aivaras Buzas shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="112.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, points after turnover, jump shot missed</title></circle><circle cx="112.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle></g><g class="shot made"><circle cx="163.2" cy="154.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="112.2" cy="155.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="198.2" cy="35.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="157.2" cy="154.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="112.2" cy="174.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, layup made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (5)</span><span class="key"><i class="swatch missed"></i>Missed (2)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>3</td>
+                <td>5</td><td>60.0</td>
+                <td>71.4</td>
+                <td>1.20</td></tr>
+            <tr><td class="left">Paint</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>14.3</td>
+                <td>2.00</td></tr>
+            <tr><td class="left">Top 3</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>14.3</td>
+                <td>3.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>5</td><td>7</td>
+              <td>71.4</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 2/2
+          &middot; eFG 78.6% &middot; TS 82.5%
+          &middot; usage 20.8%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-368749" hidden>
+    <h3>Sean Patterson &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Sean Patterson shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="110.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="264.2" cy="147.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="147.2" cy="163.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle></g><g class="shot made"><circle cx="106.2" cy="166.9" r="3.6"><title>layup made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (1)</span><span class="key"><i class="swatch missed"></i>Missed (3)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>1</td>
+                <td>3</td><td>33.3</td>
+                <td>75.0</td>
+                <td>0.67</td></tr>
+            <tr><td class="left">Corner 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>25.0</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>1</td><td>4</td>
+              <td>25.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 3/4
+          &middot; eFG 25.0% &middot; TS 43.4%
+          &middot; usage 26.9%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-393548" hidden>
+    <h3>Aidan McGrath &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Aidan McGrath shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="144.2" cy="167.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="158.2" cy="152.9" r="3.6"><title>layup missed</title></circle><circle cx="143.2" cy="160.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="139.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="155.2" cy="6.9" r="3.6"><title>3pt jump shot from center missed</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (0)</span><span class="key"><i class="swatch missed"></i>Missed (5)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>0</td>
+                <td>3</td><td>0.0</td>
+                <td>60.0</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Paint</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>20.0</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Top 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>20.0</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>0</td><td>5</td>
+              <td>0.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 4/4
+          &middot; eFG 0.0% &middot; TS 29.6%
+          &middot; usage 16.7%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-417148" hidden>
+    <h3>Michael Cunningham Smyth &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Michael Cunningham Smyth shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="6.2" cy="106.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="150.2" cy="180.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle></g><g class="shot made"><circle cx="139.2" cy="143.9" r="3.6"><title>dunk made</title></circle><circle cx="108.2" cy="166.9" r="3.6"><title>2pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (2)</span><span class="key"><i class="swatch missed"></i>Missed (4)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>2</td>
+                <td>5</td><td>40.0</td>
+                <td>83.3</td>
+                <td>0.80</td></tr>
+            <tr><td class="left">Wing 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>16.7</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>2</td><td>6</td>
+              <td>33.3</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 2/4
+          &middot; eFG 33.3% &middot; TS 38.7%
+          &middot; usage 20.5%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-368756" hidden>
+    <h3>Patrick O'Keeffe &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Patrick O&#x27;Keeffe shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="27.2" cy="171.9" r="3.6"><title>2PtsFG inside left wing, jump shot missed</title></circle></g><g class="shot made"><circle cx="145.2" cy="157.9" r="3.6"><title>2PtsFG under the basket, points from second chance + fastbreak, jump shot made</title></circle><circle cx="26.2" cy="161.9" r="3.6"><title>2pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (2)</span><span class="key"><i class="swatch missed"></i>Missed (1)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>1</td>
+                <td>1</td><td>100.0</td>
+                <td>33.3</td>
+                <td>2.00</td></tr>
+            <tr><td class="left">Mid-range</td><td>1</td>
+                <td>2</td><td>50.0</td>
+                <td>66.7</td>
+                <td>1.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>2</td><td>3</td>
+              <td>66.7</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 66.7% &middot; TS 66.7%
+          &middot; usage 18.4%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-368752" hidden>
+    <h3>Shareef Elmahi &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Shareef Elmahi shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="158.2" cy="176.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="252.2" cy="88.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="40.2" cy="65.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="93.2" cy="140.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="154.2" cy="156.9" r="3.6"><title>2PtsFG under the basket, alley oop lay-up missed</title></circle></g><g class="shot made"><circle cx="237.2" cy="63.9" r="3.6"><title>3pt jump shot made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (1)</span><span class="key"><i class="swatch missed"></i>Missed (5)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Rim</td><td>0</td>
+                <td>2</td><td>0.0</td>
+                <td>33.3</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Paint</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>16.7</td>
+                <td>0.00</td></tr>
+            <tr><td class="left">Wing 3</td><td>1</td>
+                <td>3</td><td>33.3</td>
+                <td>50.0</td>
+                <td>1.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>1</td><td>6</td>
+              <td>16.7</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 25.0% &middot; TS 25.0%
+          &middot; usage 23.8%
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="player-panel" id="pd-417960" hidden>
+    <h3>Jayden Umeh &mdash; shooting, this game</h3>
+    <div class="detail-inner">
+      <div class="detail-chart"><figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="228" height="167" role="img" aria-label="Jayden Umeh shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="-0.8" cy="174.9" r="3.6"><title>3pt jump shot missed</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (0)</span><span class="key"><i class="swatch missed"></i>Missed (1)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure></div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+            <tr><td class="left">Corner 3</td><td>0</td>
+                <td>1</td><td>0.0</td>
+                <td>100.0</td>
+                <td>0.00</td></tr>
+            <tr class="total"><td class="left">All field goals</td>
+              <td>0</td><td>1</td>
+              <td>0.0</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws 0/0
+          &middot; eFG 0.0% &middot; TS 0.0%
+          &middot; usage 28.5%
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <p class="note">USG% is the share of team possessions used while on court.
-TS% counts threes and free throws properly. FD/40 is fouls drawn per 40 minutes.</p>
+FD/40 is fouls drawn per 40 minutes. Click any player for their shot chart, zone
+splits and true shooting.</p>
 </section>
 
 <section>
@@ -1126,7 +1613,7 @@ a description of what happened, not as a measure of the player.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Sun 02 Aug 2026, 19:20 (Irish time)</span>
+  <span>Generated Sun 02 Aug 2026, 19:31 (Irish time)</span>
 </div>
 
 <div class="running-foot">
@@ -1219,6 +1706,45 @@ a description of what happened, not as a measure of the player.</p>
         if (r.children[col]) r.children[col].textContent = i + 1;
       });
     }
+  });
+
+  // Expandable player rows.
+  function toggleRow(row) {
+    var detail = document.getElementById(row.dataset.target);
+    if (!detail) return;
+    var open = detail.hasAttribute('hidden');
+
+    // The panels stack under the table, so showing more than one at a time
+    // pushes the player you clicked off screen. Close the others first.
+    var group = detail.parentNode;
+    group.querySelectorAll('.player-panel').forEach(function (panel) {
+      if (panel !== detail) panel.setAttribute('hidden', '');
+    });
+    var table = row.closest('table');
+    if (table) {
+      table.querySelectorAll('tr.expander[aria-expanded="true"]').forEach(function (r) {
+        if (r !== row) r.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    if (open) detail.removeAttribute('hidden');
+    else detail.setAttribute('hidden', '');
+    row.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  document.addEventListener('click', function (e) {
+    var row = e.target.closest('tr.expander');
+    if (!row || e.target.closest('a')) return;
+    toggleRow(row);
+  });
+
+  // Keyboard parity: the rows are focusable, so Enter and Space must work.
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var row = e.target.closest && e.target.closest('tr.expander');
+    if (!row) return;
+    e.preventDefault();
+    toggleRow(row);
   });
 
   // Offence / defence / combined toggle.

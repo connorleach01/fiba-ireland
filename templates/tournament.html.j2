@@ -29,7 +29,6 @@
             'pos' if (ff.net_rating or 0) > 0 else 'neg') }}
   {{ m.stat('Pace', '%.1f'|format(p.pace or 0),
             'event %.1f'|format(league.pace or 0)) }}
-  {{ m.stat('True shooting', '%.1f%%'|format(ff.ts_pct or 0), 'TS%') }}
 </div>
 </section>
 
@@ -41,6 +40,7 @@
 
 <section>
 <h2>Game by game</h2>
+<p class="note">Click an opponent to open that game's full review.</p>
 <div class="scroll-x">
 <table>
 <thead>
@@ -53,7 +53,7 @@
 <tbody>
 {% for g in p.games %}
   <tr>
-    <td class="left name">{{ flag(g.opponent_identity.code) }}{{ g.opponent_identity.name }}</td>
+    <td class="left name">{{ flag(g.opponent_identity.code) }}{% if g.review_href %}<a href="{{ g.review_href }}">{{ g.opponent_identity.name }}</a>{% else %}{{ g.opponent_identity.name }}{% endif %}</td>
     <td class="{{ 'pos' if g.won else 'neg' }}">
       {{ 'W' if g.won else 'L' }} {{ g.score }}&ndash;{{ g.opp_score }}</td>
     <td>{{ m.num(g.four_factors.efg_pct) }}</td>
@@ -86,19 +86,29 @@
 
 <section>
 <h2>Players, tournament to date</h2>
-{{ m.player_table(players, per_game=True) }}
+{{ m.player_table(players, per_game=True, details=player_details,
+                  scope='all games') }}
 </section>
 
 <section class="keep">
 <h2>Shooting</h2>
-<div class="cols">
+<div class="chartpair">
   <div>
-    {{ m.zone_table(zones) }}
-  </div>
-  <div class="col-narrow">
-    <h3>Shot chart, all games</h3>
+    <h3>Shots we took</h3>
     {{ charts.shots }}
   </div>
+  <div>
+    <h3>Shots we allowed</h3>
+    {{ charts.shots_faced }}
+  </div>
+</div>
+</section>
+
+<section>
+<h2>Shooting by zone</h2>
+<div class="cols">
+  <div>{{ m.zone_table(zones, caption='Our offence') }}</div>
+  <div>{{ m.zone_table(faced_zones, caption='What we allowed') }}</div>
 </div>
 </section>
 

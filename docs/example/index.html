@@ -241,6 +241,9 @@ a { color: var(--ink); text-underline-offset: 2px; }
   }
   .masthead { break-after: avoid; page-break-after: avoid; }
   .no-print, .sitebar, .viewtoggle { display: none !important; }
+  /* Expanded players print; collapsed ones stay out of the way. */
+  tr.expander { cursor: auto; }
+  .twisty { display: none; }
   .refbar {
     display: block !important; background: none; color: var(--ink-3);
     border-bottom: 1px solid var(--rule-mid); text-align: left; padding: 0 0 4px;
@@ -328,6 +331,33 @@ th[data-sortable][data-dir="desc"]::after { content: "\2193"; opacity: 1; }
 }
 table.view-off .c-def, table.view-def .c-off { display: none; }
 
+/* --- Expandable player rows ---------------------------------------------- */
+tr.expander { cursor: pointer; }
+tr.expander:hover td { background: var(--band); }
+tr.expander:focus { outline: 2px solid var(--series-1); outline-offset: -2px; }
+.twisty {
+  display: inline-block; width: 9px; margin-right: 3px;
+  color: var(--ink-3); transition: transform .12s ease;
+}
+tr.expander[aria-expanded="true"] .twisty { transform: rotate(90deg); }
+tr.expander[aria-expanded="true"] td { background: var(--band); }
+.player-panel {
+  background: var(--band); border: 1px solid var(--rule-hair);
+  padding: 10px 12px 12px; margin-top: 8px;
+  break-inside: avoid-page; page-break-inside: avoid;
+}
+.player-panel h3 { margin-top: 0; }
+.detail-inner { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.detail-chart { flex: 0 0 auto; }
+.detail-stats { flex: 1 1 260px; min-width: 240px; }
+.detail-stats table { margin-top: 0; }
+.detail-stats caption { padding-bottom: 3px; }
+
+/* --- Paired charts ------------------------------------------------------- */
+.chartpair { display: flex; gap: 18px; flex-wrap: wrap; }
+.chartpair > figure, .chartpair > div { flex: 1 1 240px; min-width: 0; }
+.chartpair h3 { margin-top: 0; }
+
 /* --- Flags --------------------------------------------------------------- */
 .flag {
   display: inline-block; vertical-align: -1px; flex: none;
@@ -388,18 +418,6 @@ td .flag, li .flag { margin-right: 5px; }
           <a href="scout_UKR.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="UKR flag"><rect y="0.0000" width="3" height="1.0000" fill="#005bbb"/><rect y="1.0000" width="3" height="1.0000" fill="#ffd500"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Ukraine</a>
       </div>
     </div>
-    <div class="drop">
-      <button type="button" aria-expanded="false">Games &#9662;</button>
-      <div class="drop-panel">
-          <a href="2026-08-02_IRL-v-POR_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="POR flag"><rect width="3" height="2" fill="#da291c"/><rect width="1.2000" height="2" fill="#046a38"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Portugal (W 82-60)</a>
-          <a href="2026-08-01_IRL-v-SWE_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="SWE flag"><rect width="3" height="2" fill="#006aa7"/><rect x=".78" width=".52" height="2" fill="#fecc00"/><rect y=".74" width="3" height=".52" fill="#fecc00"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Sweden (L 105-106)</a>
-          <a href="2026-07-29_IRL-v-NED_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NED flag"><rect y="0.0000" width="3" height="0.6667" fill="#ae1c28"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#21468b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Netherlands (L 67-89)</a>
-          <a href="2026-07-28_IRL-v-GBR_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="GBR flag"><rect width="3" height="2" fill="#012169"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#ffffff" stroke-width=".44"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#c8102e" stroke-width=".22"/><path d="M1.5 0 V2 M0 1 H3" stroke="#ffffff" stroke-width=".72"/><path d="M1.5 0 V2 M0 1 H3" stroke="#c8102e" stroke-width=".42"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Great Britain (L 63-70)</a>
-          <a href="2026-07-26_IRL-v-BEL_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="BEL flag"><rect x="0.0000" width="1.0000" height="2" fill="#000000"/><rect x="1.0000" width="1.0000" height="2" fill="#fdda24"/><rect x="2.0000" width="1.0000" height="2" fill="#ef3340"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Belgium (L 63-88)</a>
-          <a href="2026-07-25_IRL-v-CYP_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CYP flag"><rect width="3" height="2" fill="#ffffff"/><circle cx="1.5" cy="1" r=".42" fill="#d57800"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Cyprus (W 80-60)</a>
-          <a href="2026-07-24_IRL-v-FIN_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="FIN flag"><rect width="3" height="2" fill="#ffffff"/><rect x=".78" width=".52" height="2" fill="#003580"/><rect y=".74" width="3" height=".52" fill="#003580"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Finland (W 78-76)</a>
-      </div>
-    </div>
     <span class="spacer"></span>
     <a href="#" onclick="window.print();return false;">Print</a>
   </div>
@@ -409,7 +427,7 @@ td .flag, li .flag { margin-right: 5px; }
 <header class="masthead">
   <div class="kicker">
     <span>FIBA U18 Eurobasket 2026 Division B &middot; Dashboard</span>
-    <span>Sun 02 Aug 2026, 19:20 (Irish time)</span>
+    <span>Sun 02 Aug 2026, 19:31 (Irish time)</span>
   </div>
   <h1>Ireland analytics</h1>
   <p class="sub">78 of 81 games played across the event
@@ -446,11 +464,6 @@ td .flag, li .flag { margin-right: 5px; }
   <div class="label">Pace</div>
   <div class="figure ">87.3</div>
 <div class="sub">event 80.1</div></div>
-
-  <div class="stat">
-  <div class="label">True shooting</div>
-  <div class="figure ">48.2%</div>
-<div class="sub">TS%</div></div>
 
 </div>
 </section>
@@ -727,7 +740,7 @@ column to sort, so you can find the teams shooting or turning it over most.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Sun 02 Aug 2026, 19:20 (Irish time)</span>
+  <span>Generated Sun 02 Aug 2026, 19:31 (Irish time)</span>
 </div>
 
 <div class="running-foot">
@@ -820,6 +833,45 @@ column to sort, so you can find the teams shooting or turning it over most.</p>
         if (r.children[col]) r.children[col].textContent = i + 1;
       });
     }
+  });
+
+  // Expandable player rows.
+  function toggleRow(row) {
+    var detail = document.getElementById(row.dataset.target);
+    if (!detail) return;
+    var open = detail.hasAttribute('hidden');
+
+    // The panels stack under the table, so showing more than one at a time
+    // pushes the player you clicked off screen. Close the others first.
+    var group = detail.parentNode;
+    group.querySelectorAll('.player-panel').forEach(function (panel) {
+      if (panel !== detail) panel.setAttribute('hidden', '');
+    });
+    var table = row.closest('table');
+    if (table) {
+      table.querySelectorAll('tr.expander[aria-expanded="true"]').forEach(function (r) {
+        if (r !== row) r.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    if (open) detail.removeAttribute('hidden');
+    else detail.setAttribute('hidden', '');
+    row.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  document.addEventListener('click', function (e) {
+    var row = e.target.closest('tr.expander');
+    if (!row || e.target.closest('a')) return;
+    toggleRow(row);
+  });
+
+  // Keyboard parity: the rows are focusable, so Enter and Space must work.
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var row = e.target.closest && e.target.closest('tr.expander');
+    if (!row) return;
+    e.preventDefault();
+    toggleRow(row);
   });
 
   // Offence / defence / combined toggle.

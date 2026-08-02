@@ -35,9 +35,9 @@ Rate stats are still noisy at this stage of the tournament.</p>
 {% endif %}
 {% endmacro %}
 
-{% macro player_table(players, per_game=True, caption='') %}
+{% macro player_table(players, per_game=True, caption='', details=None, scope='') %}
 <div class="scroll-x">
-<table>
+<table class="{{ 'expandable' if details else '' }}">
 {% if caption %}<caption>{{ caption }}</caption>{% endif %}
 <thead>
   <tr>
@@ -51,16 +51,19 @@ Rate stats are still noisy at this stage of the tournament.</p>
       <th data-sortable>AST</th><th data-sortable>+/&ndash;</th>
     {% endif %}
     <th>FG</th><th>3PT</th><th>FT</th>
-    <th data-sortable>USG%</th><th data-sortable>TS%</th><th data-sortable>eFG%</th>
+    <th data-sortable>USG%</th><th data-sortable>eFG%</th>
     <th data-sortable>REB%</th><th data-sortable>AST%</th>
     <th data-sortable>TOV%</th><th data-sortable>FD/40</th>
   </tr>
 </thead>
 <tbody>
 {% for p in players %}
-  <tr>
+  {% set d = (details or {}).get(p.person_id) %}
+  <tr {% if d %}class="expander" data-target="pd-{{ p.person_id }}" tabindex="0"
+      role="button" aria-expanded="false"
+      aria-controls="pd-{{ p.person_id }}"{% endif %}>
     <td class="left">{{ p.uniform_number or '' }}</td>
-    <td class="left name">{{ p.full_name }}</td>
+    <td class="left name">{% if d %}<span class="twisty" aria-hidden="true">&#9656;</span>{% endif %}{{ p.full_name }}</td>
     <td class="left muted">{{ p.position or '' }}</td>
     {% if per_game %}
       <td>{{ p.games }}</td>
@@ -79,7 +82,6 @@ Rate stats are still noisy at this stage of the tournament.</p>
     <td>{{ p.FG3M }}/{{ p.FG3A }}</td>
     <td>{{ p.FTM }}/{{ p.FTA }}</td>
     <td>{{ num(p.usage_pct) }}</td>
-    <td>{{ num(p.ts_pct) }}</td>
     <td>{{ num(p.efg_pct) }}</td>
     <td>{{ num(p.treb_pct) }}</td>
     <td>{{ num(p.ast_pct) }}</td>
@@ -90,6 +92,44 @@ Rate stats are still noisy at this stage of the tournament.</p>
 </tbody>
 </table>
 </div>
+{% if details %}
+<p class="note">Click a player for their shot chart and shooting breakdown.</p>
+<div class="player-panels">
+{% for p in players %}
+  {% set d = details.get(p.person_id) %}
+  {% if d %}
+  <div class="player-panel" id="pd-{{ p.person_id }}" hidden>
+    <h3>{{ p.full_name }} &mdash; shooting{% if scope %}, {{ scope }}{% endif %}</h3>
+    <div class="detail-inner">
+      <div class="detail-chart">{{ d.chart }}</div>
+      <div class="detail-stats">
+        <table>
+          <thead><tr><th class="left">Zone</th><th>M</th><th>A</th><th>FG%</th>
+                     <th>Share</th><th>Pts/att</th></tr></thead>
+          <tbody>
+          {% for z in d.zones if z.attempts %}
+            <tr><td class="left">{{ z.zone }}</td><td>{{ z.makes }}</td>
+                <td>{{ z.attempts }}</td><td>{{ num(z.fg_pct) }}</td>
+                <td>{{ num(z.share_pct) }}</td>
+                <td>{{ num(z.points_per_attempt, 2) }}</td></tr>
+          {% endfor %}
+            <tr class="total"><td class="left">All field goals</td>
+              <td>{{ p.FGM }}</td><td>{{ p.FGA }}</td>
+              <td>{{ num(p.fg_pct) }}</td><td>&ndash;</td><td>&ndash;</td></tr>
+          </tbody>
+        </table>
+        <p class="note">Free throws {{ p.FTM }}/{{ p.FTA }}
+          &middot; eFG {{ num(p.efg_pct) }}% &middot; TS {{ num(p.ts_pct) }}%
+          &middot; usage {{ num(p.usage_pct) }}%
+          {% if d.attempts == 0 %} &middot; no field goal attempts recorded{% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+{% endfor %}
+</div>
+{% endif %}
 {% endmacro %}
 
 {% macro lineup_table(lineups, caption='', note='') %}
@@ -127,10 +167,10 @@ judged on.</p>
 {% endif %}
 {% endmacro %}
 
-{% macro zone_table(zones) %}
+{% macro zone_table(zones, caption='Shooting by zone') %}
 <div class="scroll-x">
 <table>
-<caption>Shooting by zone</caption>
+<caption>{{ caption }}</caption>
 <thead><tr><th class="left">Zone</th><th data-sortable>M</th><th data-sortable>A</th>
 <th data-sortable>FG%</th><th data-sortable>Share</th><th data-sortable>Pts/att</th></tr></thead>
 <tbody>

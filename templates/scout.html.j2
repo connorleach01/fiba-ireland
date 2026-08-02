@@ -67,7 +67,7 @@
     <p class="note">These categories overlap and do not sum to the total: a
     fast-break layup counts as points in the paint too, and bench points cut
     across all of them.</p>
-    {{ m.zone_table(zones) }}
+    {{ m.zone_table(zones, caption='Their offence') }}
   </div>
   <div class="col-narrow">
     <h3>Shot chart, all games</h3>
@@ -76,12 +76,30 @@
 </div>
 </section>
 
+<section class="keep">
+<h2>What they allow</h2>
+<div class="chartpair">
+  <div>
+    <h3>Shots they concede</h3>
+    {{ charts.shots_faced }}
+  </div>
+  <div>
+    {{ m.zone_table(faced_zones, caption='Opponent offence against them') }}
+    <p class="note">Where a team lets opponents shoot from is the clearest read
+    on their defence: a high rim share means the paint is open, a high three
+    share means they run shooters off the line but concede space outside.</p>
+  </div>
+</div>
+</section>
+
 <section>
 <h2>Personnel</h2>
-{{ m.player_table(players, per_game=True) }}
+{{ m.player_table(players, per_game=True, details=player_details,
+                  scope='all games') }}
 <p class="note">Sorted by minutes. USG% is the share of team possessions a player
-uses while on court, so a high-usage, low-TS% player is the one to make shoot.
-FD/40 flags who draws fouls.</p>
+uses while on court, so a high-usage, low-efficiency player is the one to make
+shoot. FD/40 flags who draws fouls. Click any player for their shot chart and
+zone splits.</p>
 </section>
 
 <section>

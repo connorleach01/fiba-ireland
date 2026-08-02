@@ -35,7 +35,6 @@ shows exactly what will appear here after each game.</p>
             'pos' if (ff.net_rating or 0) > 0 else 'neg') }}
   {{ m.stat('Pace', '%.1f'|format(profile.pace or 0),
             'event %.1f'|format(league.pace or 0)) }}
-  {{ m.stat('True shooting', '%.1f%%'|format(ff.ts_pct or 0), 'TS%') }}
 </div>
 </section>
 {% endif %}

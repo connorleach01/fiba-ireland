@@ -25,7 +25,6 @@
             'pos' if (ff.net_rating or 0) > 0 else 'neg') }}
   {{ m.stat('Pace', '%.0f'|format(ff.possessions or 0),
             'event avg %.0f'|format(league.pace or 0)) }}
-  {{ m.stat('True shooting', '%.1f%%'|format(ff.ts_pct or 0), 'TS%') }}
 </div>
 
 <div class="cols" style="margin-top:10px">
@@ -78,22 +77,33 @@ vertical rule marks the competition average for that factor.</p>
 
 <section class="keep">
 <h2>Shooting</h2>
-<div class="cols">
+<div class="chartpair">
   <div>
-    {{ m.zone_table(zones) }}
-  </div>
-  <div class="col-narrow">
-    <h3>{{ us.code }} shot chart</h3>
+    <h3>{{ us.code }} shots taken</h3>
     {{ charts.shots }}
+  </div>
+  <div>
+    <h3>Shots allowed to {{ them.code }}</h3>
+    {{ charts.shots_faced }}
   </div>
 </div>
 </section>
 
 <section>
+<h2>Shooting by zone</h2>
+<div class="cols">
+  <div>{{ m.zone_table(zones, caption=us.code ~ ' offence') }}</div>
+  <div>{{ m.zone_table(faced_zones, caption=them.code ~ ' offence, what we allowed') }}</div>
+</div>
+</section>
+
+<section>
 <h2>Box score &mdash; {{ us.name }}</h2>
-{{ m.player_table(players, per_game=False) }}
+{{ m.player_table(players, per_game=False, details=player_details,
+                  scope='this game') }}
 <p class="note">USG% is the share of team possessions used while on court.
-TS% counts threes and free throws properly. FD/40 is fouls drawn per 40 minutes.</p>
+FD/40 is fouls drawn per 40 minutes. Click any player for their shot chart, zone
+splits and true shooting.</p>
 </section>
 
 <section>

@@ -81,6 +81,32 @@ def build_nav(conn, event_slug: str, org_id: int) -> dict:
             "tournament": tournament, "teams": "tournament_teams.html"}
 
 
+def _player_details(conn, event_slug: str, org_id: int, players: list[dict],
+                    game_ids: list[int] | None = None) -> dict:
+    """Pre-render the expandable panel for each player.
+
+    Built at generation time rather than fetched on click, so the page stays a
+    single self-contained file that works offline and prints whatever is open.
+    Scope follows the page: a scouting report shows every game the player has
+    played, a game review shows only that game.
+    """
+    from markupsafe import Markup
+
+    details = {}
+    for player in players:
+        shots = analysis.shots(conn, event_slug, org_id, game_ids,
+                               person_id=player["person_id"])
+        zones = metrics.zone_breakdown(shots)
+        chart = charts.shot_chart(
+            shots, title=f"{player['full_name']} shot chart", width=228)
+        details[player["person_id"]] = {
+            "chart": Markup(chart),
+            "zones": zones,
+            "attempts": sum(z["attempts"] for z in zones),
+        }
+    return details
+
+
 def _inks(subject_code: str | None, other_code: str | None) -> dict:
     """Chart colours for the two teams on a page.
 
@@ -140,9 +166,12 @@ def build_scout(conn, event_slug: str, org_id: int,
     league = analysis.event_averages(conn, event_slug)
     players = analysis.player_profile(conn, event_slug, org_id)
     team_shots = analysis.shots(conn, event_slug, org_id)
+    faced_shots = analysis.shots_faced(conn, event_slug, org_id)
     zones = metrics.zone_breakdown(team_shots)
+    faced_zones = metrics.zone_breakdown(faced_shots)
     lineups = analysis.lineup_profile(conn, event_slug, org_id)
     bench = analysis.starters_vs_bench(conn, event_slug, org_id)
+    details = _player_details(conn, event_slug, org_id, players)
 
     lineups_available = any(
         g["lineups_ok"] for g in profile["games"] if g["lineups_ok"] is not None
@@ -154,7 +183,7 @@ def build_scout(conn, event_slug: str, org_id: int,
         profile=profile,
         league=league,
         players=players,
-        zones=zones,
+        zones=zones, faced_zones=faced_zones, player_details=details,
         lineups=lineups[:8],
         lineups_available=lineups_available,
         bench=bench,
@@ -168,6 +197,9 @@ def build_scout(conn, event_slug: str, org_id: int,
             "zones": _mark(charts.zone_bars(zones)),
             "shots": _mark(charts.shot_chart(
                 team_shots, title=f"{profile['identity']['name']} shot chart")),
+            "shots_faced": _mark(charts.shot_chart(
+                faced_shots, made_label="Opponent made",
+                title=f"Shots allowed by {profile['identity']['name']}")),
         },
     )
     code = profile["identity"]["code"]
@@ -197,7 +229,9 @@ def build_review(conn, event_slug: str, game_id: int,
 
     players = analysis.player_profile(conn, event_slug, org_id, [game_id])
     team_shots = analysis.shots(conn, event_slug, org_id, [game_id])
+    faced_shots = analysis.shots_faced(conn, event_slug, org_id, [game_id])
     zones = metrics.zone_breakdown(team_shots)
+    faced_zones = metrics.zone_breakdown(faced_shots)
     lineups = analysis.lineup_profile(conn, event_slug, org_id, [game_id],
                                       min_seconds=90)
     on_off = analysis.on_off(conn, event_slug, org_id, [game_id])
@@ -220,7 +254,8 @@ def build_review(conn, event_slug: str, game_id: int,
         off=metrics.four_factors(opp_totals, totals),
         league=league,
         totals=totals, opp_totals=opp_totals,
-        players=players, zones=zones,
+        players=players, zones=zones, faced_zones=faced_zones,
+        player_details=_player_details(conn, event_slug, org_id, players, [game_id]),
         lineups=lineups, on_off=on_off, bench=bench,
         lineups_available=bool(game["lineups_ok"]),
         periods=period_labels,
@@ -235,6 +270,9 @@ def build_review(conn, event_slug: str, game_id: int,
             "zones": _mark(charts.zone_bars(zones)),
             "shots": _mark(charts.shot_chart(team_shots,
                                              title=f"{us['name']} shot chart")),
+            "shots_faced": _mark(charts.shot_chart(
+                faced_shots, made_label=f"{them['code']} made",
+                title=f"Shots allowed by {us['name']}")),
             "timeline": _mark(charts.margin_timeline(
                 timeline, team_label=us["code"],
                 periods=max(4, len(period_labels)))),
@@ -255,8 +293,18 @@ def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
     league = analysis.event_averages(conn, event_slug)
     players = analysis.player_profile(conn, event_slug, org_id)
     team_shots = analysis.shots(conn, event_slug, org_id)
+    faced_shots = analysis.shots_faced(conn, event_slug, org_id)
     zones = metrics.zone_breakdown(team_shots)
+    faced_zones = metrics.zone_breakdown(faced_shots)
     lineups = analysis.lineup_profile(conn, event_slug, org_id)
+
+    # The game log is the way back into an individual game now that the nav
+    # carries no Games menu, so each row links to its own review.
+    for game in profile["games"]:
+        game["review_href"] = review_filename(
+            (game["game_utc"] or "")[:10] or str(game["game_id"]),
+            profile["identity"]["code"], game["opponent_identity"]["code"])
+
     lineups_available = any(
         g["lineups_ok"] for g in profile["games"] if g["lineups_ok"] is not None)
 
@@ -264,6 +312,8 @@ def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
         event_name=_event_name(conn, event_slug),
         generated_at=_now_text(),
         profile=profile, league=league, players=players, zones=zones,
+        faced_zones=faced_zones,
+        player_details=_player_details(conn, event_slug, org_id, players),
         lineups=lineups[:10], lineups_available=lineups_available,
         nav=nav, page="tournament", reference=reference,
         **_inks(profile["identity"]["code"], None),
@@ -273,6 +323,9 @@ def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
                 team_label=profile["identity"]["code"], opp_label="Opponents")),
             "zones": _mark(charts.zone_bars(zones)),
             "shots": _mark(charts.shot_chart(team_shots, title="Shot chart")),
+            "shots_faced": _mark(charts.shot_chart(
+                faced_shots, made_label="Opponent made",
+                title="Shots allowed")),
         },
     )
     return _write(f"{profile['identity']['code'].lower()}_tournament.html", html)

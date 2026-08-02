@@ -241,6 +241,9 @@ a { color: var(--ink); text-underline-offset: 2px; }
   }
   .masthead { break-after: avoid; page-break-after: avoid; }
   .no-print, .sitebar, .viewtoggle { display: none !important; }
+  /* Expanded players print; collapsed ones stay out of the way. */
+  tr.expander { cursor: auto; }
+  .twisty { display: none; }
   .refbar {
     display: block !important; background: none; color: var(--ink-3);
     border-bottom: 1px solid var(--rule-mid); text-align: left; padding: 0 0 4px;
@@ -328,6 +331,33 @@ th[data-sortable][data-dir="desc"]::after { content: "\2193"; opacity: 1; }
 }
 table.view-off .c-def, table.view-def .c-off { display: none; }
 
+/* --- Expandable player rows ---------------------------------------------- */
+tr.expander { cursor: pointer; }
+tr.expander:hover td { background: var(--band); }
+tr.expander:focus { outline: 2px solid var(--series-1); outline-offset: -2px; }
+.twisty {
+  display: inline-block; width: 9px; margin-right: 3px;
+  color: var(--ink-3); transition: transform .12s ease;
+}
+tr.expander[aria-expanded="true"] .twisty { transform: rotate(90deg); }
+tr.expander[aria-expanded="true"] td { background: var(--band); }
+.player-panel {
+  background: var(--band); border: 1px solid var(--rule-hair);
+  padding: 10px 12px 12px; margin-top: 8px;
+  break-inside: avoid-page; page-break-inside: avoid;
+}
+.player-panel h3 { margin-top: 0; }
+.detail-inner { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.detail-chart { flex: 0 0 auto; }
+.detail-stats { flex: 1 1 260px; min-width: 240px; }
+.detail-stats table { margin-top: 0; }
+.detail-stats caption { padding-bottom: 3px; }
+
+/* --- Paired charts ------------------------------------------------------- */
+.chartpair { display: flex; gap: 18px; flex-wrap: wrap; }
+.chartpair > figure, .chartpair > div { flex: 1 1 240px; min-width: 0; }
+.chartpair h3 { margin-top: 0; }
+
 /* --- Flags --------------------------------------------------------------- */
 .flag {
   display: inline-block; vertical-align: -1px; flex: none;
@@ -382,16 +412,6 @@ td .flag, li .flag { margin-right: 5px; }
       <div class="drop-panel">
         {% for r in nav.scouts %}
           <a href="{{ r.href }}">{{ flag(r.code) }}{{ r.name }}</a>
-        {% endfor %}
-      </div>
-    </div>
-    {% endif %}
-    {% if nav.reviews %}
-    <div class="drop">
-      <button type="button" aria-expanded="false">Games &#9662;</button>
-      <div class="drop-panel">
-        {% for r in nav.reviews %}
-          <a href="{{ r.href }}">{{ flag(r.code) }}{{ r.label }}</a>
         {% endfor %}
       </div>
     </div>
@@ -510,6 +530,45 @@ td .flag, li .flag { margin-right: 5px; }
         if (r.children[col]) r.children[col].textContent = i + 1;
       });
     }
+  });
+
+  // Expandable player rows.
+  function toggleRow(row) {
+    var detail = document.getElementById(row.dataset.target);
+    if (!detail) return;
+    var open = detail.hasAttribute('hidden');
+
+    // The panels stack under the table, so showing more than one at a time
+    // pushes the player you clicked off screen. Close the others first.
+    var group = detail.parentNode;
+    group.querySelectorAll('.player-panel').forEach(function (panel) {
+      if (panel !== detail) panel.setAttribute('hidden', '');
+    });
+    var table = row.closest('table');
+    if (table) {
+      table.querySelectorAll('tr.expander[aria-expanded="true"]').forEach(function (r) {
+        if (r !== row) r.setAttribute('aria-expanded', 'false');
+      });
+    }
+
+    if (open) detail.removeAttribute('hidden');
+    else detail.setAttribute('hidden', '');
+    row.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  document.addEventListener('click', function (e) {
+    var row = e.target.closest('tr.expander');
+    if (!row || e.target.closest('a')) return;
+    toggleRow(row);
+  });
+
+  // Keyboard parity: the rows are focusable, so Enter and Space must work.
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var row = e.target.closest && e.target.closest('tr.expander');
+    if (!row) return;
+    e.preventDefault();
+    toggleRow(row);
   });
 
   // Offence / defence / combined toggle.
