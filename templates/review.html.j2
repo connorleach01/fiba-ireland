@@ -87,12 +87,13 @@ against what they allowed. The vertical rule marks the competition average.</p>
 {% for side in [home, away] %}
 <section>
 <h2>Box score &mdash; {{ side.identity.name }}</h2>
+{# One id per table: both sides appear on the same page, and the sort handler
+   finds a table by id. #}
 {{ m.player_table(side.players, per_game=False, details=side.details,
-                  scope='this game') }}
+                  scope='this game', table_id='box-' ~ side.identity.code) }}
 {% if loop.first %}
 <p class="note">USG% is the share of team possessions used while on court.
-FD/40 is fouls drawn per 40 minutes. Click any player for their shot chart, zone
-splits and true shooting.</p>
+FD/40 is fouls drawn per 40 minutes.</p>
 {% endif %}
 </section>
 {% endfor %}

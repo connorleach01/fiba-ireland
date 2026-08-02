@@ -230,6 +230,11 @@ Nav is Dashboard, Ireland, Teams, and a Scouting dropdown. **There is no Games
 menu**: individual games are reached from the team they belong to, through the
 game log on that team's page or the dashboard's recent results.
 
+**Ireland's page is a scouting sheet.** `tournament.html.j2` deliberately carries
+the same sections in the same order as `scout.html.j2`, down to the ranked stat
+strip, so staff read their own team on exactly the terms they read an opponent.
+If you add a section to one, add it to the other or explain why not.
+
 **One game sheet per game, covering both teams**, not one per viewpoint. The
 filename comes from the fixture (`{date}_{teamA}-v-{teamB}_game.html`) so every
 team's log links to the same file; `game_filename()` is the only thing that
@@ -251,9 +256,19 @@ they still get a rank but never a shading tier, because taking a lot of threes o
 playing fast is a style, not an achievement. The denominator counts only teams
 that have played.
 
-`analysis.player_percentiles()` does the same for players, against everyone in
-the event clearing `MIN_MPG_FOR_PERCENTILE` (10 MPG). Players below the threshold
-appear in tables but unranked, and the note under the table says what the pool is.
+`analysis.player_percentiles()` does the same for players, against **every player
+who has taken the floor**. There is no minutes threshold: a table where the last
+three rows are blank reads as broken, and a deep bench player ranking 254th of
+264 in minutes is a true and useful fact rather than a small-sample artefact.
+
+The one exception is the shooting percentages. Without a volume floor a player
+who went one-for-one leads the event in FG%, which is worse than showing nothing,
+so `SHOOTING_RANK_GATES` requires attempts of at least `max(3, rate * games)`
+before FG%, 3P%, FT%, eFG%, TS% or Pts/att is ranked. The gate is per metric and
+per player, so it costs a cell, never a row, and the note under the table says a
+percentage without a rank is a thin sample rather than a missing figure. Around
+93% of rankable player cells carry a rank in the U18 reference set; if that drops
+sharply, suspect the gate before suspecting the data.
 
 Both are event-wide, so `build_all` computes them **once** and threads them
 through as `context`; do not call them per page.
@@ -277,8 +292,11 @@ reason, and if you do, say why in the commit.
   plus-minus, and there is no possession-exact stint accounting behind it.
   Lineup tables show minutes, points for, points against and plus-minus.
 - **TS% in page header strips and player tables.** It survives in the expanded
-  player panel. eFG% left the player table too, because Pts/att is the same
-  number (see above).
+  player panel.
+- **Pts/att in the player table.** It briefly replaced eFG%, being the same
+  number on a scale coaches read directly, but eFG% is what they already know, so
+  eFG% is back and Pts/att stays only in the per-zone breakdowns, where points
+  per attempt is the standard way to compare a corner three to a rim finish.
 - **Player position column**, dropped for width once shooting splits went in.
 - **A Games nav menu**, see the navigation model above.
 - **Ranks on game sheets.** One game is not a ranking.

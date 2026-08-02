@@ -198,16 +198,29 @@ def test_ranks_and_percentiles():
 
     pcts = analysis.player_percentiles(conn, U18)
     pool = pcts["_pool"]
-    check("percentile pool respects the minutes threshold", pool["size"] > 0)
-    qualified = [p for team in analysis.event_teams(conn, U18)
-                 for p in analysis.player_profile(conn, U18, team["org_id"])
-                 if (p.get("minutes_pg") or 0) >= pool["min_mpg"]]
-    check("pool size matches the qualifying players", pool["size"] == len(qualified))
-    below = [p for team in analysis.event_teams(conn, U18)
-             for p in analysis.player_profile(conn, U18, team["org_id"])
-             if (p.get("minutes_pg") or 0) < pool["min_mpg"]]
-    check("players under the threshold get no percentile",
-          all(p["person_id"] not in pcts for p in below))
+    everyone = [p for team in analysis.event_teams(conn, U18)
+                for p in analysis.player_profile(conn, U18, team["org_id"])]
+    check("every player who has played is in the pool", pool["size"] == len(everyone))
+
+    # No row of a player table may come up blank: everyone gets ranked on the
+    # counting stats, whatever their minutes.
+    always_ranked = ("minutes_pg", "pts_pg", "reb_pg", "ast_pg", "usage_pct",
+                     "treb_pct", "ast_pct", "tov_pct", "fouls_drawn_per40")
+    unranked = [(p["full_name"], key) for p in everyone for key in always_ranked
+                if p.get(key) is not None and key not in pcts[p["person_id"]]]
+    check("every player is ranked on every counting stat", not unranked,
+          f"(missing {unranked[:3]})")
+
+    # Shooting percentages are the exception, and the gate has to actually bite
+    # in both directions.
+    thin = [p for p in everyone if not analysis.ranks_shooting(p, "fg_pct")]
+    check("low-volume shooters exist to be gated", len(thin) > 0)
+    check("low-volume shooters carry no FG% rank",
+          all("fg_pct" not in pcts[p["person_id"]] for p in thin))
+    heavy = [p for p in everyone
+             if analysis.ranks_shooting(p, "fg_pct") and p.get("fg_pct") is not None]
+    check("volume shooters do carry an FG% rank",
+          all("fg_pct" in pcts[p["person_id"]] for p in heavy))
 
 
 def main() -> int:

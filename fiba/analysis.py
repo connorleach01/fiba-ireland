@@ -363,11 +363,6 @@ def event_ranks(conn, event_slug: str) -> dict:
     return ranks
 
 
-# Players below this many minutes per game are excluded from the percentile pool
-# and shown without percentiles. Ranking a player against the field on six
-# minutes a night says more about the sample than the player.
-MIN_MPG_FOR_PERCENTILE = 10.0
-
 PLAYER_METRICS: dict[str, bool | None] = {
     "minutes_pg": True, "pts_pg": True, "reb_pg": True, "ast_pg": True,
     "fg_pct": True, "fg3_pct": True, "ft_pct": True, "pts_per_fga": True,
@@ -376,29 +371,52 @@ PLAYER_METRICS: dict[str, bool | None] = {
     "fouls_drawn_per40": True,
 }
 
+# Every player who has been on the floor is ranked, so no row of a player table
+# is left blank. Shooting percentages are the exception: without a volume floor
+# a player who went one-for-one leads the event, which is worse than showing
+# nothing. The floor grows with games played, so it still bites after game one.
+# The attempt counter each shooting metric is judged on, and the per-game rate a
+# player must clear to be ranked on it.
+SHOOTING_RANK_GATES: dict[str, tuple[str, float]] = {
+    "fg_pct": ("FGA", 2.0),
+    "efg_pct": ("FGA", 2.0),
+    "ts_pct": ("FGA", 2.0),
+    "pts_per_fga": ("FGA", 2.0),
+    "fg3_pct": ("FG3A", 1.0),
+    "ft_pct": ("FTA", 1.0),
+}
+MIN_SHOOTING_ATTEMPTS = 3
 
-def player_percentiles(conn, event_slug: str,
-                       min_mpg: float = MIN_MPG_FOR_PERCENTILE) -> dict:
-    """Percentile of every qualified player against the whole event.
 
-    Returns {person_id: {metric: {...}}} plus a "_pool" key describing the
-    threshold and how many players cleared it, so a report can say what the
-    numbers are measured against.
+def ranks_shooting(player: dict, metric: str) -> bool:
+    """Has this player shot enough for a percentile on `metric` to mean anything?"""
+    gate = SHOOTING_RANK_GATES.get(metric)
+    if gate is None:
+        return True
+    counter, per_game = gate
+    floor = max(MIN_SHOOTING_ATTEMPTS, per_game * (player.get("games") or 1))
+    return (player.get(counter) or 0) >= floor
+
+
+def player_percentiles(conn, event_slug: str) -> dict:
+    """Percentile of every player in the event against the whole field.
+
+    Returns {person_id: {metric: {...}}} plus a "_pool" key describing what the
+    numbers are measured against, so a report can say so.
     """
-    pool = []
-    for team in event_teams(conn, event_slug):
-        for player in player_profile(conn, event_slug, team["org_id"]):
-            if (player.get("minutes_pg") or 0) >= min_mpg:
-                pool.append(player)
+    pool = [player
+            for team in event_teams(conn, event_slug)
+            for player in player_profile(conn, event_slug, team["org_id"])]
 
     out: dict = {p["person_id"]: {} for p in pool}
     for metric, better in PLAYER_METRICS.items():
-        pairs = [(p["person_id"], p[metric]) for p in pool if p.get(metric) is not None]
+        pairs = [(p["person_id"], p[metric]) for p in pool
+                 if p.get(metric) is not None and ranks_shooting(p, metric)]
         if not pairs:
             continue
         for person_id, entry in _rank_values(pairs, better).items():
             out[person_id][metric] = entry
-    out["_pool"] = {"min_mpg": min_mpg, "size": len(pool)}
+    out["_pool"] = {"size": len(pool), "min_attempts": MIN_SHOOTING_ATTEMPTS}
     return out
 
 

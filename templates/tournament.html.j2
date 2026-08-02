@@ -1,59 +1,60 @@
+{# Ireland's own page. Deliberately the same shape, the same sections and the
+   same ranked stat strip as an opponent scouting sheet, so staff read their own
+   team on exactly the terms they read everyone else. #}
 {% extends "_base.html.j2" %}
 {% import "_macros.j2" as m %}
 
 {% set p = profile %}
 {% set ff = p.four_factors %}
+{% set off = p.opp_four_factors %}
 
 {% block title %}{{ p.identity.name }} tournament report{% endblock %}
 {% block eyebrow %}{{ event_name }} &middot; Tournament to date{% endblock %}
+{% block kickerright %}{{ generated_at }}{% endblock %}
 {% block heading %}{{ flag(p.identity.code, 24) }}{{ p.identity.name }}{% endblock %}
 {% block subtitle %}
 {{ p.wins }}&ndash;{{ p.losses }} over {{ p.games_played }} game{{ '' if p.games_played == 1 else 's' }}
 &middot; {{ '%.1f'|format(p.points_for_pg or 0) }} scored, {{ '%.1f'|format(p.points_against_pg or 0) }} allowed per game
-&middot; Updated after every result
+&middot; Net {{ '%+.1f'|format(ff.net_rating or 0) }} per 100
 {% endblock %}
 {% block footid %}{{ p.identity.name }} tournament report{% endblock %}
 
 {% block content %}
 
-{{ m.sample_banner(p.games_played) }}
+{{ m.sample_banner(p.games_played, 'This profile is built from data that') }}
 
 <section class="keep">
-<h2>Where we stand</h2>
+<h2>Profile</h2>
 <div class="statline">
   {{ m.stat('Record', '%d&ndash;%d'|format(p.wins, p.losses),
             '%d games'|format(p.games_played)) }}
-  {{ m.stat('Off rating', '%.1f'|format(ff.off_rating or 0), 'per 100 poss') }}
-  {{ m.stat('Def rating', '%.1f'|format(ff.def_rating or 0), 'per 100 poss') }}
+  {{ m.stat('Off rating', '%.1f'|format(ff.off_rating or 0),
+            m.rank_note(ranks, 'off_rating') or 'per 100 poss') }}
+  {{ m.stat('Def rating', '%.1f'|format(ff.def_rating or 0),
+            m.rank_note(ranks, 'def_rating') or 'per 100 poss') }}
   {{ m.stat('Net', '%+.1f'|format(ff.net_rating or 0),
             m.rank_note(ranks, 'net_rating') or 'per 100 poss',
             'pos' if (ff.net_rating or 0) > 0 else 'neg') }}
   {{ m.stat('Pace', '%.1f'|format(p.pace or 0),
             m.rank_note(ranks, 'pace', 'fastest ') or 'poss/game') }}
+  {{ m.stat('3PT rate', '%.1f%%'|format(ff.fg3_rate or 0), 'of shots') }}
 </div>
 </section>
 
 <section>
 <h2>Team box score</h2>
 {{ m.team_box(box_rows, per_game=True, caption='Per game') }}
-{{ m.scoring_share(box_rows, per_game=True) }}
 </section>
 
 <section class="keep">
-<h2>Four factors, all games</h2>
-{{ m.four_factor_ranked(ff, p.opp_four_factors, league, ranks, p.identity.code, 'ff-table') }}
+<h2>Four factors</h2>
+{{ m.four_factor_ranked(ff, off, league, ranks, p.identity.code, 'ff-table') }}
 {{ charts.four_factors }}
 </section>
 
 <section>
-<h2>Game by game</h2>
-{{ m.game_log(p.games, "ireland-log", totals={"own": ff, "opp": p.opp_four_factors, "pace": p.pace, "record": "%d&ndash;%d"|format(p.wins, p.losses)}) }}
-</section>
-
-<section>
-<h2>Players, tournament to date</h2>
-{{ m.player_table(players, per_game=True, details=player_details,
-                  scope='all games', pcts=percentiles, table_id='players') }}
+<h2>How we score</h2>
+{{ m.scoring_share(box_rows, per_game=True) }}
 </section>
 
 <section class="keep">
@@ -76,13 +77,26 @@ means they run shooters off the line but concede space outside.</p>
 </section>
 
 <section>
-<h2>Most-used lineups</h2>
+<h2>Personnel</h2>
+{{ m.player_table(players, per_game=True, details=player_details,
+                  scope='all games', pcts=percentiles, table_id='players') }}
+<p class="note">Sorted by minutes. USG% is the share of team possessions a player
+uses while on court. FD/40 flags who draws fouls.</p>
+</section>
+
+<section>
+<h2>Lineups</h2>
 {% if lineups_available %}
 {{ m.lineup_table(lineups, 'Aggregated across the tournament') }}
 {% else %}
-<p class="banner alert">Lineup data is withheld: reconstruction did not pass
-validation for these games.</p>
+<p class="banner alert">Lineup reconstruction did not pass validation for these
+games, so lineup figures are withheld rather than shown unverified.</p>
 {% endif %}
+</section>
+
+<section>
+<h2>Game log</h2>
+{{ m.game_log(p.games, "ireland-log", totals={"own": ff, "opp": p.opp_four_factors, "pace": p.pace, "record": "%d&ndash;%d"|format(p.wins, p.losses)}) }}
 </section>
 
 {% endblock %}

@@ -82,7 +82,7 @@ Rate stats are still noisy at this stage of the tournament.</p>
     <th>FG</th><th data-sortable>FG%</th>
     <th>3PT</th><th data-sortable>3P%</th>
     <th>FT</th><th data-sortable>FT%</th>
-    <th data-sortable>Pts/att</th>
+    <th data-sortable>eFG%</th>
     <th data-sortable>USG%</th>
     <th data-sortable>REB%</th><th data-sortable>AST%</th>
     <th data-sortable>TOV%</th><th data-sortable>FD/40</th>
@@ -115,7 +115,7 @@ Rate stats are still noisy at this stage of the tournament.</p>
     {{ rk(p.fg3_pct, (pcts or {}).get(p.person_id), 'fg3_pct') }}
     <td>{{ p.FTM }}/{{ p.FTA }}</td>
     {{ rk(p.ft_pct, (pcts or {}).get(p.person_id), 'ft_pct') }}
-    {{ rk(p.pts_per_fga, (pcts or {}).get(p.person_id), 'pts_per_fga', 2) }}
+    {{ rk(p.efg_pct, (pcts or {}).get(p.person_id), 'efg_pct') }}
     {{ rk(p.usage_pct, (pcts or {}).get(p.person_id), 'usage_pct') }}
     {{ rk(p.treb_pct, (pcts or {}).get(p.person_id), 'treb_pct') }}
     {{ rk(p.ast_pct, (pcts or {}).get(p.person_id), 'ast_pct') }}
@@ -127,10 +127,11 @@ Rate stats are still noisy at this stage of the tournament.</p>
 </table>
 </div>
 {% if pcts and pcts.get('_pool') %}
-<p class="note">Ranks are against the {{ pcts['_pool'].size }} players in the
-event averaging at least {{ '%.0f'|format(pcts['_pool'].min_mpg) }} minutes a
-game. Players below that threshold are listed but not ranked, because a
-percentile off six minutes a night describes the sample, not the player.</p>
+<p class="note">Ranks are against all {{ pcts['_pool'].size }} players who have
+taken the floor in this event. The shooting percentages are the one exception:
+they are only ranked once a player has attempted enough shots for the number to
+carry meaning, so a percentage without a rank is a small sample rather than a
+missing figure.</p>
 {% endif %}
 {% if details %}
 <p class="note">Click a player for their shot chart and shooting breakdown.</p>
