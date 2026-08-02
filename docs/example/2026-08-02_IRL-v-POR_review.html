@@ -348,8 +348,13 @@ tr.expander[aria-expanded="true"] td { background: var(--band); }
 }
 .player-panel h3 { margin-top: 0; }
 .detail-inner { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
-.detail-chart { flex: 0 0 auto; }
-.detail-stats { flex: 1 1 260px; min-width: 240px; }
+/* The court needs a definite width. `.viz svg` sets width:100%, and a percentage
+   against a shrink-to-fit parent is circular, so the browser resolved it from
+   whatever space the neighbouring table left over: the same 228px chart came out
+   at 228, 460 and 464 depending on the player's zone labels. Fixing the basis
+   makes every player's chart identical and stops the panel overflowing. */
+.detail-chart { flex: 0 0 228px; width: 228px; max-width: 100%; }
+.detail-stats { flex: 1 1 240px; min-width: 0; }
 .detail-stats table { margin-top: 0; }
 .detail-stats caption { padding-bottom: 3px; }
 
@@ -384,6 +389,7 @@ td .flag, li .flag { margin-right: 5px; }
   .cols { display: block; }
   .chartpair { grid-template-columns: minmax(0, 1fr); }
   .chartpair > div + div { margin-top: 14px; }
+  .detail-chart { flex: 0 1 228px; }
   .cols > * + * { margin-top: 12px; }
   .col-narrow { flex: none; }
   table { min-width: 460px; }
@@ -1594,7 +1600,7 @@ plus-minus over two minutes as noise.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Sun 02 Aug 2026, 20:30 (Irish time)</span>
+  <span>Generated Sun 02 Aug 2026, 20:35 (Irish time)</span>
 </div>
 
 <div class="running-foot">

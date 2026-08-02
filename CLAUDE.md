@@ -168,6 +168,15 @@ they render about 16px wide. Unknown codes fall back to a neutral chip.
 **Charts do not repeat what the table already says.** The four-factor bars are
 deliberately unlabelled because the table above them carries the numbers.
 
+**Any container holding a chart needs a definite width.** `.viz svg` sets
+`width: 100%`, and a percentage against a shrink-to-fit parent is circular, so
+the browser falls back to whatever space the neighbours left over. That is how
+the player charts, all emitted at `width="228"`, ended up rendering at 228, 460
+and 464 depending on how wide each player's zone labels made the table beside
+them. `.detail-chart` therefore carries an explicit `flex: 0 0 228px` plus
+`width: 228px`. If you add a new chart, give its container a definite basis and
+check the rendered widths in the browser rather than trusting the SVG attribute.
+
 **Offence and defence sit side by side in a `.chartpair` grid**, offence left and
 defence right, on every page that shows shots. It is a CSS grid rather than flex
 so the two halves are exactly equal: the courts then render at the same size and
