@@ -45,7 +45,7 @@
 
 <section class="keep">
 <h2>Four factors</h2>
-{{ m.four_factor_table(ff, off, league, p.identity.code, 'Opponents', ranks=ranks) }}
+{{ m.four_factor_ranked(ff, off, league, ranks, p.identity.code, 'ff-table') }}
 {{ charts.four_factors }}
 </section>
 
@@ -76,7 +76,7 @@ means they run shooters off the line but concede space outside.</p>
 <section>
 <h2>Personnel</h2>
 {{ m.player_table(players, per_game=True, details=player_details,
-                  scope='all games') }}
+                  scope='all games', pcts=percentiles, table_id='players') }}
 <p class="note">Sorted by minutes. USG% is the share of team possessions a player
 uses while on court, so a high-usage, low-efficiency player is the one to make
 shoot. FD/40 flags who draws fouls. Click any player for their shot chart and

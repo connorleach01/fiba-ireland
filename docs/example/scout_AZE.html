@@ -30,6 +30,14 @@
   --good: #006300;
   --bad: #b32020;
   --track: #e8e8e4;
+  /* Five-step diverging tint for rank shading. Blue reads as good and red as
+     bad; the middle tier is left unshaded so "average" looks like nothing.
+     Kept very light so black text stays far above contrast minimums, and the
+     rank number is always printed alongside so colour is never the only cue. */
+  --rk-1: #c5dcf4;
+  --rk-2: #e4eefa;
+  --rk-4: #fbe8e8;
+  --rk-5: #f5cfcf;
   --court-line: #9a998f;
 
   --page-w: 210mm;
@@ -240,7 +248,7 @@ a { color: var(--ink); text-underline-offset: 2px; }
     box-shadow: none;
   }
   .masthead { break-after: avoid; page-break-after: avoid; }
-  .no-print, .sitebar, .viewtoggle { display: none !important; }
+  .no-print, .sitebar, .viewtoggle, .ranktoggle { display: none !important; }
   /* Expanded players print; collapsed ones stay out of the way. */
   tr.expander { cursor: auto; }
   .twisty { display: none; }
@@ -316,6 +324,22 @@ th[data-sortable]::after {
 th[data-sortable][data-dir="asc"]::after { content: "\2191"; opacity: 1; }
 th[data-sortable][data-dir="desc"]::after { content: "\2193"; opacity: 1; }
 
+/* --- Rank shading -------------------------------------------------------- */
+.rk-chip {
+  display: none; margin-left: 4px; font-size: 8.4px; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+table.show-ranks .rk-chip { display: inline; }
+table.show-ranks td.t1 { background: var(--rk-1); }
+table.show-ranks td.t2 { background: var(--rk-2); }
+table.show-ranks td.t4 { background: var(--rk-4); }
+table.show-ranks td.t5 { background: var(--rk-5); }
+tr.subhead td {
+  font-size: 8.2px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-2); font-weight: 700; background: var(--band);
+  border-top: 1px solid var(--rule-mid);
+}
+
 /* --- View toggle --------------------------------------------------------- */
 .viewtoggle { display: flex; gap: 0; margin: 8px 0 0; }
 .viewtoggle button {
@@ -330,6 +354,11 @@ th[data-sortable][data-dir="desc"]::after { content: "\2193"; opacity: 1; }
   background: var(--ink); color: #fff; border-color: var(--ink);
 }
 table.view-off .c-def, table.view-def .c-off { display: none; }
+table.view-box .c-adv, table.view-box .c-shot, table.view-box .c-scoring,
+table.view-adv .c-box, table.view-adv .c-shot, table.view-adv .c-scoring,
+table.view-shot .c-adv, table.view-shot .c-box, table.view-shot .c-scoring,
+table.view-scoring .c-adv, table.view-scoring .c-box, table.view-scoring .c-shot
+  { display: none; }
 
 /* --- Expandable player rows ---------------------------------------------- */
 tr.expander { cursor: pointer; }
@@ -451,7 +480,7 @@ td .flag, li .flag { margin-right: 5px; }
 <header class="masthead">
   <div class="kicker">
     <span>FIBA U18 Eurobasket 2026 Division B &middot; Scouting report</span>
-    <span>Sun 02 Aug 2026, 20:43 (Irish time)</span>
+    <span>Sun 02 Aug 2026, 20:55 (Irish time)</span>
   </div>
   <h1><svg class="flag" viewBox="0 0 3 2" width="24" height="16" role="img" aria-label="AZE flag"><rect y="0.0000" width="3" height="0.6667" fill="#00b5e2"/><rect y="0.6667" width="3" height="0.6667" fill="#ed2939"/><rect y="1.3333" width="3" height="0.6667" fill="#3f9c35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Azerbaijan</h1>
   <p class="sub">2&ndash;6 over 8 games
@@ -559,44 +588,64 @@ td .flag, li .flag { margin-right: 5px; }
 
 <section class="keep">
 <h2>Four factors</h2>
+<button type="button" class="ranktoggle no-print" data-target="#ff-table"
+        data-off="Show ranks" data-on="Hide ranks" aria-pressed="false">Show ranks</button>
+
 <div class="scroll-x">
-<table>
+<table id="ff-table">
 <thead><tr>
-  <th class="left">Factor</th><th>AZE</th>
-<th>Rank</th>  <th>Opponents</th><th>Diff</th><th>Event avg</th>
+  <th class="left">Factor</th><th>AZE</th><th>Event avg</th><th class="left">Rank</th>
 </tr></thead>
 <tbody>
+  <tr class="subhead"><td class="left" colspan="4">Offence</td></tr>
   <tr>
     <td class="left">eFG% <span class="unit">high is better</span></td>
-    <td>39.1</td>
-      <td class="muted">22nd of 22</td>
-    <td>42.5</td>
-    <td class="neg">-3.3</td>
+    <td class="t5">39.1<span class="rk-chip">22nd</span></td>
     <td class="muted">44.3</td>
+    <td class="left muted">22nd of 22</td>
   </tr>
   <tr>
     <td class="left">TOV% <span class="unit">low is better</span></td>
-    <td>30.2</td>
-      <td class="muted">21st of 22</td>
-    <td>21.1</td>
-    <td class="neg">+9.1</td>
+    <td class="t5">30.2<span class="rk-chip">21st</span></td>
     <td class="muted">22.1</td>
+    <td class="left muted">21st of 22</td>
   </tr>
   <tr>
     <td class="left">OREB% <span class="unit">high is better</span></td>
-    <td>34.6</td>
-      <td class="muted">10th of 22</td>
-    <td>36.0</td>
-    <td class="neg">-1.5</td>
+    <td class="t3">34.6<span class="rk-chip">10th</span></td>
     <td class="muted">33.9</td>
+    <td class="left muted">10th of 22</td>
   </tr>
   <tr>
     <td class="left">FTA/FGA <span class="unit">high is better</span></td>
-    <td>31.1</td>
-      <td class="muted">13th of 22</td>
-    <td>22.1</td>
-    <td class="pos">+9.0</td>
+    <td class="t3">31.1<span class="rk-chip">13th</span></td>
     <td class="muted">30.6</td>
+    <td class="left muted">13th of 22</td>
+  </tr>
+  <tr class="subhead"><td class="left" colspan="4">Defence, what they allow</td></tr>
+  <tr>
+    <td class="left">Opp eFG% <span class="unit">low is better</span></td>
+    <td class="t1">42.5<span class="rk-chip">5th</span></td>
+    <td class="muted">44.3</td>
+    <td class="left muted">5th of 22</td>
+  </tr>
+  <tr>
+    <td class="left">TOV% forced <span class="unit">high is better</span></td>
+    <td class="t4">21.1<span class="rk-chip">16th</span></td>
+    <td class="muted">22.1</td>
+    <td class="left muted">16th of 22</td>
+  </tr>
+  <tr>
+    <td class="left">DREB% <span class="unit">high is better</span></td>
+    <td class="t5">64.0<span class="rk-chip">18th</span></td>
+    <td class="muted">66.1</td>
+    <td class="left muted">18th of 22</td>
+  </tr>
+  <tr>
+    <td class="left">Opp FTA/FGA <span class="unit">low is better</span></td>
+    <td class="t1">22.1<span class="rk-chip">2nd</span></td>
+    <td class="muted">30.6</td>
+    <td class="left muted">2nd of 22</td>
   </tr>
 </tbody>
 </table>
@@ -799,8 +848,10 @@ means they run shooters off the line but concede space outside.</p>
 
 <section>
 <h2>Personnel</h2>
+<button type="button" class="ranktoggle no-print" data-target="#players"
+        data-off="Show percentiles" data-on="Hide percentiles" aria-pressed="false">Show percentiles</button>
 <div class="scroll-x">
-<table class="expandable">
+<table id="players" class="expandable">
 <thead>
   <tr>
     <th class="left">#</th><th class="left" data-sortable>Player</th>
@@ -822,22 +873,22 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">1</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Ismayil Abdullayev</td>
       <td>8</td>
-      <td>38.6</td>
-      <td>14.4</td>
-      <td>4.4</td>
-      <td>4.2</td>
+      <td class="t1">38.6<span class="rk-chip">1st</span></td>
+      <td class="t1">14.4<span class="rk-chip">13th</span></td>
+      <td class="t2">4.4<span class="rk-chip">74th</span></td>
+      <td class="t1">4.2<span class="rk-chip">16th</span></td>
     <td>37/118</td>
-    <td>31.4</td>
+    <td class="t4">31.4<span class="rk-chip">174th</span></td>
     <td>7/47</td>
-    <td>14.9</td>
+    <td class="t4">14.9<span class="rk-chip">148th</span></td>
     <td>34/48</td>
-    <td>70.8</td>
-    <td>0.69</td>
-    <td>24.1</td>
-    <td>4.9</td>
-    <td>24.7</td>
-    <td>21.9</td>
-    <td>4.8</td>
+    <td class="t2">70.8<span class="rk-chip">69th</span></td>
+    <td class="t5">0.69<span class="rk-chip">181st</span></td>
+    <td class="">24.1<span class="rk-chip">36th</span></td>
+    <td class="t5">4.9<span class="rk-chip">183rd</span></td>
+    <td class="t1">24.7<span class="rk-chip">34th</span></td>
+    <td class="t4">21.9<span class="rk-chip">162nd</span></td>
+    <td class="t2">4.8<span class="rk-chip">51st</span></td>
   </tr>
   <tr class="expander" data-target="pd-369567" tabindex="0"
       role="button" aria-expanded="false"
@@ -845,22 +896,22 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">3</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Emmanuel Agbason</td>
       <td>8</td>
-      <td>37.0</td>
-      <td>16.4</td>
-      <td>16.6</td>
-      <td>1.1</td>
+      <td class="t1">37.0<span class="rk-chip">2nd</span></td>
+      <td class="t1">16.4<span class="rk-chip">5th</span></td>
+      <td class="t1">16.6<span class="rk-chip">1st</span></td>
+      <td class="t3">1.1<span class="rk-chip">117th</span></td>
     <td>56/100</td>
-    <td>56.0</td>
+    <td class="t1">56.0<span class="rk-chip">16th</span></td>
     <td>0/1</td>
-    <td>0.0</td>
+    <td class="t5">0.0<span class="rk-chip">173rd</span></td>
     <td>19/41</td>
-    <td>46.3</td>
-    <td>1.12</td>
-    <td>19.4</td>
-    <td>19.4</td>
-    <td>8.1</td>
-    <td>14.5</td>
-    <td>4.7</td>
+    <td class="t5">46.3<span class="rk-chip">174th</span></td>
+    <td class="t1">1.12<span class="rk-chip">26th</span></td>
+    <td class="">19.4<span class="rk-chip">107th</span></td>
+    <td class="t1">19.4<span class="rk-chip">5th</span></td>
+    <td class="t4">8.1<span class="rk-chip">155th</span></td>
+    <td class="t2">14.5<span class="rk-chip">73rd</span></td>
+    <td class="t2">4.7<span class="rk-chip">54th</span></td>
   </tr>
   <tr class="expander" data-target="pd-343511" tabindex="0"
       role="button" aria-expanded="false"
@@ -868,22 +919,22 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">99</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Huseyn Mammadov</td>
       <td>7</td>
-      <td>34.9</td>
-      <td>12.7</td>
-      <td>7.0</td>
-      <td>1.3</td>
+      <td class="t1">34.9<span class="rk-chip">3rd</span></td>
+      <td class="t1">12.7<span class="rk-chip">29th</span></td>
+      <td class="t1">7.0<span class="rk-chip">19th</span></td>
+      <td class="t3">1.3<span class="rk-chip">101st</span></td>
     <td>31/86</td>
-    <td>36.0</td>
+    <td class="t3">36.0<span class="rk-chip">130th</span></td>
     <td>5/19</td>
-    <td>26.3</td>
+    <td class="t3">26.3<span class="rk-chip">85th</span></td>
     <td>22/36</td>
-    <td>61.1</td>
-    <td>0.78</td>
-    <td>21.1</td>
-    <td>8.7</td>
-    <td>8.4</td>
-    <td>17.8</td>
-    <td>4.6</td>
+    <td class="t3">61.1<span class="rk-chip">112th</span></td>
+    <td class="t4">0.78<span class="rk-chip">151st</span></td>
+    <td class="">21.1<span class="rk-chip">76th</span></td>
+    <td class="t3">8.7<span class="rk-chip">99th</span></td>
+    <td class="t4">8.4<span class="rk-chip">150th</span></td>
+    <td class="t3">17.8<span class="rk-chip">112th</span></td>
+    <td class="t2">4.6<span class="rk-chip">58th</span></td>
   </tr>
   <tr class="expander" data-target="pd-333797" tabindex="0"
       role="button" aria-expanded="false"
@@ -891,22 +942,22 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">18</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Huseyn Gaflanov</td>
       <td>7</td>
-      <td>27.9</td>
-      <td>6.4</td>
-      <td>5.1</td>
-      <td>0.3</td>
+      <td class="t1">27.9<span class="rk-chip">27th</span></td>
+      <td class="t3">6.4<span class="rk-chip">105th</span></td>
+      <td class="t1">5.1<span class="rk-chip">42nd</span></td>
+      <td class="t5">0.3<span class="rk-chip">201st</span></td>
     <td>17/59</td>
-    <td>28.8</td>
+    <td class="t5">28.8<span class="rk-chip">187th</span></td>
     <td>7/31</td>
-    <td>22.6</td>
+    <td class="t3">22.6<span class="rk-chip">109th</span></td>
     <td>4/7</td>
-    <td>57.1</td>
-    <td>0.69</td>
-    <td>15.6</td>
-    <td>8.0</td>
-    <td>2.1</td>
-    <td>15.1</td>
-    <td>0.8</td>
+    <td class="t4">57.1<span class="rk-chip">130th</span></td>
+    <td class="t5">0.69<span class="rk-chip">178th</span></td>
+    <td class="">15.6<span class="rk-chip">169th</span></td>
+    <td class="t3">8.0<span class="rk-chip">117th</span></td>
+    <td class="t5">2.1<span class="rk-chip">210th</span></td>
+    <td class="t2">15.1<span class="rk-chip">81st</span></td>
+    <td class="t5">0.8<span class="rk-chip">212th</span></td>
   </tr>
   <tr class="expander" data-target="pd-369566" tabindex="0"
       role="button" aria-expanded="false"
@@ -914,22 +965,22 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">11</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Azar Ibrahimov</td>
       <td>8</td>
-      <td>24.1</td>
-      <td>6.2</td>
-      <td>2.5</td>
-      <td>2.0</td>
+      <td class="t2">24.1<span class="rk-chip">62nd</span></td>
+      <td class="t3">6.2<span class="rk-chip">110th</span></td>
+      <td class="t4">2.5<span class="rk-chip">147th</span></td>
+      <td class="t2">2.0<span class="rk-chip">56th</span></td>
     <td>18/50</td>
-    <td>36.0</td>
+    <td class="t3">36.0<span class="rk-chip">131st</span></td>
     <td>10/26</td>
-    <td>38.5</td>
+    <td class="t1">38.5<span class="rk-chip">25th</span></td>
     <td>4/6</td>
-    <td>66.7</td>
-    <td>0.92</td>
-    <td>17.4</td>
-    <td>4.5</td>
-    <td>17.6</td>
-    <td>34.7</td>
-    <td>1.7</td>
+    <td class="t2">66.7<span class="rk-chip">84th</span></td>
+    <td class="t3">0.92<span class="rk-chip">93rd</span></td>
+    <td class="">17.4<span class="rk-chip">139th</span></td>
+    <td class="t5">4.5<span class="rk-chip">189th</span></td>
+    <td class="t2">17.6<span class="rk-chip">59th</span></td>
+    <td class="t5">34.7<span class="rk-chip">215th</span></td>
+    <td class="t5">1.7<span class="rk-chip">179th</span></td>
   </tr>
   <tr class="expander" data-target="pd-343504" tabindex="0"
       role="button" aria-expanded="false"
@@ -937,22 +988,22 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">17</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Oghuzkhan Guliyev</td>
       <td>7</td>
-      <td>22.1</td>
-      <td>5.1</td>
-      <td>2.9</td>
-      <td>2.9</td>
+      <td class="t2">22.1<span class="rk-chip">82nd</span></td>
+      <td class="t4">5.1<span class="rk-chip">144th</span></td>
+      <td class="t3">2.9<span class="rk-chip">131st</span></td>
+      <td class="t1">2.9<span class="rk-chip">32nd</span></td>
     <td>14/46</td>
-    <td>30.4</td>
+    <td class="t5">30.4<span class="rk-chip">180th</span></td>
     <td>1/12</td>
-    <td>8.3</td>
+    <td class="t5">8.3<span class="rk-chip">170th</span></td>
     <td>7/18</td>
-    <td>38.9</td>
-    <td>0.63</td>
-    <td>23.7</td>
-    <td>5.6</td>
-    <td>27.2</td>
-    <td>38.7</td>
-    <td>4.9</td>
+    <td class="t5">38.9<span class="rk-chip">184th</span></td>
+    <td class="t5">0.63<span class="rk-chip">194th</span></td>
+    <td class="">23.7<span class="rk-chip">39th</span></td>
+    <td class="t4">5.6<span class="rk-chip">172nd</span></td>
+    <td class="t1">27.2<span class="rk-chip">26th</span></td>
+    <td class="t5">38.7<span class="rk-chip">217th</span></td>
+    <td class="t2">4.9<span class="rk-chip">46th</span></td>
   </tr>
   <tr class="expander" data-target="pd-343497" tabindex="0"
       role="button" aria-expanded="false"
@@ -960,22 +1011,22 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">4</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Mubariz Mirzayev</td>
       <td>6</td>
-      <td>13.2</td>
-      <td>1.8</td>
-      <td>0.8</td>
-      <td>1.2</td>
+      <td class="t4">13.2<span class="rk-chip">175th</span></td>
+      <td class="t5">1.8<span class="rk-chip">209th</span></td>
+      <td class="t5">0.8<span class="rk-chip">216th</span></td>
+      <td class="t3">1.2<span class="rk-chip">110th</span></td>
     <td>5/24</td>
-    <td>20.8</td>
+    <td class="t5">20.8<span class="rk-chip">210th</span></td>
     <td>1/15</td>
-    <td>6.7</td>
+    <td class="t5">6.7<span class="rk-chip">172nd</span></td>
     <td>0/1</td>
-    <td>0.0</td>
-    <td>0.46</td>
-    <td>21.7</td>
-    <td>2.7</td>
-    <td>17.5</td>
-    <td>41.0</td>
-    <td>2.0</td>
+    <td class="t5">0.0<span class="rk-chip">204th</span></td>
+    <td class="t5">0.46<span class="rk-chip">211th</span></td>
+    <td class="">21.7<span class="rk-chip">68th</span></td>
+    <td class="t5">2.7<span class="rk-chip">214th</span></td>
+    <td class="t2">17.5<span class="rk-chip">61st</span></td>
+    <td class="t5">41.0<span class="rk-chip">218th</span></td>
+    <td class="t4">2.0<span class="rk-chip">164th</span></td>
   </tr>
   <tr class="expander" data-target="pd-394147" tabindex="0"
       role="button" aria-expanded="false"
@@ -983,22 +1034,22 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">0</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Musa Isayev</td>
       <td>6</td>
-      <td>11.5</td>
-      <td>1.5</td>
-      <td>1.3</td>
-      <td>0.2</td>
+      <td class="t5">11.5<span class="rk-chip">203rd</span></td>
+      <td class="t5">1.5<span class="rk-chip">213th</span></td>
+      <td class="t5">1.3<span class="rk-chip">206th</span></td>
+      <td class="t5">0.2<span class="rk-chip">209th</span></td>
     <td>4/12</td>
-    <td>33.3</td>
+    <td class="t4">33.3<span class="rk-chip">152nd</span></td>
     <td>1/1</td>
-    <td>100.0</td>
+    <td class="t1">100.0<span class="rk-chip">1st</span></td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>0.75</td>
-    <td>10.3</td>
-    <td>5.0</td>
-    <td>2.9</td>
-    <td>29.4</td>
-    <td>1.2</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="t4">0.75<span class="rk-chip">165th</span></td>
+    <td class="">10.3<span class="rk-chip">213th</span></td>
+    <td class="t5">5.0<span class="rk-chip">180th</span></td>
+    <td class="t5">2.9<span class="rk-chip">205th</span></td>
+    <td class="t5">29.4<span class="rk-chip">198th</span></td>
+    <td class="t5">1.2<span class="rk-chip">202nd</span></td>
   </tr>
   <tr class="expander" data-target="pd-343507" tabindex="0"
       role="button" aria-expanded="false"
@@ -1006,22 +1057,22 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">27</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Hajisamad Oghuz</td>
       <td>5</td>
-      <td>10.5</td>
-      <td>0.0</td>
-      <td>0.6</td>
-      <td>0.0</td>
+      <td class="t5">10.5<span class="rk-chip">215th</span></td>
+      <td class="t5">0.0<span class="rk-chip">219th</span></td>
+      <td class="t5">0.6<span class="rk-chip">218th</span></td>
+      <td class="t5">0.0<span class="rk-chip">216th</span></td>
     <td>0/7</td>
-    <td>0.0</td>
+    <td class="t5">0.0<span class="rk-chip">219th</span></td>
     <td>0/5</td>
-    <td>0.0</td>
+    <td class="t5">0.0<span class="rk-chip">173rd</span></td>
     <td>0/2</td>
-    <td>0.0</td>
-    <td>0.00</td>
-    <td>8.7</td>
-    <td>2.5</td>
-    <td>0.0</td>
-    <td>27.6</td>
-    <td>0.8</td>
+    <td class="t5">0.0<span class="rk-chip">204th</span></td>
+    <td class="t5">0.00<span class="rk-chip">219th</span></td>
+    <td class="">8.7<span class="rk-chip">217th</span></td>
+    <td class="t5">2.5<span class="rk-chip">217th</span></td>
+    <td class="t5">0.0<span class="rk-chip">216th</span></td>
+    <td class="t5">27.6<span class="rk-chip">193rd</span></td>
+    <td class="t5">0.8<span class="rk-chip">213th</span></td>
   </tr>
   <tr class="expander" data-target="pd-415107" tabindex="0"
       role="button" aria-expanded="false"
@@ -1029,22 +1080,22 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">29</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Aykhan Aslanov</td>
       <td>4</td>
-      <td>4.3</td>
-      <td>1.0</td>
-      <td>1.8</td>
-      <td>0.0</td>
+      <td class="">4.3</td>
+      <td class="">1.0</td>
+      <td class="">1.8</td>
+      <td class="">0.0</td>
     <td>2/9</td>
-    <td>22.2</td>
+    <td class="">22.2</td>
     <td>0/4</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>0.44</td>
-    <td>26.9</td>
-    <td>17.7</td>
-    <td>0.0</td>
-    <td>18.2</td>
-    <td>0.0</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">0.44</td>
+    <td class="">26.9</td>
+    <td class="">17.7</td>
+    <td class="">0.0</td>
+    <td class="">18.2</td>
+    <td class="">0.0</td>
   </tr>
   <tr class="expander" data-target="pd-394149" tabindex="0"
       role="button" aria-expanded="false"
@@ -1052,22 +1103,22 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">9</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Tamerlan Novruzlu</td>
       <td>1</td>
-      <td>10.8</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
+      <td class="t5">10.8<span class="rk-chip">211th</span></td>
+      <td class="t5">0.0<span class="rk-chip">219th</span></td>
+      <td class="t5">0.0<span class="rk-chip">220th</span></td>
+      <td class="t5">0.0<span class="rk-chip">216th</span></td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>3.9</td>
-    <td>0.0</td>
-    <td>0.0</td>
-    <td>100.0</td>
-    <td>0.0</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">3.9<span class="rk-chip">219th</span></td>
+    <td class="t5">0.0<span class="rk-chip">220th</span></td>
+    <td class="t5">0.0<span class="rk-chip">216th</span></td>
+    <td class="t5">100.0<span class="rk-chip">220th</span></td>
+    <td class="t5">0.0<span class="rk-chip">218th</span></td>
   </tr>
   <tr class="expander" data-target="pd-394146" tabindex="0"
       role="button" aria-expanded="false"
@@ -1075,26 +1126,30 @@ means they run shooters off the line but concede space outside.</p>
     <td class="left">14</td>
     <td class="left name"><span class="twisty" aria-hidden="true">&#9656;</span>Tunar Hajizada</td>
       <td>2</td>
-      <td>2.9</td>
-      <td>0.0</td>
-      <td>1.0</td>
-      <td>0.0</td>
+      <td class="">2.9</td>
+      <td class="">0.0</td>
+      <td class="">1.0</td>
+      <td class="">0.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>7.1</td>
-    <td>14.8</td>
-    <td>0.0</td>
-    <td>100.0</td>
-    <td>0.0</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">7.1</td>
+    <td class="">14.8</td>
+    <td class="">0.0</td>
+    <td class="">100.0</td>
+    <td class="">0.0</td>
   </tr>
 </tbody>
 </table>
 </div>
+<p class="note">Ranks are against the 220 players in the
+event averaging at least 10 minutes a
+game. Players below that threshold are listed but not ranked, because a
+percentile off six minutes a night describes the sample, not the player.</p>
 <p class="note">Click a player for their shot chart and shooting breakdown.</p>
 <div class="player-panels">
   <div class="player-panel" id="pd-343499" hidden>
@@ -1847,7 +1902,7 @@ TOV% forced and DREB% are higher-is-better.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Sun 02 Aug 2026, 20:43 (Irish time)</span>
+  <span>Generated Sun 02 Aug 2026, 20:55 (Irish time)</span>
 </div>
 
 <div class="running-foot">
@@ -1979,6 +2034,18 @@ TOV% forced and DREB% are higher-is-better.</p>
     if (!row) return;
     e.preventDefault();
     toggleRow(row);
+  });
+
+  // Rank shading toggle. Off by default so the default page stays a clean
+  // printed table; turning it on adds the rank number and a tint.
+  document.addEventListener('click', function (e) {
+    var button = e.target.closest('button.ranktoggle');
+    if (!button) return;
+    var table = document.querySelector(button.dataset.target);
+    if (!table) return;
+    var on = table.classList.toggle('show-ranks');
+    button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    button.textContent = on ? button.dataset.on : button.dataset.off;
   });
 
   // Offence / defence / combined toggle.

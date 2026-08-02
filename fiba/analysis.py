@@ -168,23 +168,82 @@ def event_averages(conn, event_slug: str) -> dict:
     return factors
 
 
-# Metrics we rank teams on, and whether a bigger number is better. Pace has no
-# direction: it is ranked fastest first and labelled as such rather than pretending
-# quick or slow is an achievement.
-RANKED_METRICS = {
-    "efg_pct": True,
-    "tov_pct": False,
-    "oreb_pct": True,
-    "ft_rate": True,
-    "off_rating": True,
-    "def_rating": False,
-    "net_rating": True,
-    "pace": True,
-    "opp_efg_pct": False,
-    "tov_forced_pct": True,
-    "dreb_pct": True,
-    "opp_ft_rate": False,
+# Everything a team can be ranked on, and whether a bigger number is better.
+# Grouped the way the leaderboard presents them. Pace and the shot-share metrics
+# have no better/worse direction, so they carry None and are ranked but never
+# shaded: taking a lot of threes is a style, not an achievement.
+TEAM_METRICS: dict[str, dict] = {
+    # Advanced, own
+    "pace": {"group": "advanced", "better": None, "label": "Pace", "dp": 0},
+    "off_rating": {"group": "advanced", "better": True, "label": "ORtg"},
+    "def_rating": {"group": "advanced", "better": False, "label": "DRtg"},
+    "net_rating": {"group": "advanced", "better": True, "label": "Net/100", "signed": True},
+    "efg_pct": {"group": "advanced", "better": True, "label": "eFG%"},
+    "tov_pct": {"group": "advanced", "better": False, "label": "TOV%"},
+    "oreb_pct": {"group": "advanced", "better": True, "label": "OREB%"},
+    "ft_rate": {"group": "advanced", "better": True, "label": "FTA/FGA"},
+    # Advanced, allowed
+    "opp_efg_pct": {"group": "advanced", "better": False, "label": "Opp eFG%"},
+    "tov_forced_pct": {"group": "advanced", "better": True, "label": "TOV% frc"},
+    "dreb_pct": {"group": "advanced", "better": True, "label": "DREB%"},
+    "opp_ft_rate": {"group": "advanced", "better": False, "label": "Opp FTr"},
+    # Box score, per game
+    "pts": {"group": "box", "better": True, "label": "PTS"},
+    "fg_pct": {"group": "box", "better": True, "label": "FG%"},
+    "fg3_pct": {"group": "box", "better": True, "label": "3P%"},
+    "ft_pct": {"group": "box", "better": True, "label": "FT%"},
+    "oreb": {"group": "box", "better": True, "label": "OR"},
+    "dreb": {"group": "box", "better": True, "label": "DR"},
+    "ast": {"group": "box", "better": True, "label": "AST"},
+    "tov": {"group": "box", "better": False, "label": "TO"},
+    "stl": {"group": "box", "better": True, "label": "STL"},
+    "blk": {"group": "box", "better": True, "label": "BLK"},
+    "pf": {"group": "box", "better": False, "label": "PF"},
+    "opp_pts": {"group": "box", "better": False, "label": "Opp PTS"},
+    "opp_fg_pct": {"group": "box", "better": False, "label": "Opp FG%"},
+    "opp_fg3_pct": {"group": "box", "better": False, "label": "Opp 3P%"},
+    # Shooting by zone, own then allowed
+    "rim_share": {"group": "shot", "better": None, "label": "Rim %sh"},
+    "rim_fg": {"group": "shot", "better": True, "label": "Rim FG%"},
+    "paint_share": {"group": "shot", "better": None, "label": "Paint %sh"},
+    "mid_share": {"group": "shot", "better": None, "label": "Mid %sh"},
+    "three_share": {"group": "shot", "better": None, "label": "3PT %sh"},
+    "three_fg": {"group": "shot", "better": True, "label": "3PT FG%"},
+    "opp_rim_share": {"group": "shot", "better": False, "label": "Opp rim %sh"},
+    "opp_rim_fg": {"group": "shot", "better": False, "label": "Opp rim FG%"},
+    "opp_three_share": {"group": "shot", "better": None, "label": "Opp 3PT %sh"},
+    "opp_three_fg": {"group": "shot", "better": False, "label": "Opp 3PT FG%"},
+    # Scoring breakdown, per game
+    "pip": {"group": "scoring", "better": True, "label": "Paint"},
+    "fbp": {"group": "scoring", "better": True, "label": "Fast break"},
+    "scp": {"group": "scoring", "better": True, "label": "2nd chance"},
+    "pat": {"group": "scoring", "better": True, "label": "Off TO"},
+    "bench": {"group": "scoring", "better": True, "label": "Bench"},
+    "opp_pip": {"group": "scoring", "better": False, "label": "Opp paint"},
+    "opp_fbp": {"group": "scoring", "better": False, "label": "Opp fast br"},
+    "opp_scp": {"group": "scoring", "better": False, "label": "Opp 2nd ch"},
+    "opp_pat": {"group": "scoring", "better": False, "label": "Opp off TO"},
 }
+
+
+# How the leaderboard groups its columns. Each view is a readable width on its
+# own; showing all forty-odd at once would not be.
+LEADERBOARD_GROUPS = [
+    {"key": "adv", "label": "Advanced", "metrics": [
+        "pace", "off_rating", "def_rating", "net_rating",
+        "efg_pct", "tov_pct", "oreb_pct", "ft_rate",
+        "opp_efg_pct", "tov_forced_pct", "dreb_pct", "opp_ft_rate"]},
+    {"key": "box", "label": "Box score", "metrics": [
+        "pts", "fg_pct", "fg3_pct", "ft_pct", "oreb", "dreb", "ast", "tov",
+        "stl", "blk", "pf", "opp_pts", "opp_fg_pct", "opp_fg3_pct"]},
+    {"key": "shot", "label": "Shooting", "metrics": [
+        "rim_share", "rim_fg", "paint_share", "mid_share", "three_share",
+        "three_fg", "opp_rim_share", "opp_rim_fg", "opp_three_share",
+        "opp_three_fg"]},
+    {"key": "scoring", "label": "Scoring", "metrics": [
+        "pip", "fbp", "scp", "pat", "bench",
+        "opp_pip", "opp_fbp", "opp_scp", "opp_pat"]},
+]
 
 
 def ordinal(n: int) -> str:
@@ -193,53 +252,154 @@ def ordinal(n: int) -> str:
     return f"{n}{ {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th') }"
 
 
-def event_ranks(conn, event_slug: str) -> dict:
-    """Where each team sits in the event on every ranked metric.
+def _zone_summary(zones: list[dict], prefix: str = "") -> dict:
+    by_name = {z["zone"]: z for z in zones}
+    three_attempts = sum(by_name[z]["attempts"] for z in ("Corner 3", "Wing 3", "Top 3"))
+    three_makes = sum(by_name[z]["makes"] for z in ("Corner 3", "Wing 3", "Top 3"))
+    total = sum(z["attempts"] for z in zones)
+    return {
+        f"{prefix}rim_share": metrics._pct(by_name["Rim"]["attempts"], total),
+        f"{prefix}rim_fg": by_name["Rim"]["fg_pct"],
+        f"{prefix}paint_share": metrics._pct(by_name["Paint"]["attempts"], total),
+        f"{prefix}mid_share": metrics._pct(by_name["Mid-range"]["attempts"], total),
+        f"{prefix}three_share": metrics._pct(three_attempts, total),
+        f"{prefix}three_fg": metrics._pct(three_makes, three_attempts),
+    }
 
-    Returns {org_id: {metric: {"rank": int, "of": int, "label": "3rd of 22"}}}.
-    Only teams that have played are ranked, so the denominator is honest early in
-    a tournament when some teams have no games yet.
-    """
-    values: dict[str, list[tuple[int, float]]] = {k: [] for k in RANKED_METRICS}
+
+def team_metrics(conn, event_slug: str) -> dict:
+    """Every rankable number for every team that has played."""
+    out: dict[int, dict] = {}
     for team in event_teams(conn, event_slug):
-        profile = team_profile(conn, event_slug, team["org_id"])
-        if not profile["games_played"]:
+        org_id = team["org_id"]
+        profile = team_profile(conn, event_slug, org_id)
+        games = profile["games_played"]
+        if not games:
             continue
         own, opp = profile["four_factors"], profile["opp_four_factors"]
-        source = {
+        t, o = profile["totals"], profile["opp_totals"]
+
+        row = {
+            "pace": profile["pace"],
+            "off_rating": own.get("off_rating"),
+            "def_rating": own.get("def_rating"),
+            "net_rating": own.get("net_rating"),
             "efg_pct": own.get("efg_pct"),
             "tov_pct": own.get("tov_pct"),
             "oreb_pct": own.get("oreb_pct"),
             "ft_rate": own.get("ft_rate"),
-            "off_rating": own.get("off_rating"),
-            "def_rating": own.get("def_rating"),
-            "net_rating": own.get("net_rating"),
-            "pace": profile.get("pace"),
             "opp_efg_pct": opp.get("efg_pct"),
             "tov_forced_pct": opp.get("tov_pct"),
             "dreb_pct": own.get("dreb_pct"),
             "opp_ft_rate": opp.get("ft_rate"),
+            "pts": t["PTS"] / games,
+            "fg_pct": metrics._pct(t["FGM"], t["FGA"]),
+            "fg3_pct": metrics._pct(t["FG3M"], t["FG3A"]),
+            "ft_pct": metrics._pct(t["FTM"], t["FTA"]),
+            "oreb": t["OR"] / games,
+            "dreb": t["DR"] / games,
+            "ast": t["AS"] / games,
+            "tov": t["TO"] / games,
+            "stl": t["ST"] / games,
+            "blk": t["BS"] / games,
+            "pf": t["PF"] / games,
+            "opp_pts": o["PTS"] / games,
+            "opp_fg_pct": metrics._pct(o["FGM"], o["FGA"]),
+            "opp_fg3_pct": metrics._pct(o["FG3M"], o["FG3A"]),
+            "pip": t["A_PIP"] / games,
+            "fbp": t["A_FBP"] / games,
+            "scp": t["A_SCP"] / games,
+            "pat": t["A_PAT"] / games,
+            "bench": t["A_PFB"] / games,
+            "opp_pip": o["A_PIP"] / games,
+            "opp_fbp": o["A_FBP"] / games,
+            "opp_scp": o["A_SCP"] / games,
+            "opp_pat": o["A_PAT"] / games,
         }
-        for metric, value in source.items():
-            if value is not None:
-                values[metric].append((team["org_id"], value))
+        row.update(_zone_summary(metrics.zone_breakdown(shots(conn, event_slug, org_id))))
+        row.update(_zone_summary(
+            metrics.zone_breakdown(shots_faced(conn, event_slug, org_id)), "opp_"))
+        out[org_id] = row
+    return out
 
-    ranks: dict[int, dict] = {}
-    for metric, pairs in values.items():
-        higher_is_better = RANKED_METRICS[metric]
-        pairs.sort(key=lambda pair: -pair[1] if higher_is_better else pair[1])
-        total = len(pairs)
-        previous_value = None
-        previous_rank = 0
-        for index, (org_id, value) in enumerate(pairs, start=1):
-            # Ties share a rank, otherwise two identical numbers read as different.
-            rank = previous_rank if value == previous_value else index
-            previous_value, previous_rank = value, rank
-            ranks.setdefault(org_id, {})[metric] = {
-                "rank": rank, "of": total,
-                "label": f"{ordinal(rank)} of {total}",
-            }
+
+def _rank_values(pairs: list[tuple], higher_is_better) -> dict:
+    """Rank a list of (key, value), ties sharing a rank."""
+    if higher_is_better is None:
+        pairs = sorted(pairs, key=lambda pair: -pair[1])
+    else:
+        pairs = sorted(pairs, key=lambda pair: -pair[1] if higher_is_better else pair[1])
+    total = len(pairs)
+    ranks = {}
+    previous_value = None
+    previous_rank = 0
+    for index, (key, value) in enumerate(pairs, start=1):
+        rank = previous_rank if value == previous_value else index
+        previous_value, previous_rank = value, rank
+        # Percentile of the field this entry beats, and a five-step tier used for
+        # shading. Metrics with no direction get no tier, so they are never
+        # coloured as if one end were good.
+        percentile = 100.0 * (total - rank) / (total - 1) if total > 1 else 50.0
+        tier = None
+        if higher_is_better is not None:
+            tier = 1 if percentile >= 80 else 2 if percentile >= 60 else \
+                3 if percentile >= 40 else 4 if percentile >= 20 else 5
+        ranks[key] = {"rank": rank, "of": total, "label": f"{ordinal(rank)} of {total}",
+                      "percentile": percentile, "tier": tier}
     return ranks
+
+
+def event_ranks(conn, event_slug: str) -> dict:
+    """{org_id: {metric: {rank, of, label, percentile, tier}}} across the event."""
+    values = team_metrics(conn, event_slug)
+    ranks: dict[int, dict] = {org_id: {} for org_id in values}
+    for metric, spec in TEAM_METRICS.items():
+        pairs = [(org_id, row[metric]) for org_id, row in values.items()
+                 if row.get(metric) is not None]
+        if not pairs:
+            continue
+        for org_id, entry in _rank_values(pairs, spec["better"]).items():
+            ranks[org_id][metric] = entry
+    return ranks
+
+
+# Players below this many minutes per game are excluded from the percentile pool
+# and shown without percentiles. Ranking a player against the field on six
+# minutes a night says more about the sample than the player.
+MIN_MPG_FOR_PERCENTILE = 10.0
+
+PLAYER_METRICS: dict[str, bool | None] = {
+    "minutes_pg": True, "pts_pg": True, "reb_pg": True, "ast_pg": True,
+    "fg_pct": True, "fg3_pct": True, "ft_pct": True, "pts_per_fga": True,
+    "usage_pct": None, "ts_pct": True, "efg_pct": True,
+    "treb_pct": True, "ast_pct": True, "tov_pct": False,
+    "fouls_drawn_per40": True,
+}
+
+
+def player_percentiles(conn, event_slug: str,
+                       min_mpg: float = MIN_MPG_FOR_PERCENTILE) -> dict:
+    """Percentile of every qualified player against the whole event.
+
+    Returns {person_id: {metric: {...}}} plus a "_pool" key describing the
+    threshold and how many players cleared it, so a report can say what the
+    numbers are measured against.
+    """
+    pool = []
+    for team in event_teams(conn, event_slug):
+        for player in player_profile(conn, event_slug, team["org_id"]):
+            if (player.get("minutes_pg") or 0) >= min_mpg:
+                pool.append(player)
+
+    out: dict = {p["person_id"]: {} for p in pool}
+    for metric, better in PLAYER_METRICS.items():
+        pairs = [(p["person_id"], p[metric]) for p in pool if p.get(metric) is not None]
+        if not pairs:
+            continue
+        for person_id, entry in _rank_values(pairs, better).items():
+            out[person_id][metric] = entry
+    out["_pool"] = {"min_mpg": min_mpg, "size": len(pool)}
+    return out
 
 
 def player_profile(conn, event_slug: str, org_id: int,

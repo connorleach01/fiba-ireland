@@ -130,6 +130,11 @@ turnovers, bench) and do not sum to total points: a fast-break layup is also
 points in the paint, and bench points cut across all of them. Any table showing
 them must say so.
 
+**Never name a template variable `values`, `items` or `keys`.** Jinja resolves
+dot access to attributes before dict keys, so `row.values` silently returns
+`dict.values` and the render fails deep inside Jinja with a confusing message.
+The leaderboard row key is `stats` for exactly this reason.
+
 **Free throws are logged at `x:0, y:0`** and carry no location. Exclude them from
 shot charts.
 
@@ -206,15 +211,30 @@ finished game in the event, which is what makes the scouting game logs clickable
 That is roughly 81 sheets at about 190 KB, so `docs/` runs to the high teens of
 megabytes. Fine for Pages and for git, but do not casually add per-page weight.
 
-## Ranks
+## Ranks and percentiles
 
-`analysis.event_ranks()` ranks every team that has played on twelve metrics, ties
-sharing a rank, and returns labels like "3rd of 22". The denominator counts only
-teams with games, so it stays honest early in a tournament. Pace has no
-better/worse direction and is ranked fastest first, labelled as such. Ranks
-appear in the scouting and tournament stat strips and as a column in the four
-factors table. They are deliberately absent from game sheets: a single game is
-not a ranking.
+`analysis.TEAM_METRICS` declares every rankable team number, its group
+(advanced / box / shot / scoring) and whether bigger is better.
+`analysis.team_metrics()` computes them and `event_ranks()` ranks each one, ties
+sharing a rank. Metrics with **no** better/worse direction carry `better: None`:
+they still get a rank but never a shading tier, because taking a lot of threes or
+playing fast is a style, not an achievement. The denominator counts only teams
+that have played.
+
+`analysis.player_percentiles()` does the same for players, against everyone in
+the event clearing `MIN_MPG_FOR_PERCENTILE` (10 MPG). Players below the threshold
+appear in tables but unranked, and the note under the table says what the pool is.
+
+Both are event-wide, so `build_all` computes them **once** and threads them
+through as `context`; do not call them per page.
+
+Shading is a five-step diverging tint (blue good, red bad, unshaded middle) that
+is off by default and turned on by a `rank_toggle`. The rank number always prints
+alongside the tint, so colour is never the only cue. Game sheets get no ranks at
+all: a single game is not a ranking.
+
+`LEADERBOARD_GROUPS` drives the leaderboard's four views, so adding a column is a
+one-line change there plus an entry in `TEAM_METRICS`.
 
 ## Conventions
 

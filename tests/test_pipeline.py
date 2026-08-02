@@ -171,11 +171,50 @@ def test_theming():
     check("known country renders its flag", "svg" in theming.flag_svg("IRL"))
 
 
+def test_ranks_and_percentiles():
+    """Ranks must respect direction, tie fairly, and skip style metrics."""
+    print("ranks and percentiles")
+    conn = db.connect()
+    ranks = analysis.event_ranks(conn, U18)
+    metrics_values = analysis.team_metrics(conn, U18)
+    check("every playing team is ranked", len(ranks) == len(metrics_values))
+
+    # Best defensive rating is the lowest number, not the highest.
+    best = min(metrics_values.items(), key=lambda kv: kv[1]["def_rating"])[0]
+    check("lower defensive rating ranks first",
+          ranks[best]["def_rating"]["rank"] == 1,
+          f"(got {ranks[best]['def_rating']['rank']})")
+
+    # Highest turnover rate must rank last, since low is better.
+    worst = max(metrics_values.items(), key=lambda kv: kv[1]["tov_pct"])[0]
+    check("higher turnover rate ranks last",
+          ranks[worst]["tov_pct"]["rank"] == len(metrics_values))
+
+    # Style metrics get a rank but no shading tier.
+    check("pace carries no tier", ranks[best]["pace"]["tier"] is None)
+    check("three-point share carries no tier",
+          ranks[best]["three_share"]["tier"] is None)
+    check("net rating carries a tier", ranks[best]["net_rating"]["tier"] in (1, 2, 3, 4, 5))
+
+    pcts = analysis.player_percentiles(conn, U18)
+    pool = pcts["_pool"]
+    check("percentile pool respects the minutes threshold", pool["size"] > 0)
+    qualified = [p for team in analysis.event_teams(conn, U18)
+                 for p in analysis.player_profile(conn, U18, team["org_id"])
+                 if (p.get("minutes_pg") or 0) >= pool["min_mpg"]]
+    check("pool size matches the qualifying players", pool["size"] == len(qualified))
+    below = [p for team in analysis.event_teams(conn, U18)
+             for p in analysis.player_profile(conn, U18, team["org_id"])
+             if (p.get("minutes_pg") or 0) < pool["min_mpg"]]
+    check("players under the threshold get no percentile",
+          all(p["person_id"] not in pcts for p in below))
+
+
 def main() -> int:
     for test in (test_clock, test_parse_both_encodings, test_metrics_match_published,
                  test_four_factors_sanity, test_shot_zones, test_lineups_validate,
                  test_small_sample_rates_withheld, test_empty_event_shape,
-                 test_theming):
+                 test_theming, test_ranks_and_percentiles):
         test()
     print()
     if _failures:

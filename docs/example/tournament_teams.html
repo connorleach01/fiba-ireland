@@ -30,6 +30,14 @@
   --good: #006300;
   --bad: #b32020;
   --track: #e8e8e4;
+  /* Five-step diverging tint for rank shading. Blue reads as good and red as
+     bad; the middle tier is left unshaded so "average" looks like nothing.
+     Kept very light so black text stays far above contrast minimums, and the
+     rank number is always printed alongside so colour is never the only cue. */
+  --rk-1: #c5dcf4;
+  --rk-2: #e4eefa;
+  --rk-4: #fbe8e8;
+  --rk-5: #f5cfcf;
   --court-line: #9a998f;
 
   --page-w: 210mm;
@@ -240,7 +248,7 @@ a { color: var(--ink); text-underline-offset: 2px; }
     box-shadow: none;
   }
   .masthead { break-after: avoid; page-break-after: avoid; }
-  .no-print, .sitebar, .viewtoggle { display: none !important; }
+  .no-print, .sitebar, .viewtoggle, .ranktoggle { display: none !important; }
   /* Expanded players print; collapsed ones stay out of the way. */
   tr.expander { cursor: auto; }
   .twisty { display: none; }
@@ -316,6 +324,22 @@ th[data-sortable]::after {
 th[data-sortable][data-dir="asc"]::after { content: "\2191"; opacity: 1; }
 th[data-sortable][data-dir="desc"]::after { content: "\2193"; opacity: 1; }
 
+/* --- Rank shading -------------------------------------------------------- */
+.rk-chip {
+  display: none; margin-left: 4px; font-size: 8.4px; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+table.show-ranks .rk-chip { display: inline; }
+table.show-ranks td.t1 { background: var(--rk-1); }
+table.show-ranks td.t2 { background: var(--rk-2); }
+table.show-ranks td.t4 { background: var(--rk-4); }
+table.show-ranks td.t5 { background: var(--rk-5); }
+tr.subhead td {
+  font-size: 8.2px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-2); font-weight: 700; background: var(--band);
+  border-top: 1px solid var(--rule-mid);
+}
+
 /* --- View toggle --------------------------------------------------------- */
 .viewtoggle { display: flex; gap: 0; margin: 8px 0 0; }
 .viewtoggle button {
@@ -330,6 +354,11 @@ th[data-sortable][data-dir="desc"]::after { content: "\2193"; opacity: 1; }
   background: var(--ink); color: #fff; border-color: var(--ink);
 }
 table.view-off .c-def, table.view-def .c-off { display: none; }
+table.view-box .c-adv, table.view-box .c-shot, table.view-box .c-scoring,
+table.view-adv .c-box, table.view-adv .c-shot, table.view-adv .c-scoring,
+table.view-shot .c-adv, table.view-shot .c-box, table.view-shot .c-scoring,
+table.view-scoring .c-adv, table.view-scoring .c-box, table.view-scoring .c-shot
+  { display: none; }
 
 /* --- Expandable player rows ---------------------------------------------- */
 tr.expander { cursor: pointer; }
@@ -444,11 +473,11 @@ td .flag, li .flag { margin-right: 5px; }
 <header class="masthead">
   <div class="kicker">
     <span>FIBA U18 Eurobasket 2026 Division B &middot; Team leaderboard</span>
-    <span>Sun 02 Aug 2026, 20:43 (Irish time)</span>
+    <span>Sun 02 Aug 2026, 20:55 (Irish time)</span>
   </div>
-  <h1>All teams: four factors and ratings</h1>
+  <h1>All teams, ranked</h1>
   <p class="sub">22 teams &middot; 78 games played &middot;
-Click any column to sort
+Switch view, click a column to sort, turn on ranks to shade
 </p>
 </header>
 
@@ -457,33 +486,72 @@ Click any column to sort
 <h2>Leaderboard</h2>
 
 <div class="viewtoggle no-print" data-target="#leaderboard">
-  <button type="button" data-view="off" aria-pressed="false">Offence</button>
-  <button type="button" data-view="def" aria-pressed="false">Defence</button>
-  <button type="button" data-view="all" aria-pressed="true">Combined</button>
+  <button type="button" data-view="adv"
+          aria-pressed="true">Advanced</button>
+  <button type="button" data-view="box"
+          aria-pressed="false">Box score</button>
+  <button type="button" data-view="shot"
+          aria-pressed="false">Shooting</button>
+  <button type="button" data-view="scoring"
+          aria-pressed="false">Scoring</button>
 </div>
+<button type="button" class="ranktoggle no-print" data-target="#leaderboard"
+        data-off="Show ranks" data-on="Hide ranks" aria-pressed="false">Show ranks</button>
+
 
 <div class="scroll-x">
-<table id="leaderboard" class="view-all" data-rank-column="0">
+<table id="leaderboard" class="view-adv" data-rank-column="0">
 <thead>
   <tr>
     <th class="left">#</th>
     <th class="left" data-sortable>Team</th>
     <th data-sortable>Gm</th>
     <th data-sortable>W&ndash;L</th>
-    <th data-sortable>PF</th>
-    <th data-sortable>PA</th>
-    <th data-sortable>Pace</th>
-    <th class="c-off" data-sortable>eFG%</th>
-    <th class="c-off" data-sortable>TOV%</th>
-    <th class="c-off" data-sortable>OREB%</th>
-    <th class="c-off" data-sortable>FTA/FGA</th>
-    <th class="c-off" data-sortable>ORtg</th>
-    <th class="c-def" data-sortable>Opp eFG%</th>
-    <th class="c-def" data-sortable>TOV% frc</th>
-    <th class="c-def" data-sortable>DREB%</th>
-    <th class="c-def" data-sortable>Opp FTr</th>
-    <th class="c-def" data-sortable>DRtg</th>
-    <th data-sortable>Net/100</th>
+        <th class="c-adv" data-sortable>Pace</th>
+        <th class="c-adv" data-sortable>ORtg</th>
+        <th class="c-adv" data-sortable>DRtg</th>
+        <th class="c-adv" data-sortable>Net/100</th>
+        <th class="c-adv" data-sortable>eFG%</th>
+        <th class="c-adv" data-sortable>TOV%</th>
+        <th class="c-adv" data-sortable>OREB%</th>
+        <th class="c-adv" data-sortable>FTA/FGA</th>
+        <th class="c-adv" data-sortable>Opp eFG%</th>
+        <th class="c-adv" data-sortable>TOV% frc</th>
+        <th class="c-adv" data-sortable>DREB%</th>
+        <th class="c-adv" data-sortable>Opp FTr</th>
+        <th class="c-box" data-sortable>PTS</th>
+        <th class="c-box" data-sortable>FG%</th>
+        <th class="c-box" data-sortable>3P%</th>
+        <th class="c-box" data-sortable>FT%</th>
+        <th class="c-box" data-sortable>OR</th>
+        <th class="c-box" data-sortable>DR</th>
+        <th class="c-box" data-sortable>AST</th>
+        <th class="c-box" data-sortable>TO</th>
+        <th class="c-box" data-sortable>STL</th>
+        <th class="c-box" data-sortable>BLK</th>
+        <th class="c-box" data-sortable>PF</th>
+        <th class="c-box" data-sortable>Opp PTS</th>
+        <th class="c-box" data-sortable>Opp FG%</th>
+        <th class="c-box" data-sortable>Opp 3P%</th>
+        <th class="c-shot" data-sortable>Rim %sh</th>
+        <th class="c-shot" data-sortable>Rim FG%</th>
+        <th class="c-shot" data-sortable>Paint %sh</th>
+        <th class="c-shot" data-sortable>Mid %sh</th>
+        <th class="c-shot" data-sortable>3PT %sh</th>
+        <th class="c-shot" data-sortable>3PT FG%</th>
+        <th class="c-shot" data-sortable>Opp rim %sh</th>
+        <th class="c-shot" data-sortable>Opp rim FG%</th>
+        <th class="c-shot" data-sortable>Opp 3PT %sh</th>
+        <th class="c-shot" data-sortable>Opp 3PT FG%</th>
+        <th class="c-scoring" data-sortable>Paint</th>
+        <th class="c-scoring" data-sortable>Fast break</th>
+        <th class="c-scoring" data-sortable>2nd chance</th>
+        <th class="c-scoring" data-sortable>Off TO</th>
+        <th class="c-scoring" data-sortable>Bench</th>
+        <th class="c-scoring" data-sortable>Opp paint</th>
+        <th class="c-scoring" data-sortable>Opp fast br</th>
+        <th class="c-scoring" data-sortable>Opp 2nd ch</th>
+        <th class="c-scoring" data-sortable>Opp off TO</th>
   </tr>
 </thead>
 <tbody>
@@ -492,541 +560,1139 @@ Click any column to sort
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NED flag"><rect y="0.0000" width="3" height="0.6667" fill="#ae1c28"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#21468b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Netherlands</td>
     <td>7</td>
     <td data-value="1.0000">7&ndash;0</td>
-    <td>81.6</td>
-    <td>61.4</td>
-    <td>79</td>
-
-    <td class="c-off">46.2</td>
-    <td class="c-off">18.8</td>
-    <td class="c-off">40.8</td>
-    <td class="c-off">30.4</td>
-    <td class="c-off">103.3</td>
-
-    <td class="c-def">39.4</td>
-    <td class="c-def">27.0</td>
-    <td class="c-def">69.3</td>
-    <td class="c-def">24.1</td>
-    <td class="c-def">77.8</td>
-
-    <td class="pos">+25.5</td>
+        <td class="c-adv">79<span class="rk-chip">17th</span></td>
+        <td class="c-adv t1">103.3<span class="rk-chip">2nd</span></td>
+        <td class="c-adv t1">77.8<span class="rk-chip">1st</span></td>
+        <td class="c-adv t1">+25.5<span class="rk-chip">1st</span></td>
+        <td class="c-adv t2">46.2<span class="rk-chip">6th</span></td>
+        <td class="c-adv t2">18.8<span class="rk-chip">6th</span></td>
+        <td class="c-adv t1">40.8<span class="rk-chip">2nd</span></td>
+        <td class="c-adv t4">30.4<span class="rk-chip">14th</span></td>
+        <td class="c-adv t1">39.4<span class="rk-chip">2nd</span></td>
+        <td class="c-adv t1">27.0<span class="rk-chip">1st</span></td>
+        <td class="c-adv t2">69.3<span class="rk-chip">6th</span></td>
+        <td class="c-adv t1">24.1<span class="rk-chip">4th</span></td>
+        <td class="c-box t1">81.6<span class="rk-chip">2nd</span></td>
+        <td class="c-box t1">41.4<span class="rk-chip">5th</span></td>
+        <td class="c-box t3">24.3<span class="rk-chip">13th</span></td>
+        <td class="c-box t2">64.5<span class="rk-chip">9th</span></td>
+        <td class="c-box t1">18.7<span class="rk-chip">1st</span></td>
+        <td class="c-box t2">30.6<span class="rk-chip">8th</span></td>
+        <td class="c-box t4">14.4<span class="rk-chip">17th</span></td>
+        <td class="c-box t2">14.9<span class="rk-chip">6th</span></td>
+        <td class="c-box t1">12.0<span class="rk-chip">4th</span></td>
+        <td class="c-box t3">3.6<span class="rk-chip">10th</span></td>
+        <td class="c-box t1">17.0<span class="rk-chip">5th</span></td>
+        <td class="c-box t1">61.4<span class="rk-chip">2nd</span></td>
+        <td class="c-box t1">34.5<span class="rk-chip">2nd</span></td>
+        <td class="c-box t2">24.0<span class="rk-chip">6th</span></td>
+        <td class="c-shot">42.0<span class="rk-chip">2nd</span></td>
+        <td class="c-shot t2">59.3<span class="rk-chip">7th</span></td>
+        <td class="c-shot">12.0<span class="rk-chip">21st</span></td>
+        <td class="c-shot">6.5<span class="rk-chip">20th</span></td>
+        <td class="c-shot">39.6<span class="rk-chip">9th</span></td>
+        <td class="c-shot t3">24.3<span class="rk-chip">13th</span></td>
+        <td class="c-shot t5">41.2<span class="rk-chip">22nd</span></td>
+        <td class="c-shot t1">46.2<span class="rk-chip">1st</span></td>
+        <td class="c-shot">40.5<span class="rk-chip">7th</span></td>
+        <td class="c-shot t2">24.0<span class="rk-chip">6th</span></td>
+        <td class="c-scoring t1">43.4<span class="rk-chip">3rd</span></td>
+        <td class="c-scoring t2">15.9<span class="rk-chip">7th</span></td>
+        <td class="c-scoring t1">18.4<span class="rk-chip">1st</span></td>
+        <td class="c-scoring t3">18.3<span class="rk-chip">10th</span></td>
+        <td class="c-scoring t2">30.0<span class="rk-chip">7th</span></td>
+        <td class="c-scoring t1">28.6<span class="rk-chip">2nd</span></td>
+        <td class="c-scoring t1">9.9<span class="rk-chip">5th</span></td>
+        <td class="c-scoring t2">10.9<span class="rk-chip">9th</span></td>
+        <td class="c-scoring t1">10.7<span class="rk-chip">1st</span></td>
   </tr>
   <tr>
     <td class="left muted">2</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CZE flag"><rect width="3" height="1" fill="#ffffff"/><rect y="1" width="3" height="1" fill="#d7141a"/><path d="M0 0 L1.5 1 L0 2 Z" fill="#11457e"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Czechia</td>
     <td>7</td>
     <td data-value="0.8571">6&ndash;1</td>
-    <td>77.3</td>
-    <td>58.6</td>
-    <td>75</td>
-
-    <td class="c-off">47.3</td>
-    <td class="c-off">21.0</td>
-    <td class="c-off">42.2</td>
-    <td class="c-off">36.9</td>
-    <td class="c-off">103.1</td>
-
-    <td class="c-def">38.0</td>
-    <td class="c-def">22.1</td>
-    <td class="c-def">69.6</td>
-    <td class="c-def">29.0</td>
-    <td class="c-def">78.1</td>
-
-    <td class="pos">+25.0</td>
+        <td class="c-adv">75<span class="rk-chip">21st</span></td>
+        <td class="c-adv t1">103.1<span class="rk-chip">3rd</span></td>
+        <td class="c-adv t1">78.1<span class="rk-chip">2nd</span></td>
+        <td class="c-adv t1">+25.0<span class="rk-chip">2nd</span></td>
+        <td class="c-adv t1">47.3<span class="rk-chip">3rd</span></td>
+        <td class="c-adv t3">21.0<span class="rk-chip">11th</span></td>
+        <td class="c-adv t1">42.2<span class="rk-chip">1st</span></td>
+        <td class="c-adv t1">36.9<span class="rk-chip">1st</span></td>
+        <td class="c-adv t1">38.0<span class="rk-chip">1st</span></td>
+        <td class="c-adv t3">22.1<span class="rk-chip">13th</span></td>
+        <td class="c-adv t1">69.6<span class="rk-chip">5th</span></td>
+        <td class="c-adv t2">29.0<span class="rk-chip">9th</span></td>
+        <td class="c-box t2">77.3<span class="rk-chip">8th</span></td>
+        <td class="c-box t1">41.4<span class="rk-chip">4th</span></td>
+        <td class="c-box t3">26.5<span class="rk-chip">11th</span></td>
+        <td class="c-box t5">54.6<span class="rk-chip">20th</span></td>
+        <td class="c-box t1">18.3<span class="rk-chip">2nd</span></td>
+        <td class="c-box t1">32.0<span class="rk-chip">4th</span></td>
+        <td class="c-box t2">18.4<span class="rk-chip">6th</span></td>
+        <td class="c-box t2">15.7<span class="rk-chip">9th</span></td>
+        <td class="c-box t5">8.1<span class="rk-chip">18th</span></td>
+        <td class="c-box t4">3.3<span class="rk-chip">14th</span></td>
+        <td class="c-box t1">16.7<span class="rk-chip">3rd</span></td>
+        <td class="c-box t1">58.6<span class="rk-chip">1st</span></td>
+        <td class="c-box t1">33.7<span class="rk-chip">1st</span></td>
+        <td class="c-box t1">23.5<span class="rk-chip">4th</span></td>
+        <td class="c-shot">32.3<span class="rk-chip">12th</span></td>
+        <td class="c-shot t1">63.2<span class="rk-chip">1st</span></td>
+        <td class="c-shot">15.5<span class="rk-chip">18th</span></td>
+        <td class="c-shot">7.4<span class="rk-chip">17th</span></td>
+        <td class="c-shot">44.8<span class="rk-chip">2nd</span></td>
+        <td class="c-shot t3">26.5<span class="rk-chip">11th</span></td>
+        <td class="c-shot t2">30.6<span class="rk-chip">8th</span></td>
+        <td class="c-shot t1">52.9<span class="rk-chip">4th</span></td>
+        <td class="c-shot">36.4<span class="rk-chip">15th</span></td>
+        <td class="c-shot t1">23.5<span class="rk-chip">4th</span></td>
+        <td class="c-scoring t3">37.1<span class="rk-chip">12th</span></td>
+        <td class="c-scoring t4">12.3<span class="rk-chip">15th</span></td>
+        <td class="c-scoring t1">16.1<span class="rk-chip">2nd</span></td>
+        <td class="c-scoring t3">17.4<span class="rk-chip">13th</span></td>
+        <td class="c-scoring t3">26.7<span class="rk-chip">10th</span></td>
+        <td class="c-scoring t1">28.3<span class="rk-chip">1st</span></td>
+        <td class="c-scoring t1">9.7<span class="rk-chip">2nd</span></td>
+        <td class="c-scoring t1">9.6<span class="rk-chip">3rd</span></td>
+        <td class="c-scoring t1">12.9<span class="rk-chip">3rd</span></td>
   </tr>
   <tr>
     <td class="left muted">3</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="BEL flag"><rect x="0.0000" width="1.0000" height="2" fill="#000000"/><rect x="1.0000" width="1.0000" height="2" fill="#fdda24"/><rect x="2.0000" width="1.0000" height="2" fill="#ef3340"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Belgium</td>
     <td>7</td>
     <td data-value="0.7143">5&ndash;2</td>
-    <td>83.7</td>
-    <td>71.6</td>
-    <td>79</td>
-
-    <td class="c-off">45.3</td>
-    <td class="c-off">16.6</td>
-    <td class="c-off">38.1</td>
-    <td class="c-off">36.4</td>
-    <td class="c-off">105.6</td>
-
-    <td class="c-def">45.3</td>
-    <td class="c-def">21.6</td>
-    <td class="c-def">70.0</td>
-    <td class="c-def">23.2</td>
-    <td class="c-def">90.3</td>
-
-    <td class="pos">+15.3</td>
+        <td class="c-adv">79<span class="rk-chip">15th</span></td>
+        <td class="c-adv t1">105.6<span class="rk-chip">1st</span></td>
+        <td class="c-adv t3">90.3<span class="rk-chip">12th</span></td>
+        <td class="c-adv t1">+15.3<span class="rk-chip">3rd</span></td>
+        <td class="c-adv t3">45.3<span class="rk-chip">11th</span></td>
+        <td class="c-adv t1">16.6<span class="rk-chip">2nd</span></td>
+        <td class="c-adv t1">38.1<span class="rk-chip">4th</span></td>
+        <td class="c-adv t1">36.4<span class="rk-chip">2nd</span></td>
+        <td class="c-adv t4">45.3<span class="rk-chip">14th</span></td>
+        <td class="c-adv t4">21.6<span class="rk-chip">15th</span></td>
+        <td class="c-adv t1">70.0<span class="rk-chip">3rd</span></td>
+        <td class="c-adv t1">23.2<span class="rk-chip">3rd</span></td>
+        <td class="c-box t1">83.7<span class="rk-chip">1st</span></td>
+        <td class="c-box t2">40.4<span class="rk-chip">7th</span></td>
+        <td class="c-box t4">24.2<span class="rk-chip">14th</span></td>
+        <td class="c-box t1">68.1<span class="rk-chip">3rd</span></td>
+        <td class="c-box t1">17.9<span class="rk-chip">4th</span></td>
+        <td class="c-box t4">28.0<span class="rk-chip">16th</span></td>
+        <td class="c-box t3">15.9<span class="rk-chip">10th</span></td>
+        <td class="c-box t1">13.1<span class="rk-chip">2nd</span></td>
+        <td class="c-box t4">9.0<span class="rk-chip">15th</span></td>
+        <td class="c-box t3">3.4<span class="rk-chip">13th</span></td>
+        <td class="c-box t1">17.0<span class="rk-chip">5th</span></td>
+        <td class="c-box t2">71.6<span class="rk-chip">7th</span></td>
+        <td class="c-box t4">41.4<span class="rk-chip">17th</span></td>
+        <td class="c-box t4">26.1<span class="rk-chip">15th</span></td>
+        <td class="c-shot">34.3<span class="rk-chip">10th</span></td>
+        <td class="c-shot t2">59.8<span class="rk-chip">6th</span></td>
+        <td class="c-shot">17.3<span class="rk-chip">17th</span></td>
+        <td class="c-shot">7.7<span class="rk-chip">12th</span></td>
+        <td class="c-shot">40.7<span class="rk-chip">7th</span></td>
+        <td class="c-shot t4">24.2<span class="rk-chip">14th</span></td>
+        <td class="c-shot t5">39.7<span class="rk-chip">20th</span></td>
+        <td class="c-shot t5">60.2<span class="rk-chip">19th</span></td>
+        <td class="c-shot">30.3<span class="rk-chip">22nd</span></td>
+        <td class="c-shot t4">26.1<span class="rk-chip">15th</span></td>
+        <td class="c-scoring t1">40.9<span class="rk-chip">5th</span></td>
+        <td class="c-scoring t1">18.9<span class="rk-chip">2nd</span></td>
+        <td class="c-scoring t1">15.4<span class="rk-chip">3rd</span></td>
+        <td class="c-scoring t1">20.4<span class="rk-chip">4th</span></td>
+        <td class="c-scoring t2">29.6<span class="rk-chip">8th</span></td>
+        <td class="c-scoring t5">42.3<span class="rk-chip">18th</span></td>
+        <td class="c-scoring t1">9.7<span class="rk-chip">2nd</span></td>
+        <td class="c-scoring t2">10.9<span class="rk-chip">9th</span></td>
+        <td class="c-scoring t1">13.3<span class="rk-chip">4th</span></td>
   </tr>
   <tr>
     <td class="left muted">4</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="HUN flag"><rect y="0.0000" width="3" height="0.6667" fill="#cd2a3e"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#436f4d"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Hungary</td>
     <td>7</td>
     <td data-value="0.8571">6&ndash;1</td>
-    <td>75.6</td>
-    <td>66.7</td>
-    <td>74</td>
-
-    <td class="c-off">46.5</td>
-    <td class="c-off">19.8</td>
-    <td class="c-off">37.1</td>
-    <td class="c-off">29.6</td>
-    <td class="c-off">101.8</td>
-
-    <td class="c-def">47.5</td>
-    <td class="c-def">23.9</td>
-    <td class="c-def">69.7</td>
-    <td class="c-def">29.7</td>
-    <td class="c-def">89.8</td>
-
-    <td class="pos">+11.9</td>
+        <td class="c-adv">74<span class="rk-chip">22nd</span></td>
+        <td class="c-adv t1">101.8<span class="rk-chip">4th</span></td>
+        <td class="c-adv t2">89.8<span class="rk-chip">9th</span></td>
+        <td class="c-adv t1">+11.9<span class="rk-chip">4th</span></td>
+        <td class="c-adv t1">46.5<span class="rk-chip">4th</span></td>
+        <td class="c-adv t2">19.8<span class="rk-chip">9th</span></td>
+        <td class="c-adv t2">37.1<span class="rk-chip">7th</span></td>
+        <td class="c-adv t4">29.6<span class="rk-chip">15th</span></td>
+        <td class="c-adv t5">47.5<span class="rk-chip">20th</span></td>
+        <td class="c-adv t1">23.9<span class="rk-chip">5th</span></td>
+        <td class="c-adv t1">69.7<span class="rk-chip">4th</span></td>
+        <td class="c-adv t3">29.7<span class="rk-chip">12th</span></td>
+        <td class="c-box t3">75.6<span class="rk-chip">11th</span></td>
+        <td class="c-box t3">39.9<span class="rk-chip">10th</span></td>
+        <td class="c-box t1">29.8<span class="rk-chip">1st</span></td>
+        <td class="c-box t1">66.9<span class="rk-chip">5th</span></td>
+        <td class="c-box t2">15.6<span class="rk-chip">8th</span></td>
+        <td class="c-box t5">26.3<span class="rk-chip">19th</span></td>
+        <td class="c-box t3">15.9<span class="rk-chip">10th</span></td>
+        <td class="c-box t1">14.7<span class="rk-chip">4th</span></td>
+        <td class="c-box t3">9.9<span class="rk-chip">12th</span></td>
+        <td class="c-box t3">3.6<span class="rk-chip">10th</span></td>
+        <td class="c-box t3">18.3<span class="rk-chip">10th</span></td>
+        <td class="c-box t1">66.7<span class="rk-chip">4th</span></td>
+        <td class="c-box t5">41.5<span class="rk-chip">18th</span></td>
+        <td class="c-box t5">28.9<span class="rk-chip">21st</span></td>
+        <td class="c-shot">25.8<span class="rk-chip">20th</span></td>
+        <td class="c-shot t4">56.2<span class="rk-chip">14th</span></td>
+        <td class="c-shot">21.1<span class="rk-chip">10th</span></td>
+        <td class="c-shot">8.7<span class="rk-chip">8th</span></td>
+        <td class="c-shot">44.3<span class="rk-chip">4th</span></td>
+        <td class="c-shot t1">29.8<span class="rk-chip">1st</span></td>
+        <td class="c-shot t1">26.9<span class="rk-chip">3rd</span></td>
+        <td class="c-shot t2">55.4<span class="rk-chip">6th</span></td>
+        <td class="c-shot">41.5<span class="rk-chip">4th</span></td>
+        <td class="c-shot t5">28.9<span class="rk-chip">21st</span></td>
+        <td class="c-scoring t5">32.9<span class="rk-chip">20th</span></td>
+        <td class="c-scoring t5">9.4<span class="rk-chip">22nd</span></td>
+        <td class="c-scoring t1">14.6<span class="rk-chip">4th</span></td>
+        <td class="c-scoring t1">20.4<span class="rk-chip">4th</span></td>
+        <td class="c-scoring t1">33.1<span class="rk-chip">5th</span></td>
+        <td class="c-scoring t1">31.4<span class="rk-chip">5th</span></td>
+        <td class="c-scoring t1">9.0<span class="rk-chip">1st</span></td>
+        <td class="c-scoring t1">8.3<span class="rk-chip">1st</span></td>
+        <td class="c-scoring t2">14.0<span class="rk-chip">6th</span></td>
   </tr>
   <tr>
     <td class="left muted">5</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CRO flag"><rect y="0.0000" width="3" height="0.6667" fill="#ff0000"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#171796"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Croatia</td>
     <td>7</td>
     <td data-value="0.5714">4&ndash;3</td>
-    <td>81.4</td>
-    <td>72.7</td>
-    <td>82</td>
-
-    <td class="c-off">49.8</td>
-    <td class="c-off">22.6</td>
-    <td class="c-off">35.5</td>
-    <td class="c-off">33.6</td>
-    <td class="c-off">99.9</td>
-
-    <td class="c-def">44.1</td>
-    <td class="c-def">20.5</td>
-    <td class="c-def">71.2</td>
-    <td class="c-def">29.1</td>
-    <td class="c-def">89.2</td>
-
-    <td class="pos">+10.7</td>
+        <td class="c-adv">82<span class="rk-chip">8th</span></td>
+        <td class="c-adv t2">99.9<span class="rk-chip">6th</span></td>
+        <td class="c-adv t2">89.2<span class="rk-chip">7th</span></td>
+        <td class="c-adv t1">+10.7<span class="rk-chip">5th</span></td>
+        <td class="c-adv t1">49.8<span class="rk-chip">1st</span></td>
+        <td class="c-adv t4">22.6<span class="rk-chip">14th</span></td>
+        <td class="c-adv t2">35.5<span class="rk-chip">8th</span></td>
+        <td class="c-adv t2">33.6<span class="rk-chip">6th</span></td>
+        <td class="c-adv t3">44.1<span class="rk-chip">11th</span></td>
+        <td class="c-adv t4">20.5<span class="rk-chip">17th</span></td>
+        <td class="c-adv t1">71.2<span class="rk-chip">2nd</span></td>
+        <td class="c-adv t3">29.1<span class="rk-chip">10th</span></td>
+        <td class="c-box t1">81.4<span class="rk-chip">3rd</span></td>
+        <td class="c-box t1">45.0<span class="rk-chip">1st</span></td>
+        <td class="c-box t1">28.5<span class="rk-chip">4th</span></td>
+        <td class="c-box t2">66.9<span class="rk-chip">6th</span></td>
+        <td class="c-box t4">13.9<span class="rk-chip">15th</span></td>
+        <td class="c-box t1">32.1<span class="rk-chip">3rd</span></td>
+        <td class="c-box t1">20.9<span class="rk-chip">1st</span></td>
+        <td class="c-box t4">18.4<span class="rk-chip">15th</span></td>
+        <td class="c-box t3">9.7<span class="rk-chip">13th</span></td>
+        <td class="c-box t2">4.4<span class="rk-chip">6th</span></td>
+        <td class="c-box t3">18.6<span class="rk-chip">11th</span></td>
+        <td class="c-box t3">72.7<span class="rk-chip">10th</span></td>
+        <td class="c-box t3">40.2<span class="rk-chip">13th</span></td>
+        <td class="c-box t1">22.8<span class="rk-chip">3rd</span></td>
+        <td class="c-shot">41.3<span class="rk-chip">5th</span></td>
+        <td class="c-shot t1">61.1<span class="rk-chip">4th</span></td>
+        <td class="c-shot">17.8<span class="rk-chip">14th</span></td>
+        <td class="c-shot">7.1<span class="rk-chip">19th</span></td>
+        <td class="c-shot">33.8<span class="rk-chip">18th</span></td>
+        <td class="c-shot t1">28.5<span class="rk-chip">4th</span></td>
+        <td class="c-shot t4">37.9<span class="rk-chip">17th</span></td>
+        <td class="c-shot t4">59.2<span class="rk-chip">16th</span></td>
+        <td class="c-shot">34.4<span class="rk-chip">18th</span></td>
+        <td class="c-shot t1">22.8<span class="rk-chip">3rd</span></td>
+        <td class="c-scoring t1">44.3<span class="rk-chip">2nd</span></td>
+        <td class="c-scoring t5">10.9<span class="rk-chip">19th</span></td>
+        <td class="c-scoring t3">11.6<span class="rk-chip">11th</span></td>
+        <td class="c-scoring t2">19.7<span class="rk-chip">8th</span></td>
+        <td class="c-scoring t4">23.7<span class="rk-chip">15th</span></td>
+        <td class="c-scoring t5">43.1<span class="rk-chip">19th</span></td>
+        <td class="c-scoring t3">13.4<span class="rk-chip">10th</span></td>
+        <td class="c-scoring t1">9.9<span class="rk-chip">4th</span></td>
+        <td class="c-scoring t4">20.0<span class="rk-chip">16th</span></td>
   </tr>
   <tr>
     <td class="left muted">6</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="POL flag"><rect y="0.0000" width="3" height="1.0000" fill="#ffffff"/><rect y="1.0000" width="3" height="1.0000" fill="#dc143c"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Poland</td>
     <td>7</td>
     <td data-value="0.8571">6&ndash;1</td>
-    <td>73.7</td>
-    <td>65.9</td>
-    <td>77</td>
-
-    <td class="c-off">45.4</td>
-    <td class="c-off">17.6</td>
-    <td class="c-off">28.6</td>
-    <td class="c-off">34.2</td>
-    <td class="c-off">95.5</td>
-
-    <td class="c-def">41.2</td>
-    <td class="c-def">23.5</td>
-    <td class="c-def">64.3</td>
-    <td class="c-def">19.9</td>
-    <td class="c-def">85.3</td>
-
-    <td class="pos">+10.2</td>
+        <td class="c-adv">77<span class="rk-chip">20th</span></td>
+        <td class="c-adv t3">95.5<span class="rk-chip">10th</span></td>
+        <td class="c-adv t1">85.3<span class="rk-chip">3rd</span></td>
+        <td class="c-adv t2">+10.2<span class="rk-chip">6th</span></td>
+        <td class="c-adv t2">45.4<span class="rk-chip">8th</span></td>
+        <td class="c-adv t1">17.6<span class="rk-chip">3rd</span></td>
+        <td class="c-adv t5">28.6<span class="rk-chip">21st</span></td>
+        <td class="c-adv t1">34.2<span class="rk-chip">5th</span></td>
+        <td class="c-adv t1">41.2<span class="rk-chip">3rd</span></td>
+        <td class="c-adv t2">23.5<span class="rk-chip">6th</span></td>
+        <td class="c-adv t4">64.3<span class="rk-chip">17th</span></td>
+        <td class="c-adv t1">19.9<span class="rk-chip">1st</span></td>
+        <td class="c-box t3">73.7<span class="rk-chip">12th</span></td>
+        <td class="c-box t2">41.0<span class="rk-chip">6th</span></td>
+        <td class="c-box t4">24.1<span class="rk-chip">15th</span></td>
+        <td class="c-box t2">65.4<span class="rk-chip">7th</span></td>
+        <td class="c-box t5">12.1<span class="rk-chip">21st</span></td>
+        <td class="c-box t3">29.9<span class="rk-chip">10th</span></td>
+        <td class="c-box t3">15.7<span class="rk-chip">12th</span></td>
+        <td class="c-box t1">13.6<span class="rk-chip">3rd</span></td>
+        <td class="c-box t4">8.9<span class="rk-chip">16th</span></td>
+        <td class="c-box t2">3.7<span class="rk-chip">9th</span></td>
+        <td class="c-box t2">18.0<span class="rk-chip">8th</span></td>
+        <td class="c-box t1">65.9<span class="rk-chip">3rd</span></td>
+        <td class="c-box t1">36.2<span class="rk-chip">5th</span></td>
+        <td class="c-box t2">24.4<span class="rk-chip">8th</span></td>
+        <td class="c-shot">27.9<span class="rk-chip">18th</span></td>
+        <td class="c-shot t3">57.5<span class="rk-chip">11th</span></td>
+        <td class="c-shot">28.5<span class="rk-chip">1st</span></td>
+        <td class="c-shot">7.2<span class="rk-chip">18th</span></td>
+        <td class="c-shot">36.4<span class="rk-chip">14th</span></td>
+        <td class="c-shot t4">24.1<span class="rk-chip">15th</span></td>
+        <td class="c-shot t1">25.6<span class="rk-chip">2nd</span></td>
+        <td class="c-shot t4">58.7<span class="rk-chip">14th</span></td>
+        <td class="c-shot">40.9<span class="rk-chip">5th</span></td>
+        <td class="c-shot t2">24.4<span class="rk-chip">8th</span></td>
+        <td class="c-scoring t2">38.6<span class="rk-chip">9th</span></td>
+        <td class="c-scoring t3">15.0<span class="rk-chip">10th</span></td>
+        <td class="c-scoring t3">11.1<span class="rk-chip">13th</span></td>
+        <td class="c-scoring t1">22.6<span class="rk-chip">2nd</span></td>
+        <td class="c-scoring t1">37.0<span class="rk-chip">2nd</span></td>
+        <td class="c-scoring t1">30.9<span class="rk-chip">4th</span></td>
+        <td class="c-scoring t1">9.7<span class="rk-chip">2nd</span></td>
+        <td class="c-scoring t3">11.9<span class="rk-chip">12th</span></td>
+        <td class="c-scoring t2">14.9<span class="rk-chip">8th</span></td>
   </tr>
   <tr>
     <td class="left muted">7</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="SUI flag"><rect width="3" height="2" fill="#d52b1e"/><rect x="1.28" y=".3" width=".44" height="1.4" fill="#ffffff"/><rect x=".8" y=".78" width="1.4" height=".44" fill="#ffffff"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Switzerland</td>
     <td>6</td>
     <td data-value="0.5000">3&ndash;3</td>
-    <td>77.8</td>
-    <td>70.8</td>
-    <td>82</td>
-
-    <td class="c-off">45.3</td>
-    <td class="c-off">18.5</td>
-    <td class="c-off">30.0</td>
-    <td class="c-off">34.8</td>
-    <td class="c-off">94.8</td>
-
-    <td class="c-def">43.8</td>
-    <td class="c-def">25.0</td>
-    <td class="c-def">71.3</td>
-    <td class="c-def">37.1</td>
-    <td class="c-def">86.3</td>
-
-    <td class="pos">+8.5</td>
+        <td class="c-adv">82<span class="rk-chip">6th</span></td>
+        <td class="c-adv t3">94.8<span class="rk-chip">11th</span></td>
+        <td class="c-adv t1">86.3<span class="rk-chip">4th</span></td>
+        <td class="c-adv t2">+8.5<span class="rk-chip">7th</span></td>
+        <td class="c-adv t3">45.3<span class="rk-chip">10th</span></td>
+        <td class="c-adv t1">18.5<span class="rk-chip">4th</span></td>
+        <td class="c-adv t5">30.0<span class="rk-chip">20th</span></td>
+        <td class="c-adv t1">34.8<span class="rk-chip">4th</span></td>
+        <td class="c-adv t2">43.8<span class="rk-chip">9th</span></td>
+        <td class="c-adv t1">25.0<span class="rk-chip">4th</span></td>
+        <td class="c-adv t1">71.3<span class="rk-chip">1st</span></td>
+        <td class="c-adv t5">37.1<span class="rk-chip">18th</span></td>
+        <td class="c-box t2">77.8<span class="rk-chip">7th</span></td>
+        <td class="c-box t1">42.4<span class="rk-chip">2nd</span></td>
+        <td class="c-box t4">23.8<span class="rk-chip">16th</span></td>
+        <td class="c-box t4">61.4<span class="rk-chip">14th</span></td>
+        <td class="c-box t5">13.0<span class="rk-chip">19th</span></td>
+        <td class="c-box t3">29.0<span class="rk-chip">13th</span></td>
+        <td class="c-box t2">17.2<span class="rk-chip">7th</span></td>
+        <td class="c-box t2">15.2<span class="rk-chip">7th</span></td>
+        <td class="c-box t1">12.3<span class="rk-chip">3rd</span></td>
+        <td class="c-box t4">3.2<span class="rk-chip">16th</span></td>
+        <td class="c-box t4">19.5<span class="rk-chip">17th</span></td>
+        <td class="c-box t2">70.8<span class="rk-chip">6th</span></td>
+        <td class="c-box t2">38.5<span class="rk-chip">7th</span></td>
+        <td class="c-box t4">27.0<span class="rk-chip">17th</span></td>
+        <td class="c-shot">41.7<span class="rk-chip">3rd</span></td>
+        <td class="c-shot t2">59.2<span class="rk-chip">8th</span></td>
+        <td class="c-shot">24.0<span class="rk-chip">6th</span></td>
+        <td class="c-shot">10.1<span class="rk-chip">5th</span></td>
+        <td class="c-shot">24.2<span class="rk-chip">22nd</span></td>
+        <td class="c-shot t4">23.8<span class="rk-chip">16th</span></td>
+        <td class="c-shot t2">30.5<span class="rk-chip">7th</span></td>
+        <td class="c-shot t5">60.9<span class="rk-chip">21st</span></td>
+        <td class="c-shot">39.3<span class="rk-chip">11th</span></td>
+        <td class="c-shot t4">27.0<span class="rk-chip">17th</span></td>
+        <td class="c-scoring t1">47.0<span class="rk-chip">1st</span></td>
+        <td class="c-scoring t1">17.3<span class="rk-chip">5th</span></td>
+        <td class="c-scoring t4">10.7<span class="rk-chip">17th</span></td>
+        <td class="c-scoring t1">23.0<span class="rk-chip">1st</span></td>
+        <td class="c-scoring t5">17.5<span class="rk-chip">18th</span></td>
+        <td class="c-scoring t2">33.0<span class="rk-chip">6th</span></td>
+        <td class="c-scoring t5">17.7<span class="rk-chip">20th</span></td>
+        <td class="c-scoring t1">9.0<span class="rk-chip">2nd</span></td>
+        <td class="c-scoring t1">13.5<span class="rk-chip">5th</span></td>
   </tr>
   <tr>
     <td class="left muted">8</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="MNE flag"><rect width="3" height="2" fill="#c40308"/><circle cx="1.5" cy="1" r=".42" fill="#d0aa4b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Montenegro</td>
     <td>6</td>
     <td data-value="0.6667">4&ndash;2</td>
-    <td>77.0</td>
-    <td>70.3</td>
-    <td>79</td>
-
-    <td class="c-off">45.3</td>
-    <td class="c-off">18.7</td>
-    <td class="c-off">34.6</td>
-    <td class="c-off">31.3</td>
-    <td class="c-off">96.9</td>
-
-    <td class="c-def">43.3</td>
-    <td class="c-def">22.9</td>
-    <td class="c-def">67.5</td>
-    <td class="c-def">26.9</td>
-    <td class="c-def">88.5</td>
-
-    <td class="pos">+8.4</td>
+        <td class="c-adv">79<span class="rk-chip">13th</span></td>
+        <td class="c-adv t2">96.9<span class="rk-chip">8th</span></td>
+        <td class="c-adv t2">88.5<span class="rk-chip">6th</span></td>
+        <td class="c-adv t2">+8.4<span class="rk-chip">8th</span></td>
+        <td class="c-adv t2">45.3<span class="rk-chip">9th</span></td>
+        <td class="c-adv t1">18.7<span class="rk-chip">5th</span></td>
+        <td class="c-adv t2">34.6<span class="rk-chip">9th</span></td>
+        <td class="c-adv t3">31.3<span class="rk-chip">12th</span></td>
+        <td class="c-adv t2">43.3<span class="rk-chip">7th</span></td>
+        <td class="c-adv t3">22.9<span class="rk-chip">10th</span></td>
+        <td class="c-adv t2">67.5<span class="rk-chip">8th</span></td>
+        <td class="c-adv t2">26.9<span class="rk-chip">7th</span></td>
+        <td class="c-box t2">77.0<span class="rk-chip">9th</span></td>
+        <td class="c-box t2">40.2<span class="rk-chip">8th</span></td>
+        <td class="c-box t3">27.0<span class="rk-chip">10th</span></td>
+        <td class="c-box t3">63.4<span class="rk-chip">10th</span></td>
+        <td class="c-box t3">15.0<span class="rk-chip">12th</span></td>
+        <td class="c-box t4">27.7<span class="rk-chip">17th</span></td>
+        <td class="c-box t1">19.2<span class="rk-chip">5th</span></td>
+        <td class="c-box t1">14.8<span class="rk-chip">5th</span></td>
+        <td class="c-box t2">11.2<span class="rk-chip">6th</span></td>
+        <td class="c-box t5">1.8<span class="rk-chip">22nd</span></td>
+        <td class="c-box t3">18.7<span class="rk-chip">12th</span></td>
+        <td class="c-box t1">70.3<span class="rk-chip">5th</span></td>
+        <td class="c-box t3">39.8<span class="rk-chip">11th</span></td>
+        <td class="c-box t1">22.4<span class="rk-chip">2nd</span></td>
+        <td class="c-shot">28.9<span class="rk-chip">15th</span></td>
+        <td class="c-shot t1">60.3<span class="rk-chip">5th</span></td>
+        <td class="c-shot">20.6<span class="rk-chip">11th</span></td>
+        <td class="c-shot">12.4<span class="rk-chip">1st</span></td>
+        <td class="c-shot">38.0<span class="rk-chip">11th</span></td>
+        <td class="c-shot t3">27.0<span class="rk-chip">10th</span></td>
+        <td class="c-shot t5">38.8<span class="rk-chip">18th</span></td>
+        <td class="c-shot t5">59.6<span class="rk-chip">18th</span></td>
+        <td class="c-shot">31.1<span class="rk-chip">19th</span></td>
+        <td class="c-shot t1">22.4<span class="rk-chip">2nd</span></td>
+        <td class="c-scoring t4">35.3<span class="rk-chip">15th</span></td>
+        <td class="c-scoring t3">14.5<span class="rk-chip">11th</span></td>
+        <td class="c-scoring t2">12.5<span class="rk-chip">8th</span></td>
+        <td class="c-scoring t2">20.0<span class="rk-chip">7th</span></td>
+        <td class="c-scoring t1">40.5<span class="rk-chip">1st</span></td>
+        <td class="c-scoring t4">41.0<span class="rk-chip">16th</span></td>
+        <td class="c-scoring t2">12.3<span class="rk-chip">8th</span></td>
+        <td class="c-scoring t2">10.7<span class="rk-chip">8th</span></td>
+        <td class="c-scoring t3">16.5<span class="rk-chip">10th</span></td>
   </tr>
   <tr>
     <td class="left muted">9</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="ROU flag"><rect x="0.0000" width="1.0000" height="2" fill="#002b7f"/><rect x="1.0000" width="1.0000" height="2" fill="#fcd116"/><rect x="2.0000" width="1.0000" height="2" fill="#ce1126"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Romania</td>
     <td>7</td>
     <td data-value="0.5714">4&ndash;3</td>
-    <td>78.0</td>
-    <td>75.9</td>
-    <td>79</td>
-
-    <td class="c-off">43.7</td>
-    <td class="c-off">15.9</td>
-    <td class="c-off">32.6</td>
-    <td class="c-off">32.3</td>
-    <td class="c-off">98.4</td>
-
-    <td class="c-def">43.2</td>
-    <td class="c-def">17.3</td>
-    <td class="c-def">66.4</td>
-    <td class="c-def">36.1</td>
-    <td class="c-def">95.7</td>
-
-    <td class="pos">+2.7</td>
+        <td class="c-adv">79<span class="rk-chip">14th</span></td>
+        <td class="c-adv t2">98.4<span class="rk-chip">7th</span></td>
+        <td class="c-adv t5">95.7<span class="rk-chip">18th</span></td>
+        <td class="c-adv t2">+2.7<span class="rk-chip">9th</span></td>
+        <td class="c-adv t4">43.7<span class="rk-chip">14th</span></td>
+        <td class="c-adv t1">15.9<span class="rk-chip">1st</span></td>
+        <td class="c-adv t3">32.6<span class="rk-chip">12th</span></td>
+        <td class="c-adv t2">32.3<span class="rk-chip">9th</span></td>
+        <td class="c-adv t2">43.2<span class="rk-chip">6th</span></td>
+        <td class="c-adv t5">17.3<span class="rk-chip">21st</span></td>
+        <td class="c-adv t4">66.4<span class="rk-chip">14th</span></td>
+        <td class="c-adv t4">36.1<span class="rk-chip">16th</span></td>
+        <td class="c-box t2">78.0<span class="rk-chip">6th</span></td>
+        <td class="c-box t4">39.3<span class="rk-chip">14th</span></td>
+        <td class="c-box t5">22.9<span class="rk-chip">18th</span></td>
+        <td class="c-box t2">65.0<span class="rk-chip">8th</span></td>
+        <td class="c-box t3">15.1<span class="rk-chip">10th</span></td>
+        <td class="c-box t2">30.7<span class="rk-chip">6th</span></td>
+        <td class="c-box t4">15.0<span class="rk-chip">14th</span></td>
+        <td class="c-box t1">12.6<span class="rk-chip">1st</span></td>
+        <td class="c-box t5">7.9<span class="rk-chip">20th</span></td>
+        <td class="c-box t1">4.7<span class="rk-chip">4th</span></td>
+        <td class="c-box t5">21.1<span class="rk-chip">19th</span></td>
+        <td class="c-box t4">75.9<span class="rk-chip">15th</span></td>
+        <td class="c-box t2">37.9<span class="rk-chip">6th</span></td>
+        <td class="c-box t4">26.1<span class="rk-chip">16th</span></td>
+        <td class="c-shot">34.7<span class="rk-chip">9th</span></td>
+        <td class="c-shot t3">57.1<span class="rk-chip">12th</span></td>
+        <td class="c-shot">19.6<span class="rk-chip">12th</span></td>
+        <td class="c-shot">7.5<span class="rk-chip">15th</span></td>
+        <td class="c-shot">38.1<span class="rk-chip">10th</span></td>
+        <td class="c-shot t5">22.9<span class="rk-chip">18th</span></td>
+        <td class="c-shot t3">31.1<span class="rk-chip">10th</span></td>
+        <td class="c-shot t3">57.2<span class="rk-chip">10th</span></td>
+        <td class="c-shot">40.8<span class="rk-chip">6th</span></td>
+        <td class="c-shot t4">26.1<span class="rk-chip">16th</span></td>
+        <td class="c-scoring t1">41.1<span class="rk-chip">4th</span></td>
+        <td class="c-scoring t4">13.0<span class="rk-chip">14th</span></td>
+        <td class="c-scoring t5">9.4<span class="rk-chip">20th</span></td>
+        <td class="c-scoring t5">14.0<span class="rk-chip">18th</span></td>
+        <td class="c-scoring t1">33.7<span class="rk-chip">3rd</span></td>
+        <td class="c-scoring t2">33.4<span class="rk-chip">7th</span></td>
+        <td class="c-scoring t2">12.0<span class="rk-chip">6th</span></td>
+        <td class="c-scoring t4">13.3<span class="rk-chip">17th</span></td>
+        <td class="c-scoring t1">11.6<span class="rk-chip">2nd</span></td>
   </tr>
   <tr>
     <td class="left muted">10</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="ISL flag"><rect width="3" height="2" fill="#02529c"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#dc1e35"/><rect y=".86" width="3" height=".28" fill="#dc1e35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Iceland</td>
     <td>8</td>
     <td data-value="0.5000">4&ndash;4</td>
-    <td>78.8</td>
-    <td>77.0</td>
-    <td>82</td>
-
-    <td class="c-off">46.4</td>
-    <td class="c-off">19.0</td>
-    <td class="c-off">30.1</td>
-    <td class="c-off">22.0</td>
-    <td class="c-off">96.0</td>
-
-    <td class="c-def">49.2</td>
-    <td class="c-def">26.8</td>
-    <td class="c-def">60.9</td>
-    <td class="c-def">31.6</td>
-    <td class="c-def">93.9</td>
-
-    <td class="pos">+2.1</td>
+        <td class="c-adv">82<span class="rk-chip">7th</span></td>
+        <td class="c-adv t2">96.0<span class="rk-chip">9th</span></td>
+        <td class="c-adv t4">93.9<span class="rk-chip">16th</span></td>
+        <td class="c-adv t3">+2.1<span class="rk-chip">10th</span></td>
+        <td class="c-adv t1">46.4<span class="rk-chip">5th</span></td>
+        <td class="c-adv t2">19.0<span class="rk-chip">7th</span></td>
+        <td class="c-adv t5">30.1<span class="rk-chip">19th</span></td>
+        <td class="c-adv t5">22.0<span class="rk-chip">22nd</span></td>
+        <td class="c-adv t5">49.2<span class="rk-chip">22nd</span></td>
+        <td class="c-adv t1">26.8<span class="rk-chip">2nd</span></td>
+        <td class="c-adv t5">60.9<span class="rk-chip">21st</span></td>
+        <td class="c-adv t3">31.6<span class="rk-chip">13th</span></td>
+        <td class="c-box t1">78.8<span class="rk-chip">5th</span></td>
+        <td class="c-box t3">39.8<span class="rk-chip">12th</span></td>
+        <td class="c-box t1">29.7<span class="rk-chip">2nd</span></td>
+        <td class="c-box t1">69.5<span class="rk-chip">2nd</span></td>
+        <td class="c-box t4">13.6<span class="rk-chip">16th</span></td>
+        <td class="c-box t5">24.8<span class="rk-chip">21st</span></td>
+        <td class="c-box t1">20.5<span class="rk-chip">2nd</span></td>
+        <td class="c-box t2">15.6<span class="rk-chip">8th</span></td>
+        <td class="c-box t1">12.4<span class="rk-chip">2nd</span></td>
+        <td class="c-box t5">2.0<span class="rk-chip">21st</span></td>
+        <td class="c-box t3">18.8<span class="rk-chip">13th</span></td>
+        <td class="c-box t4">77.0<span class="rk-chip">16th</span></td>
+        <td class="c-box t5">45.3<span class="rk-chip">22nd</span></td>
+        <td class="c-box t3">25.2<span class="rk-chip">11th</span></td>
+        <td class="c-shot">24.5<span class="rk-chip">22nd</span></td>
+        <td class="c-shot t1">61.5<span class="rk-chip">3rd</span></td>
+        <td class="c-shot">23.5<span class="rk-chip">7th</span></td>
+        <td class="c-shot">7.5<span class="rk-chip">14th</span></td>
+        <td class="c-shot">44.4<span class="rk-chip">3rd</span></td>
+        <td class="c-shot t1">29.7<span class="rk-chip">2nd</span></td>
+        <td class="c-shot t3">35.4<span class="rk-chip">13th</span></td>
+        <td class="c-shot t5">63.0<span class="rk-chip">22nd</span></td>
+        <td class="c-shot">30.5<span class="rk-chip">21st</span></td>
+        <td class="c-shot t3">25.2<span class="rk-chip">11th</span></td>
+        <td class="c-scoring t3">36.5<span class="rk-chip">13th</span></td>
+        <td class="c-scoring t1">17.5<span class="rk-chip">4th</span></td>
+        <td class="c-scoring t4">10.8<span class="rk-chip">15th</span></td>
+        <td class="c-scoring t1">22.1<span class="rk-chip">3rd</span></td>
+        <td class="c-scoring t3">24.9<span class="rk-chip">13th</span></td>
+        <td class="c-scoring t5">46.5<span class="rk-chip">21st</span></td>
+        <td class="c-scoring t3">14.8<span class="rk-chip">12th</span></td>
+        <td class="c-scoring t5">14.1<span class="rk-chip">19th</span></td>
+        <td class="c-scoring t3">17.5<span class="rk-chip">11th</span></td>
   </tr>
   <tr>
     <td class="left muted">11</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="FIN flag"><rect width="3" height="2" fill="#ffffff"/><rect x=".78" width=".52" height="2" fill="#003580"/><rect y=".74" width="3" height=".52" fill="#003580"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Finland</td>
     <td>8</td>
     <td data-value="0.5000">4&ndash;4</td>
-    <td>73.1</td>
-    <td>72.8</td>
-    <td>80</td>
-
-    <td class="c-off">41.5</td>
-    <td class="c-off">19.7</td>
-    <td class="c-off">32.5</td>
-    <td class="c-off">29.6</td>
-    <td class="c-off">91.6</td>
-
-    <td class="c-def">43.4</td>
-    <td class="c-def">22.4</td>
-    <td class="c-def">66.5</td>
-    <td class="c-def">34.7</td>
-    <td class="c-def">91.1</td>
-
-    <td class="pos">+0.5</td>
+        <td class="c-adv">80<span class="rk-chip">11th</span></td>
+        <td class="c-adv t3">91.6<span class="rk-chip">13th</span></td>
+        <td class="c-adv t3">91.1<span class="rk-chip">13th</span></td>
+        <td class="c-adv t3">+0.5<span class="rk-chip">11th</span></td>
+        <td class="c-adv t5">41.5<span class="rk-chip">18th</span></td>
+        <td class="c-adv t2">19.7<span class="rk-chip">8th</span></td>
+        <td class="c-adv t3">32.5<span class="rk-chip">13th</span></td>
+        <td class="c-adv t4">29.6<span class="rk-chip">16th</span></td>
+        <td class="c-adv t2">43.4<span class="rk-chip">8th</span></td>
+        <td class="c-adv t3">22.4<span class="rk-chip">11th</span></td>
+        <td class="c-adv t3">66.5<span class="rk-chip">12th</span></td>
+        <td class="c-adv t4">34.7<span class="rk-chip">15th</span></td>
+        <td class="c-box t3">73.1<span class="rk-chip">13th</span></td>
+        <td class="c-box t5">35.6<span class="rk-chip">21st</span></td>
+        <td class="c-box t3">25.5<span class="rk-chip">12th</span></td>
+        <td class="c-box t1">70.1<span class="rk-chip">1st</span></td>
+        <td class="c-box t2">15.6<span class="rk-chip">7th</span></td>
+        <td class="c-box t4">28.8<span class="rk-chip">14th</span></td>
+        <td class="c-box t2">16.1<span class="rk-chip">9th</span></td>
+        <td class="c-box t3">15.8<span class="rk-chip">10th</span></td>
+        <td class="c-box t4">8.6<span class="rk-chip">17th</span></td>
+        <td class="c-box t4">2.9<span class="rk-chip">17th</span></td>
+        <td class="c-box t4">19.1<span class="rk-chip">15th</span></td>
+        <td class="c-box t3">72.8<span class="rk-chip">12th</span></td>
+        <td class="c-box t2">38.8<span class="rk-chip">8th</span></td>
+        <td class="c-box t1">24.0<span class="rk-chip">5th</span></td>
+        <td class="c-shot">28.2<span class="rk-chip">17th</span></td>
+        <td class="c-shot t4">54.7<span class="rk-chip">17th</span></td>
+        <td class="c-shot">17.6<span class="rk-chip">15th</span></td>
+        <td class="c-shot">8.3<span class="rk-chip">10th</span></td>
+        <td class="c-shot">45.9<span class="rk-chip">1st</span></td>
+        <td class="c-shot t3">25.5<span class="rk-chip">12th</span></td>
+        <td class="c-shot t1">28.4<span class="rk-chip">5th</span></td>
+        <td class="c-shot t2">55.6<span class="rk-chip">8th</span></td>
+        <td class="c-shot">38.4<span class="rk-chip">13th</span></td>
+        <td class="c-shot t1">24.0<span class="rk-chip">5th</span></td>
+        <td class="c-scoring t5">30.8<span class="rk-chip">21st</span></td>
+        <td class="c-scoring t2">15.1<span class="rk-chip">9th</span></td>
+        <td class="c-scoring t2">12.1<span class="rk-chip">9th</span></td>
+        <td class="c-scoring t4">16.4<span class="rk-chip">15th</span></td>
+        <td class="c-scoring t3">26.2<span class="rk-chip">11th</span></td>
+        <td class="c-scoring t2">35.2<span class="rk-chip">9th</span></td>
+        <td class="c-scoring t2">12.0<span class="rk-chip">6th</span></td>
+        <td class="c-scoring t1">10.0<span class="rk-chip">5th</span></td>
+        <td class="c-scoring t2">15.2<span class="rk-chip">9th</span></td>
   </tr>
   <tr>
     <td class="left muted">12</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="GEO flag"><rect width="3" height="2" fill="#ffffff"/><rect x="1.28" y=".3" width=".44" height="1.4" fill="#ff0000"/><rect x=".8" y=".78" width="1.4" height=".44" fill="#ff0000"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Georgia</td>
     <td>7</td>
     <td data-value="0.5714">4&ndash;3</td>
-    <td>72.1</td>
-    <td>72.3</td>
-    <td>81</td>
-
-    <td class="c-off">43.4</td>
-    <td class="c-off">21.0</td>
-    <td class="c-off">32.1</td>
-    <td class="c-off">32.7</td>
-    <td class="c-off">89.3</td>
-
-    <td class="c-def">44.0</td>
-    <td class="c-def">23.2</td>
-    <td class="c-def">66.7</td>
-    <td class="c-def">32.8</td>
-    <td class="c-def">89.5</td>
-
-    <td class="neg">-0.2</td>
+        <td class="c-adv">81<span class="rk-chip">9th</span></td>
+        <td class="c-adv t4">89.3<span class="rk-chip">14th</span></td>
+        <td class="c-adv t2">89.5<span class="rk-chip">8th</span></td>
+        <td class="c-adv t3">-0.2<span class="rk-chip">12th</span></td>
+        <td class="c-adv t4">43.4<span class="rk-chip">15th</span></td>
+        <td class="c-adv t3">21.0<span class="rk-chip">12th</span></td>
+        <td class="c-adv t4">32.1<span class="rk-chip">14th</span></td>
+        <td class="c-adv t2">32.7<span class="rk-chip">7th</span></td>
+        <td class="c-adv t3">44.0<span class="rk-chip">10th</span></td>
+        <td class="c-adv t2">23.2<span class="rk-chip">8th</span></td>
+        <td class="c-adv t3">66.7<span class="rk-chip">11th</span></td>
+        <td class="c-adv t4">32.8<span class="rk-chip">14th</span></td>
+        <td class="c-box t4">72.1<span class="rk-chip">15th</span></td>
+        <td class="c-box t4">39.2<span class="rk-chip">15th</span></td>
+        <td class="c-box t5">22.2<span class="rk-chip">19th</span></td>
+        <td class="c-box t4">58.3<span class="rk-chip">17th</span></td>
+        <td class="c-box t4">14.6<span class="rk-chip">14th</span></td>
+        <td class="c-box t3">29.4<span class="rk-chip">12th</span></td>
+        <td class="c-box t3">15.7<span class="rk-chip">12th</span></td>
+        <td class="c-box t3">17.0<span class="rk-chip">12th</span></td>
+        <td class="c-box t3">10.1<span class="rk-chip">10th</span></td>
+        <td class="c-box t1">4.7<span class="rk-chip">4th</span></td>
+        <td class="c-box t4">18.9<span class="rk-chip">14th</span></td>
+        <td class="c-box t2">72.3<span class="rk-chip">9th</span></td>
+        <td class="c-box t3">39.2<span class="rk-chip">10th</span></td>
+        <td class="c-box t1">22.3<span class="rk-chip">1st</span></td>
+        <td class="c-shot">41.5<span class="rk-chip">4th</span></td>
+        <td class="c-shot t4">55.1<span class="rk-chip">15th</span></td>
+        <td class="c-shot">14.9<span class="rk-chip">20th</span></td>
+        <td class="c-shot">5.9<span class="rk-chip">21st</span></td>
+        <td class="c-shot">37.7<span class="rk-chip">12th</span></td>
+        <td class="c-shot t5">22.2<span class="rk-chip">19th</span></td>
+        <td class="c-shot t5">39.6<span class="rk-chip">19th</span></td>
+        <td class="c-shot t4">58.8<span class="rk-chip">15th</span></td>
+        <td class="c-shot">42.8<span class="rk-chip">2nd</span></td>
+        <td class="c-shot t1">22.3<span class="rk-chip">1st</span></td>
+        <td class="c-scoring t2">39.1<span class="rk-chip">8th</span></td>
+        <td class="c-scoring t3">13.1<span class="rk-chip">12th</span></td>
+        <td class="c-scoring t3">11.6<span class="rk-chip">11th</span></td>
+        <td class="c-scoring t2">20.1<span class="rk-chip">6th</span></td>
+        <td class="c-scoring t5">17.4<span class="rk-chip">19th</span></td>
+        <td class="c-scoring t3">36.6<span class="rk-chip">11th</span></td>
+        <td class="c-scoring t3">14.3<span class="rk-chip">11th</span></td>
+        <td class="c-scoring t3">11.7<span class="rk-chip">11th</span></td>
+        <td class="c-scoring t2">14.3<span class="rk-chip">7th</span></td>
   </tr>
   <tr>
     <td class="left muted">13</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="BIH flag"><rect width="3" height="2" fill="#002395"/><circle cx="1.5" cy="1" r=".42" fill="#fecb00"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Bosnia and Herzegovina</td>
     <td>7</td>
     <td data-value="0.4286">3&ndash;4</td>
-    <td>79.1</td>
-    <td>80.0</td>
-    <td>79</td>
-
-    <td class="c-off">47.9</td>
-    <td class="c-off">22.9</td>
-    <td class="c-off">40.5</td>
-    <td class="c-off">28.7</td>
-    <td class="c-off">100.0</td>
-
-    <td class="c-def">48.5</td>
-    <td class="c-def">19.7</td>
-    <td class="c-def">65.5</td>
-    <td class="c-def">26.0</td>
-    <td class="c-def">101.1</td>
-
-    <td class="neg">-1.1</td>
+        <td class="c-adv">79<span class="rk-chip">16th</span></td>
+        <td class="c-adv t1">100.0<span class="rk-chip">5th</span></td>
+        <td class="c-adv t5">101.1<span class="rk-chip">19th</span></td>
+        <td class="c-adv t3">-1.1<span class="rk-chip">13th</span></td>
+        <td class="c-adv t1">47.9<span class="rk-chip">2nd</span></td>
+        <td class="c-adv t4">22.9<span class="rk-chip">15th</span></td>
+        <td class="c-adv t1">40.5<span class="rk-chip">3rd</span></td>
+        <td class="c-adv t4">28.7<span class="rk-chip">17th</span></td>
+        <td class="c-adv t5">48.5<span class="rk-chip">21st</span></td>
+        <td class="c-adv t5">19.7<span class="rk-chip">18th</span></td>
+        <td class="c-adv t4">65.5<span class="rk-chip">16th</span></td>
+        <td class="c-adv t2">26.0<span class="rk-chip">6th</span></td>
+        <td class="c-box t1">79.1<span class="rk-chip">4th</span></td>
+        <td class="c-box t1">42.2<span class="rk-chip">3rd</span></td>
+        <td class="c-box t1">28.1<span class="rk-chip">5th</span></td>
+        <td class="c-box t1">67.4<span class="rk-chip">4th</span></td>
+        <td class="c-box t1">16.9<span class="rk-chip">5th</span></td>
+        <td class="c-box t4">28.7<span class="rk-chip">15th</span></td>
+        <td class="c-box t1">19.3<span class="rk-chip">4th</span></td>
+        <td class="c-box t4">18.1<span class="rk-chip">14th</span></td>
+        <td class="c-box t4">9.3<span class="rk-chip">14th</span></td>
+        <td class="c-box t4">3.3<span class="rk-chip">14th</span></td>
+        <td class="c-box t1">16.9<span class="rk-chip">4th</span></td>
+        <td class="c-box t5">80.0<span class="rk-chip">19th</span></td>
+        <td class="c-box t5">42.5<span class="rk-chip">21st</span></td>
+        <td class="c-box t5">30.5<span class="rk-chip">22nd</span></td>
+        <td class="c-shot">43.0<span class="rk-chip">1st</span></td>
+        <td class="c-shot t3">57.0<span class="rk-chip">13th</span></td>
+        <td class="c-shot">10.6<span class="rk-chip">22nd</span></td>
+        <td class="c-shot">5.6<span class="rk-chip">22nd</span></td>
+        <td class="c-shot">40.7<span class="rk-chip">6th</span></td>
+        <td class="c-shot t1">28.1<span class="rk-chip">5th</span></td>
+        <td class="c-shot t5">40.2<span class="rk-chip">21st</span></td>
+        <td class="c-shot t1">53.0<span class="rk-chip">5th</span></td>
+        <td class="c-shot">39.6<span class="rk-chip">10th</span></td>
+        <td class="c-shot t5">30.5<span class="rk-chip">22nd</span></td>
+        <td class="c-scoring t2">39.4<span class="rk-chip">7th</span></td>
+        <td class="c-scoring t2">16.4<span class="rk-chip">6th</span></td>
+        <td class="c-scoring t2">13.7<span class="rk-chip">6th</span></td>
+        <td class="c-scoring t5">13.9<span class="rk-chip">20th</span></td>
+        <td class="c-scoring t4">22.4<span class="rk-chip">17th</span></td>
+        <td class="c-scoring t3">38.6<span class="rk-chip">13th</span></td>
+        <td class="c-scoring t4">16.6<span class="rk-chip">17th</span></td>
+        <td class="c-scoring t4">13.0<span class="rk-chip">16th</span></td>
+        <td class="c-scoring t4">19.7<span class="rk-chip">14th</span></td>
   </tr>
   <tr class="highlight">
     <td class="left muted">14</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="IRL flag"><rect x="0.0000" width="1.0000" height="2" fill="#169b62"/><rect x="1.0000" width="1.0000" height="2" fill="#ffffff"/><rect x="2.0000" width="1.0000" height="2" fill="#ff883e"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Ireland</td>
     <td>7</td>
     <td data-value="0.4286">3&ndash;4</td>
-    <td>76.9</td>
-    <td>78.4</td>
-    <td>87</td>
-
-    <td class="c-off">44.8</td>
-    <td class="c-off">26.2</td>
-    <td class="c-off">33.0</td>
-    <td class="c-off">35.7</td>
-    <td class="c-off">88.0</td>
-
-    <td class="c-def">44.2</td>
-    <td class="c-def">22.1</td>
-    <td class="c-def">66.4</td>
-    <td class="c-def">37.3</td>
-    <td class="c-def">89.8</td>
-
-    <td class="neg">-1.8</td>
+        <td class="c-adv">87<span class="rk-chip">1st</span></td>
+        <td class="c-adv t4">88.0<span class="rk-chip">15th</span></td>
+        <td class="c-adv t3">89.8<span class="rk-chip">10th</span></td>
+        <td class="c-adv t4">-1.8<span class="rk-chip">14th</span></td>
+        <td class="c-adv t3">44.8<span class="rk-chip">12th</span></td>
+        <td class="c-adv t5">26.2<span class="rk-chip">19th</span></td>
+        <td class="c-adv t3">33.0<span class="rk-chip">11th</span></td>
+        <td class="c-adv t1">35.7<span class="rk-chip">3rd</span></td>
+        <td class="c-adv t3">44.2<span class="rk-chip">12th</span></td>
+        <td class="c-adv t4">22.1<span class="rk-chip">14th</span></td>
+        <td class="c-adv t3">66.4<span class="rk-chip">13th</span></td>
+        <td class="c-adv t5">37.3<span class="rk-chip">19th</span></td>
+        <td class="c-box t3">76.9<span class="rk-chip">10th</span></td>
+        <td class="c-box t3">39.8<span class="rk-chip">11th</span></td>
+        <td class="c-box t2">27.6<span class="rk-chip">7th</span></td>
+        <td class="c-box t3">61.6<span class="rk-chip">13th</span></td>
+        <td class="c-box t3">14.9<span class="rk-chip">13th</span></td>
+        <td class="c-box t1">33.6<span class="rk-chip">1st</span></td>
+        <td class="c-box t1">19.4<span class="rk-chip">3rd</span></td>
+        <td class="c-box t5">22.9<span class="rk-chip">19th</span></td>
+        <td class="c-box t1">12.9<span class="rk-chip">1st</span></td>
+        <td class="c-box t5">2.7<span class="rk-chip">18th</span></td>
+        <td class="c-box t5">20.7<span class="rk-chip">18th</span></td>
+        <td class="c-box t5">78.4<span class="rk-chip">18th</span></td>
+        <td class="c-box t2">38.9<span class="rk-chip">9th</span></td>
+        <td class="c-box t4">25.5<span class="rk-chip">14th</span></td>
+        <td class="c-shot">41.1<span class="rk-chip">6th</span></td>
+        <td class="c-shot t5">53.5<span class="rk-chip">18th</span></td>
+        <td class="c-shot">15.4<span class="rk-chip">19th</span></td>
+        <td class="c-shot">7.5<span class="rk-chip">16th</span></td>
+        <td class="c-shot">36.1<span class="rk-chip">15th</span></td>
+        <td class="c-shot t2">27.6<span class="rk-chip">7th</span></td>
+        <td class="c-shot t4">37.9<span class="rk-chip">16th</span></td>
+        <td class="c-shot t3">57.5<span class="rk-chip">11th</span></td>
+        <td class="c-shot">41.7<span class="rk-chip">3rd</span></td>
+        <td class="c-shot t4">25.5<span class="rk-chip">14th</span></td>
+        <td class="c-scoring t2">38.6<span class="rk-chip">9th</span></td>
+        <td class="c-scoring t1">18.3<span class="rk-chip">3rd</span></td>
+        <td class="c-scoring t3">12.0<span class="rk-chip">10th</span></td>
+        <td class="c-scoring t2">19.3<span class="rk-chip">9th</span></td>
+        <td class="c-scoring t2">29.6<span class="rk-chip">8th</span></td>
+        <td class="c-scoring t4">39.7<span class="rk-chip">14th</span></td>
+        <td class="c-scoring t5">17.0<span class="rk-chip">18th</span></td>
+        <td class="c-scoring t5">14.1<span class="rk-chip">20th</span></td>
+        <td class="c-scoring t4">21.1<span class="rk-chip">17th</span></td>
   </tr>
   <tr>
     <td class="left muted">15</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="GBR flag"><rect width="3" height="2" fill="#012169"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#ffffff" stroke-width=".44"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#c8102e" stroke-width=".22"/><path d="M1.5 0 V2 M0 1 H3" stroke="#ffffff" stroke-width=".72"/><path d="M1.5 0 V2 M0 1 H3" stroke="#c8102e" stroke-width=".42"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Great Britain</td>
     <td>8</td>
     <td data-value="0.5000">4&ndash;4</td>
-    <td>67.6</td>
-    <td>72.1</td>
-    <td>82</td>
-
-    <td class="c-off">42.2</td>
-    <td class="c-off">28.6</td>
-    <td class="c-off">37.9</td>
-    <td class="c-off">32.4</td>
-    <td class="c-off">82.2</td>
-
-    <td class="c-def">41.5</td>
-    <td class="c-def">22.3</td>
-    <td class="c-def">66.8</td>
-    <td class="c-def">25.2</td>
-    <td class="c-def">87.7</td>
-
-    <td class="neg">-5.5</td>
+        <td class="c-adv">82<span class="rk-chip">5th</span></td>
+        <td class="c-adv t5">82.2<span class="rk-chip">18th</span></td>
+        <td class="c-adv t1">87.7<span class="rk-chip">5th</span></td>
+        <td class="c-adv t4">-5.5<span class="rk-chip">15th</span></td>
+        <td class="c-adv t4">42.2<span class="rk-chip">17th</span></td>
+        <td class="c-adv t5">28.6<span class="rk-chip">20th</span></td>
+        <td class="c-adv t1">37.9<span class="rk-chip">5th</span></td>
+        <td class="c-adv t2">32.4<span class="rk-chip">8th</span></td>
+        <td class="c-adv t1">41.5<span class="rk-chip">4th</span></td>
+        <td class="c-adv t3">22.3<span class="rk-chip">12th</span></td>
+        <td class="c-adv t3">66.8<span class="rk-chip">10th</span></td>
+        <td class="c-adv t1">25.2<span class="rk-chip">5th</span></td>
+        <td class="c-box t4">67.6<span class="rk-chip">17th</span></td>
+        <td class="c-box t5">37.6<span class="rk-chip">18th</span></td>
+        <td class="c-box t1">29.6<span class="rk-chip">3rd</span></td>
+        <td class="c-box t5">58.2<span class="rk-chip">18th</span></td>
+        <td class="c-box t2">16.4<span class="rk-chip">6th</span></td>
+        <td class="c-box t1">32.6<span class="rk-chip">2nd</span></td>
+        <td class="c-box t5">13.1<span class="rk-chip">20th</span></td>
+        <td class="c-box t5">23.5<span class="rk-chip">20th</span></td>
+        <td class="c-box t2">10.5<span class="rk-chip">8th</span></td>
+        <td class="c-box t1">6.9<span class="rk-chip">1st</span></td>
+        <td class="c-box t2">17.1<span class="rk-chip">7th</span></td>
+        <td class="c-box t2">72.1<span class="rk-chip">8th</span></td>
+        <td class="c-box t1">36.1<span class="rk-chip">4th</span></td>
+        <td class="c-box t5">27.2<span class="rk-chip">18th</span></td>
+        <td class="c-shot">33.2<span class="rk-chip">11th</span></td>
+        <td class="c-shot t5">48.3<span class="rk-chip">22nd</span></td>
+        <td class="c-shot">26.9<span class="rk-chip">4th</span></td>
+        <td class="c-shot">9.0<span class="rk-chip">7th</span></td>
+        <td class="c-shot">30.9<span class="rk-chip">21st</span></td>
+        <td class="c-shot t1">29.6<span class="rk-chip">3rd</span></td>
+        <td class="c-shot t2">30.6<span class="rk-chip">9th</span></td>
+        <td class="c-shot t1">52.0<span class="rk-chip">2nd</span></td>
+        <td class="c-shot">40.1<span class="rk-chip">9th</span></td>
+        <td class="c-shot t5">27.2<span class="rk-chip">18th</span></td>
+        <td class="c-scoring t5">33.8<span class="rk-chip">18th</span></td>
+        <td class="c-scoring t5">10.0<span class="rk-chip">21st</span></td>
+        <td class="c-scoring t4">11.1<span class="rk-chip">14th</span></td>
+        <td class="c-scoring t5">13.9<span class="rk-chip">19th</span></td>
+        <td class="c-scoring t4">24.2<span class="rk-chip">14th</span></td>
+        <td class="c-scoring t2">34.0<span class="rk-chip">8th</span></td>
+        <td class="c-scoring t4">16.4<span class="rk-chip">16th</span></td>
+        <td class="c-scoring t4">12.8<span class="rk-chip">14th</span></td>
+        <td class="c-scoring t4">19.8<span class="rk-chip">15th</span></td>
   </tr>
   <tr>
     <td class="left muted">16</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="SWE flag"><rect width="3" height="2" fill="#006aa7"/><rect x=".78" width=".52" height="2" fill="#fecc00"/><rect y=".74" width="3" height=".52" fill="#fecc00"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Sweden</td>
     <td>7</td>
     <td data-value="0.2857">2&ndash;5</td>
-    <td>72.1</td>
-    <td>78.3</td>
-    <td>84</td>
-
-    <td class="c-off">41.4</td>
-    <td class="c-off">21.0</td>
-    <td class="c-off">31.0</td>
-    <td class="c-off">25.1</td>
-    <td class="c-off">86.1</td>
-
-    <td class="c-def">46.0</td>
-    <td class="c-def">23.0</td>
-    <td class="c-def">68.2</td>
-    <td class="c-def">39.4</td>
-    <td class="c-def">93.4</td>
-
-    <td class="neg">-7.3</td>
+        <td class="c-adv">84<span class="rk-chip">2nd</span></td>
+        <td class="c-adv t4">86.1<span class="rk-chip">16th</span></td>
+        <td class="c-adv t4">93.4<span class="rk-chip">15th</span></td>
+        <td class="c-adv t4">-7.3<span class="rk-chip">16th</span></td>
+        <td class="c-adv t5">41.4<span class="rk-chip">19th</span></td>
+        <td class="c-adv t3">21.0<span class="rk-chip">10th</span></td>
+        <td class="c-adv t4">31.0<span class="rk-chip">16th</span></td>
+        <td class="c-adv t5">25.1<span class="rk-chip">19th</span></td>
+        <td class="c-adv t5">46.0<span class="rk-chip">18th</span></td>
+        <td class="c-adv t2">23.0<span class="rk-chip">9th</span></td>
+        <td class="c-adv t2">68.2<span class="rk-chip">7th</span></td>
+        <td class="c-adv t5">39.4<span class="rk-chip">21st</span></td>
+        <td class="c-box t4">72.1<span class="rk-chip">15th</span></td>
+        <td class="c-box t4">37.7<span class="rk-chip">17th</span></td>
+        <td class="c-box t5">18.5<span class="rk-chip">22nd</span></td>
+        <td class="c-box t4">61.2<span class="rk-chip">15th</span></td>
+        <td class="c-box t3">15.1<span class="rk-chip">10th</span></td>
+        <td class="c-box t3">29.7<span class="rk-chip">11th</span></td>
+        <td class="c-box t2">16.4<span class="rk-chip">8th</span></td>
+        <td class="c-box t3">17.6<span class="rk-chip">13th</span></td>
+        <td class="c-box t2">11.1<span class="rk-chip">7th</span></td>
+        <td class="c-box t5">2.3<span class="rk-chip">20th</span></td>
+        <td class="c-box t5">22.1<span class="rk-chip">21st</span></td>
+        <td class="c-box t4">78.3<span class="rk-chip">17th</span></td>
+        <td class="c-box t4">41.1<span class="rk-chip">15th</span></td>
+        <td class="c-box t3">25.4<span class="rk-chip">13th</span></td>
+        <td class="c-shot">27.4<span class="rk-chip">19th</span></td>
+        <td class="c-shot t2">58.9<span class="rk-chip">9th</span></td>
+        <td class="c-shot">25.1<span class="rk-chip">5th</span></td>
+        <td class="c-shot">7.6<span class="rk-chip">13th</span></td>
+        <td class="c-shot">39.9<span class="rk-chip">8th</span></td>
+        <td class="c-shot t5">18.5<span class="rk-chip">22nd</span></td>
+        <td class="c-shot t1">27.2<span class="rk-chip">4th</span></td>
+        <td class="c-shot t2">56.7<span class="rk-chip">9th</span></td>
+        <td class="c-shot">38.8<span class="rk-chip">12th</span></td>
+        <td class="c-shot t3">25.4<span class="rk-chip">13th</span></td>
+        <td class="c-scoring t1">40.9<span class="rk-chip">5th</span></td>
+        <td class="c-scoring t1">19.0<span class="rk-chip">1st</span></td>
+        <td class="c-scoring t4">10.7<span class="rk-chip">16th</span></td>
+        <td class="c-scoring t3">17.7<span class="rk-chip">12th</span></td>
+        <td class="c-scoring t1">33.7<span class="rk-chip">3rd</span></td>
+        <td class="c-scoring t3">38.0<span class="rk-chip">12th</span></td>
+        <td class="c-scoring t4">14.9<span class="rk-chip">14th</span></td>
+        <td class="c-scoring t2">10.1<span class="rk-chip">7th</span></td>
+        <td class="c-scoring t3">17.6<span class="rk-chip">12th</span></td>
   </tr>
   <tr>
     <td class="left muted">17</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="POR flag"><rect width="3" height="2" fill="#da291c"/><rect width="1.2000" height="2" fill="#046a38"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Portugal</td>
     <td>7</td>
     <td data-value="0.2857">2&ndash;5</td>
-    <td>66.1</td>
-    <td>72.7</td>
-    <td>80</td>
-
-    <td class="c-off">40.6</td>
-    <td class="c-off">24.4</td>
-    <td class="c-off">37.3</td>
-    <td class="c-off">27.3</td>
-    <td class="c-off">83.2</td>
-
-    <td class="c-def">47.4</td>
-    <td class="c-def">26.2</td>
-    <td class="c-def">67.3</td>
-    <td class="c-def">41.8</td>
-    <td class="c-def">91.4</td>
-
-    <td class="neg">-8.3</td>
+        <td class="c-adv">80<span class="rk-chip">12th</span></td>
+        <td class="c-adv t4">83.2<span class="rk-chip">17th</span></td>
+        <td class="c-adv t4">91.4<span class="rk-chip">14th</span></td>
+        <td class="c-adv t4">-8.3<span class="rk-chip">17th</span></td>
+        <td class="c-adv t5">40.6<span class="rk-chip">20th</span></td>
+        <td class="c-adv t5">24.4<span class="rk-chip">18th</span></td>
+        <td class="c-adv t2">37.3<span class="rk-chip">6th</span></td>
+        <td class="c-adv t5">27.3<span class="rk-chip">18th</span></td>
+        <td class="c-adv t5">47.4<span class="rk-chip">19th</span></td>
+        <td class="c-adv t1">26.2<span class="rk-chip">3rd</span></td>
+        <td class="c-adv t2">67.3<span class="rk-chip">9th</span></td>
+        <td class="c-adv t5">41.8<span class="rk-chip">22nd</span></td>
+        <td class="c-box t5">66.1<span class="rk-chip">18th</span></td>
+        <td class="c-box t5">36.5<span class="rk-chip">19th</span></td>
+        <td class="c-box t4">23.7<span class="rk-chip">17th</span></td>
+        <td class="c-box t5">47.8<span class="rk-chip">22nd</span></td>
+        <td class="c-box t1">18.0<span class="rk-chip">3rd</span></td>
+        <td class="c-box t5">25.0<span class="rk-chip">20th</span></td>
+        <td class="c-box t4">14.9<span class="rk-chip">15th</span></td>
+        <td class="c-box t4">19.4<span class="rk-chip">17th</span></td>
+        <td class="c-box t1">11.4<span class="rk-chip">5th</span></td>
+        <td class="c-box t2">4.3<span class="rk-chip">7th</span></td>
+        <td class="c-box t4">19.1<span class="rk-chip">16th</span></td>
+        <td class="c-box t3">72.7<span class="rk-chip">10th</span></td>
+        <td class="c-box t5">42.3<span class="rk-chip">20th</span></td>
+        <td class="c-box t5">27.6<span class="rk-chip">19th</span></td>
+        <td class="c-shot">25.7<span class="rk-chip">21st</span></td>
+        <td class="c-shot t4">54.8<span class="rk-chip">16th</span></td>
+        <td class="c-shot">27.9<span class="rk-chip">2nd</span></td>
+        <td class="c-shot">11.2<span class="rk-chip">3rd</span></td>
+        <td class="c-shot">35.2<span class="rk-chip">17th</span></td>
+        <td class="c-shot t4">23.7<span class="rk-chip">17th</span></td>
+        <td class="c-shot t2">29.1<span class="rk-chip">6th</span></td>
+        <td class="c-shot t5">60.3<span class="rk-chip">20th</span></td>
+        <td class="c-shot">36.5<span class="rk-chip">14th</span></td>
+        <td class="c-shot t5">27.6<span class="rk-chip">19th</span></td>
+        <td class="c-scoring t4">35.4<span class="rk-chip">14th</span></td>
+        <td class="c-scoring t5">11.1<span class="rk-chip">18th</span></td>
+        <td class="c-scoring t2">13.0<span class="rk-chip">7th</span></td>
+        <td class="c-scoring t3">18.0<span class="rk-chip">11th</span></td>
+        <td class="c-scoring t2">30.3<span class="rk-chip">6th</span></td>
+        <td class="c-scoring t3">36.0<span class="rk-chip">10th</span></td>
+        <td class="c-scoring t5">19.6<span class="rk-chip">21st</span></td>
+        <td class="c-scoring t1">10.0<span class="rk-chip">5th</span></td>
+        <td class="c-scoring t4">21.1<span class="rk-chip">17th</span></td>
   </tr>
   <tr>
     <td class="left muted">18</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="MKD flag"><rect width="3" height="2" fill="#d20000"/><circle cx="1.5" cy="1" r=".42" fill="#f8e600"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>North Macedonia</td>
     <td>7</td>
     <td data-value="0.2857">2&ndash;5</td>
-    <td>72.7</td>
-    <td>81.4</td>
-    <td>78</td>
-
-    <td class="c-off">46.0</td>
-    <td class="c-off">21.6</td>
-    <td class="c-off">31.8</td>
-    <td class="c-off">32.2</td>
-    <td class="c-off">93.4</td>
-
-    <td class="c-def">46.0</td>
-    <td class="c-def">18.7</td>
-    <td class="c-def">62.0</td>
-    <td class="c-def">36.6</td>
-    <td class="c-def">104.6</td>
-
-    <td class="neg">-11.2</td>
+        <td class="c-adv">78<span class="rk-chip">19th</span></td>
+        <td class="c-adv t3">93.4<span class="rk-chip">12th</span></td>
+        <td class="c-adv t5">104.6<span class="rk-chip">22nd</span></td>
+        <td class="c-adv t5">-11.2<span class="rk-chip">18th</span></td>
+        <td class="c-adv t2">46.0<span class="rk-chip">7th</span></td>
+        <td class="c-adv t3">21.6<span class="rk-chip">13th</span></td>
+        <td class="c-adv t4">31.8<span class="rk-chip">15th</span></td>
+        <td class="c-adv t3">32.2<span class="rk-chip">10th</span></td>
+        <td class="c-adv t4">46.0<span class="rk-chip">17th</span></td>
+        <td class="c-adv t5">18.7<span class="rk-chip">19th</span></td>
+        <td class="c-adv t5">62.0<span class="rk-chip">20th</span></td>
+        <td class="c-adv t4">36.6<span class="rk-chip">17th</span></td>
+        <td class="c-box t4">72.7<span class="rk-chip">14th</span></td>
+        <td class="c-box t2">40.1<span class="rk-chip">9th</span></td>
+        <td class="c-box t2">27.1<span class="rk-chip">9th</span></td>
+        <td class="c-box t3">62.3<span class="rk-chip">12th</span></td>
+        <td class="c-box t4">13.3<span class="rk-chip">17th</span></td>
+        <td class="c-box t5">27.0<span class="rk-chip">18th</span></td>
+        <td class="c-box t4">14.9<span class="rk-chip">15th</span></td>
+        <td class="c-box t3">16.9<span class="rk-chip">11th</span></td>
+        <td class="c-box t5">8.0<span class="rk-chip">19th</span></td>
+        <td class="c-box t5">2.4<span class="rk-chip">19th</span></td>
+        <td class="c-box t5">21.4<span class="rk-chip">20th</span></td>
+        <td class="c-box t5">81.4<span class="rk-chip">21st</span></td>
+        <td class="c-box t4">41.0<span class="rk-chip">14th</span></td>
+        <td class="c-box t2">24.6<span class="rk-chip">9th</span></td>
+        <td class="c-shot">28.9<span class="rk-chip">16th</span></td>
+        <td class="c-shot t3">58.8<span class="rk-chip">10th</span></td>
+        <td class="c-shot">18.9<span class="rk-chip">13th</span></td>
+        <td class="c-shot">8.4<span class="rk-chip">9th</span></td>
+        <td class="c-shot">43.8<span class="rk-chip">5th</span></td>
+        <td class="c-shot t2">27.1<span class="rk-chip">9th</span></td>
+        <td class="c-shot t3">35.0<span class="rk-chip">12th</span></td>
+        <td class="c-shot t2">55.6<span class="rk-chip">7th</span></td>
+        <td class="c-shot">40.4<span class="rk-chip">8th</span></td>
+        <td class="c-shot t2">24.6<span class="rk-chip">9th</span></td>
+        <td class="c-scoring t4">34.0<span class="rk-chip">17th</span></td>
+        <td class="c-scoring t3">13.1<span class="rk-chip">12th</span></td>
+        <td class="c-scoring t5">9.7<span class="rk-chip">19th</span></td>
+        <td class="c-scoring t4">14.3<span class="rk-chip">17th</span></td>
+        <td class="c-scoring t3">25.0<span class="rk-chip">12th</span></td>
+        <td class="c-scoring t4">39.7<span class="rk-chip">14th</span></td>
+        <td class="c-scoring t4">15.9<span class="rk-chip">15th</span></td>
+        <td class="c-scoring t5">16.3<span class="rk-chip">21st</span></td>
+        <td class="c-scoring t5">21.3<span class="rk-chip">19th</span></td>
   </tr>
   <tr>
     <td class="left muted">19</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="UKR flag"><rect y="0.0000" width="3" height="1.0000" fill="#005bbb"/><rect y="1.0000" width="3" height="1.0000" fill="#ffd500"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Ukraine</td>
     <td>7</td>
     <td data-value="0.1429">1&ndash;6</td>
-    <td>62.7</td>
-    <td>74.3</td>
-    <td>78</td>
-
-    <td class="c-off">39.9</td>
-    <td class="c-off">24.0</td>
-    <td class="c-off">30.7</td>
-    <td class="c-off">31.5</td>
-    <td class="c-off">80.3</td>
-
-    <td class="c-def">44.4</td>
-    <td class="c-def">18.7</td>
-    <td class="c-def">66.4</td>
-    <td class="c-def">29.7</td>
-    <td class="c-def">95.2</td>
-
-    <td class="neg">-14.8</td>
+        <td class="c-adv">78<span class="rk-chip">18th</span></td>
+        <td class="c-adv t5">80.3<span class="rk-chip">20th</span></td>
+        <td class="c-adv t4">95.2<span class="rk-chip">17th</span></td>
+        <td class="c-adv t5">-14.8<span class="rk-chip">19th</span></td>
+        <td class="c-adv t5">39.9<span class="rk-chip">21st</span></td>
+        <td class="c-adv t4">24.0<span class="rk-chip">16th</span></td>
+        <td class="c-adv t5">30.7<span class="rk-chip">18th</span></td>
+        <td class="c-adv t3">31.5<span class="rk-chip">11th</span></td>
+        <td class="c-adv t3">44.4<span class="rk-chip">13th</span></td>
+        <td class="c-adv t5">18.7<span class="rk-chip">20th</span></td>
+        <td class="c-adv t4">66.4<span class="rk-chip">14th</span></td>
+        <td class="c-adv t3">29.7<span class="rk-chip">11th</span></td>
+        <td class="c-box t5">62.7<span class="rk-chip">20th</span></td>
+        <td class="c-box t5">34.9<span class="rk-chip">22nd</span></td>
+        <td class="c-box t2">28.0<span class="rk-chip">6th</span></td>
+        <td class="c-box t4">60.7<span class="rk-chip">16th</span></td>
+        <td class="c-box t4">13.3<span class="rk-chip">17th</span></td>
+        <td class="c-box t2">30.7<span class="rk-chip">6th</span></td>
+        <td class="c-box t5">14.0<span class="rk-chip">18th</span></td>
+        <td class="c-box t4">18.7<span class="rk-chip">16th</span></td>
+        <td class="c-box t5">7.3<span class="rk-chip">21st</span></td>
+        <td class="c-box t2">3.9<span class="rk-chip">8th</span></td>
+        <td class="c-box t2">18.1<span class="rk-chip">9th</span></td>
+        <td class="c-box t4">74.3<span class="rk-chip">14th</span></td>
+        <td class="c-box t3">40.0<span class="rk-chip">12th</span></td>
+        <td class="c-box t2">24.2<span class="rk-chip">7th</span></td>
+        <td class="c-shot">35.1<span class="rk-chip">8th</span></td>
+        <td class="c-shot t5">48.7<span class="rk-chip">21st</span></td>
+        <td class="c-shot">17.3<span class="rk-chip">16th</span></td>
+        <td class="c-shot">12.2<span class="rk-chip">2nd</span></td>
+        <td class="c-shot">35.4<span class="rk-chip">16th</span></td>
+        <td class="c-shot t2">28.0<span class="rk-chip">6th</span></td>
+        <td class="c-shot t4">36.8<span class="rk-chip">14th</span></td>
+        <td class="c-shot t3">58.0<span class="rk-chip">12th</span></td>
+        <td class="c-shot">36.2<span class="rk-chip">16th</span></td>
+        <td class="c-shot t2">24.2<span class="rk-chip">7th</span></td>
+        <td class="c-scoring t5">26.6<span class="rk-chip">22nd</span></td>
+        <td class="c-scoring t5">10.4<span class="rk-chip">20th</span></td>
+        <td class="c-scoring t5">8.6<span class="rk-chip">21st</span></td>
+        <td class="c-scoring t5">12.9<span class="rk-chip">21st</span></td>
+        <td class="c-scoring t4">23.0<span class="rk-chip">16th</span></td>
+        <td class="c-scoring t4">41.4<span class="rk-chip">17th</span></td>
+        <td class="c-scoring t2">12.4<span class="rk-chip">9th</span></td>
+        <td class="c-scoring t4">12.9<span class="rk-chip">15th</span></td>
+        <td class="c-scoring t5">21.7<span class="rk-chip">20th</span></td>
   </tr>
   <tr>
     <td class="left muted">20</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="AZE flag"><rect y="0.0000" width="3" height="0.6667" fill="#00b5e2"/><rect y="0.6667" width="3" height="0.6667" fill="#ed2939"/><rect y="1.3333" width="3" height="0.6667" fill="#3f9c35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Azerbaijan</td>
     <td>8</td>
     <td data-value="0.2500">2&ndash;6</td>
-    <td>61.2</td>
-    <td>74.0</td>
-    <td>82</td>
-
-    <td class="c-off">39.1</td>
-    <td class="c-off">30.2</td>
-    <td class="c-off">34.6</td>
-    <td class="c-off">31.1</td>
-    <td class="c-off">74.4</td>
-
-    <td class="c-def">42.5</td>
-    <td class="c-def">21.1</td>
-    <td class="c-def">64.0</td>
-    <td class="c-def">22.1</td>
-    <td class="c-def">89.9</td>
-
-    <td class="neg">-15.5</td>
+        <td class="c-adv">82<span class="rk-chip">4th</span></td>
+        <td class="c-adv t5">74.4<span class="rk-chip">22nd</span></td>
+        <td class="c-adv t3">89.9<span class="rk-chip">11th</span></td>
+        <td class="c-adv t5">-15.5<span class="rk-chip">20th</span></td>
+        <td class="c-adv t5">39.1<span class="rk-chip">22nd</span></td>
+        <td class="c-adv t5">30.2<span class="rk-chip">21st</span></td>
+        <td class="c-adv t3">34.6<span class="rk-chip">10th</span></td>
+        <td class="c-adv t3">31.1<span class="rk-chip">13th</span></td>
+        <td class="c-adv t1">42.5<span class="rk-chip">5th</span></td>
+        <td class="c-adv t4">21.1<span class="rk-chip">16th</span></td>
+        <td class="c-adv t5">64.0<span class="rk-chip">18th</span></td>
+        <td class="c-adv t1">22.1<span class="rk-chip">2nd</span></td>
+        <td class="c-box t5">61.2<span class="rk-chip">22nd</span></td>
+        <td class="c-box t5">36.0<span class="rk-chip">20th</span></td>
+        <td class="c-box t5">19.9<span class="rk-chip">21st</span></td>
+        <td class="c-box t5">56.6<span class="rk-chip">19th</span></td>
+        <td class="c-box t2">15.4<span class="rk-chip">9th</span></td>
+        <td class="c-box t1">31.8<span class="rk-chip">5th</span></td>
+        <td class="c-box t5">12.2<span class="rk-chip">21st</span></td>
+        <td class="c-box t5">24.9<span class="rk-chip">21st</span></td>
+        <td class="c-box t3">10.0<span class="rk-chip">11th</span></td>
+        <td class="c-box t1">5.6<span class="rk-chip">2nd</span></td>
+        <td class="c-box t1">16.4<span class="rk-chip">2nd</span></td>
+        <td class="c-box t3">74.0<span class="rk-chip">13th</span></td>
+        <td class="c-box t1">35.7<span class="rk-chip">3rd</span></td>
+        <td class="c-box t5">28.5<span class="rk-chip">20th</span></td>
+        <td class="c-shot">36.8<span class="rk-chip">7th</span></td>
+        <td class="c-shot t5">52.1<span class="rk-chip">20th</span></td>
+        <td class="c-shot">21.1<span class="rk-chip">9th</span></td>
+        <td class="c-shot">10.6<span class="rk-chip">4th</span></td>
+        <td class="c-shot">31.5<span class="rk-chip">20th</span></td>
+        <td class="c-shot t5">19.9<span class="rk-chip">21st</span></td>
+        <td class="c-shot t1">24.5<span class="rk-chip">1st</span></td>
+        <td class="c-shot t1">52.7<span class="rk-chip">3rd</span></td>
+        <td class="c-shot">47.6<span class="rk-chip">1st</span></td>
+        <td class="c-shot t5">28.5<span class="rk-chip">20th</span></td>
+        <td class="c-scoring t4">34.2<span class="rk-chip">16th</span></td>
+        <td class="c-scoring t4">12.2<span class="rk-chip">16th</span></td>
+        <td class="c-scoring t1">14.1<span class="rk-chip">5th</span></td>
+        <td class="c-scoring t4">15.5<span class="rk-chip">16th</span></td>
+        <td class="c-scoring t5">7.2<span class="rk-chip">22nd</span></td>
+        <td class="c-scoring t1">28.8<span class="rk-chip">3rd</span></td>
+        <td class="c-scoring t3">14.8<span class="rk-chip">12th</span></td>
+        <td class="c-scoring t3">12.4<span class="rk-chip">13th</span></td>
+        <td class="c-scoring t5">24.8<span class="rk-chip">21st</span></td>
   </tr>
   <tr>
     <td class="left muted">21</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CYP flag"><rect width="3" height="2" fill="#ffffff"/><circle cx="1.5" cy="1" r=".42" fill="#d57800"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Cyprus</td>
     <td>7</td>
     <td data-value="0.1429">1&ndash;6</td>
-    <td>65.4</td>
-    <td>81.1</td>
-    <td>80</td>
-
-    <td class="c-off">43.9</td>
-    <td class="c-off">24.4</td>
-    <td class="c-off">22.8</td>
-    <td class="c-off">23.5</td>
-    <td class="c-off">81.6</td>
-
-    <td class="c-def">45.6</td>
-    <td class="c-def">23.3</td>
-    <td class="c-def">53.6</td>
-    <td class="c-def">38.6</td>
-    <td class="c-def">101.2</td>
-
-    <td class="neg">-19.6</td>
+        <td class="c-adv">80<span class="rk-chip">10th</span></td>
+        <td class="c-adv t5">81.6<span class="rk-chip">19th</span></td>
+        <td class="c-adv t5">101.2<span class="rk-chip">20th</span></td>
+        <td class="c-adv t5">-19.6<span class="rk-chip">21st</span></td>
+        <td class="c-adv t3">43.9<span class="rk-chip">13th</span></td>
+        <td class="c-adv t4">24.4<span class="rk-chip">17th</span></td>
+        <td class="c-adv t5">22.8<span class="rk-chip">22nd</span></td>
+        <td class="c-adv t5">23.5<span class="rk-chip">21st</span></td>
+        <td class="c-adv t4">45.6<span class="rk-chip">15th</span></td>
+        <td class="c-adv t2">23.3<span class="rk-chip">7th</span></td>
+        <td class="c-adv t5">53.6<span class="rk-chip">22nd</span></td>
+        <td class="c-adv t5">38.6<span class="rk-chip">20th</span></td>
+        <td class="c-box t5">65.4<span class="rk-chip">19th</span></td>
+        <td class="c-box t4">38.8<span class="rk-chip">16th</span></td>
+        <td class="c-box t2">27.4<span class="rk-chip">8th</span></td>
+        <td class="c-box t3">62.9<span class="rk-chip">11th</span></td>
+        <td class="c-box t5">9.1<span class="rk-chip">22nd</span></td>
+        <td class="c-box t5">23.1<span class="rk-chip">22nd</span></td>
+        <td class="c-box t5">13.7<span class="rk-chip">19th</span></td>
+        <td class="c-box t5">19.6<span class="rk-chip">18th</span></td>
+        <td class="c-box t2">10.3<span class="rk-chip">9th</span></td>
+        <td class="c-box t3">3.6<span class="rk-chip">10th</span></td>
+        <td class="c-box t5">23.4<span class="rk-chip">22nd</span></td>
+        <td class="c-box t5">81.1<span class="rk-chip">20th</span></td>
+        <td class="c-box t4">41.1<span class="rk-chip">16th</span></td>
+        <td class="c-box t3">24.9<span class="rk-chip">10th</span></td>
+        <td class="c-shot">30.9<span class="rk-chip">13th</span></td>
+        <td class="c-shot t5">52.9<span class="rk-chip">19th</span></td>
+        <td class="c-shot">23.1<span class="rk-chip">8th</span></td>
+        <td class="c-shot">8.3<span class="rk-chip">11th</span></td>
+        <td class="c-shot">37.7<span class="rk-chip">13th</span></td>
+        <td class="c-shot t2">27.4<span class="rk-chip">8th</span></td>
+        <td class="c-shot t4">37.2<span class="rk-chip">15th</span></td>
+        <td class="c-shot t4">59.4<span class="rk-chip">17th</span></td>
+        <td class="c-shot">35.7<span class="rk-chip">17th</span></td>
+        <td class="c-shot t3">24.9<span class="rk-chip">10th</span></td>
+        <td class="c-scoring t5">33.1<span class="rk-chip">19th</span></td>
+        <td class="c-scoring t4">11.7<span class="rk-chip">17th</span></td>
+        <td class="c-scoring t5">7.7<span class="rk-chip">22nd</span></td>
+        <td class="c-scoring t4">16.9<span class="rk-chip">14th</span></td>
+        <td class="c-scoring t5">14.4<span class="rk-chip">20th</span></td>
+        <td class="c-scoring t5">43.1<span class="rk-chip">19th</span></td>
+        <td class="c-scoring t5">20.7<span class="rk-chip">22nd</span></td>
+        <td class="c-scoring t5">19.4<span class="rk-chip">22nd</span></td>
+        <td class="c-scoring t3">18.4<span class="rk-chip">13th</span></td>
   </tr>
   <tr>
     <td class="left muted">22</td>
     <td class="left name"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NOR flag"><rect width="3" height="2" fill="#ba0c2f"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#00205b"/><rect y=".86" width="3" height=".28" fill="#00205b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Norway</td>
     <td>7</td>
     <td data-value="0.1429">1&ndash;6</td>
-    <td>62.6</td>
-    <td>84.3</td>
-    <td>82</td>
-
-    <td class="c-off">43.0</td>
-    <td class="c-off">30.3</td>
-    <td class="c-off">30.8</td>
-    <td class="c-off">24.2</td>
-    <td class="c-off">75.9</td>
-
-    <td class="c-def">45.9</td>
-    <td class="c-def">15.3</td>
-    <td class="c-def">63.6</td>
-    <td class="c-def">27.3</td>
-    <td class="c-def">102.3</td>
-
-    <td class="neg">-26.4</td>
+        <td class="c-adv">82<span class="rk-chip">3rd</span></td>
+        <td class="c-adv t5">75.9<span class="rk-chip">21st</span></td>
+        <td class="c-adv t5">102.3<span class="rk-chip">21st</span></td>
+        <td class="c-adv t5">-26.4<span class="rk-chip">22nd</span></td>
+        <td class="c-adv t4">43.0<span class="rk-chip">16th</span></td>
+        <td class="c-adv t5">30.3<span class="rk-chip">22nd</span></td>
+        <td class="c-adv t4">30.8<span class="rk-chip">17th</span></td>
+        <td class="c-adv t5">24.2<span class="rk-chip">20th</span></td>
+        <td class="c-adv t4">45.9<span class="rk-chip">16th</span></td>
+        <td class="c-adv t5">15.3<span class="rk-chip">22nd</span></td>
+        <td class="c-adv t5">63.6<span class="rk-chip">19th</span></td>
+        <td class="c-adv t2">27.3<span class="rk-chip">8th</span></td>
+        <td class="c-box t5">62.6<span class="rk-chip">21st</span></td>
+        <td class="c-box t3">39.4<span class="rk-chip">13th</span></td>
+        <td class="c-box t5">21.9<span class="rk-chip">20th</span></td>
+        <td class="c-box t5">50.0<span class="rk-chip">21st</span></td>
+        <td class="c-box t5">13.0<span class="rk-chip">19th</span></td>
+        <td class="c-box t2">30.0<span class="rk-chip">9th</span></td>
+        <td class="c-box t5">12.1<span class="rk-chip">22nd</span></td>
+        <td class="c-box t5">25.0<span class="rk-chip">22nd</span></td>
+        <td class="c-box t5">6.6<span class="rk-chip">22nd</span></td>
+        <td class="c-box t1">4.9<span class="rk-chip">3rd</span></td>
+        <td class="c-box t1">16.1<span class="rk-chip">1st</span></td>
+        <td class="c-box t5">84.3<span class="rk-chip">22nd</span></td>
+        <td class="c-box t5">42.1<span class="rk-chip">19th</span></td>
+        <td class="c-box t3">25.3<span class="rk-chip">12th</span></td>
+        <td class="c-shot">30.4<span class="rk-chip">14th</span></td>
+        <td class="c-shot t1">62.5<span class="rk-chip">2nd</span></td>
+        <td class="c-shot">27.5<span class="rk-chip">3rd</span></td>
+        <td class="c-shot">9.4<span class="rk-chip">6th</span></td>
+        <td class="c-shot">32.7<span class="rk-chip">19th</span></td>
+        <td class="c-shot t5">21.9<span class="rk-chip">20th</span></td>
+        <td class="c-shot t3">31.4<span class="rk-chip">11th</span></td>
+        <td class="c-shot t3">58.2<span class="rk-chip">13th</span></td>
+        <td class="c-shot">30.6<span class="rk-chip">20th</span></td>
+        <td class="c-shot t3">25.3<span class="rk-chip">12th</span></td>
+        <td class="c-scoring t3">38.3<span class="rk-chip">11th</span></td>
+        <td class="c-scoring t2">15.4<span class="rk-chip">8th</span></td>
+        <td class="c-scoring t5">10.3<span class="rk-chip">18th</span></td>
+        <td class="c-scoring t5">12.1<span class="rk-chip">22nd</span></td>
+        <td class="c-scoring t5">13.3<span class="rk-chip">21st</span></td>
+        <td class="c-scoring t5">49.1<span class="rk-chip">22nd</span></td>
+        <td class="c-scoring t5">17.4<span class="rk-chip">19th</span></td>
+        <td class="c-scoring t5">13.6<span class="rk-chip">18th</span></td>
+        <td class="c-scoring t5">25.9<span class="rk-chip">22nd</span></td>
   </tr>
-<tr class="total">
-  <td class="left"></td>
-  <td class="left">Event average</td>
-  <td>&ndash;</td><td>&ndash;</td>
-  <td>73.4</td>
-  <td>73.4</td>
-  <td>80</td>
-  <td class="c-off">44.3</td>
-  <td class="c-off">22.1</td>
-  <td class="c-off">33.9</td>
-  <td class="c-off">30.6</td>
-  <td class="c-off">91.5</td>
-  <td class="c-def">44.3</td>
-  <td class="c-def">22.1</td>
-  <td class="c-def">66.1</td>
-  <td class="c-def">30.6</td>
-  <td class="c-def">91.5</td>
-  <td>&ndash;</td>
-</tr>
 </tbody>
 </table>
 </div>
-<p class="note">Defensive columns describe what a team allows: <strong>Opp eFG%</strong>
-and <strong>Opp FTr</strong> are lower-is-better, <strong>TOV% frc</strong> (turnovers
-forced) and <strong>DREB%</strong> are higher-is-better. Because every game contributes
-both teams, the event average is identical on offence and defence by construction.
-Teams enter the tournament having played different numbers of games; the Gm column
-shows the sample behind each row.</p>
+<p class="note">Ranked by net rating. Every view covers both sides of the ball:
+the columns prefixed <strong>Opp</strong> are what a team allows, and shading
+already accounts for direction, so a shaded cell is good or bad rather than just
+high or low. Pace and the shot-share columns carry a rank but no shading, because
+taking a lot of threes is a style rather than an achievement. Teams enter the
+tournament having played different numbers of games; the Gm column shows the
+sample behind each row.</p>
 </section>
 
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Sun 02 Aug 2026, 20:43 (Irish time)</span>
+  <span>Generated Sun 02 Aug 2026, 20:55 (Irish time)</span>
 </div>
 
 <div class="running-foot">
@@ -1158,6 +1824,18 @@ shows the sample behind each row.</p>
     if (!row) return;
     e.preventDefault();
     toggleRow(row);
+  });
+
+  // Rank shading toggle. Off by default so the default page stays a clean
+  // printed table; turning it on adds the rank number and a tint.
+  document.addEventListener('click', function (e) {
+    var button = e.target.closest('button.ranktoggle');
+    if (!button) return;
+    var table = document.querySelector(button.dataset.target);
+    if (!table) return;
+    var on = table.classList.toggle('show-ranks');
+    button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    button.textContent = on ? button.dataset.on : button.dataset.off;
   });
 
   // Offence / defence / combined toggle.

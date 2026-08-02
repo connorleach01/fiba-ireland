@@ -41,7 +41,7 @@
 
 <section class="keep">
 <h2>Four factors, all games</h2>
-{{ m.four_factor_table(ff, p.opp_four_factors, league, p.identity.code, 'Opponents', ranks=ranks) }}
+{{ m.four_factor_ranked(ff, p.opp_four_factors, league, ranks, p.identity.code, 'ff-table') }}
 {{ charts.four_factors }}
 </section>
 
@@ -53,7 +53,7 @@
 <section>
 <h2>Players, tournament to date</h2>
 {{ m.player_table(players, per_game=True, details=player_details,
-                  scope='all games') }}
+                  scope='all games', pcts=percentiles, table_id='players') }}
 </section>
 
 <section class="keep">

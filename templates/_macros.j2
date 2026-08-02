@@ -30,6 +30,28 @@
 {%- if r %}{{ prefix }}{{ r.label }}{% endif -%}
 {%- endmacro %}
 
+{# A table cell carrying a value plus its rank, shaded by tier when the reader
+   turns ranks on. Metrics with no better/worse direction get a rank but no
+   tier, so style is never coloured as if it were quality. #}
+{% macro rk(value, ranks, key, digits=1, plus=False) -%}
+{%- set r = (ranks or {}).get(key) -%}
+<td class="{% if r and r.tier %}t{{ r.tier }}{% endif %}">
+{%- if plus %}{{ signed(value, digits) }}{% else %}{{ num(value, digits) }}{% endif -%}
+{%- if r %}<span class="rk-chip">{{ ordinal_short(r.rank) }}</span>{% endif -%}
+</td>
+{%- endmacro %}
+
+{% macro ordinal_short(n) -%}
+{%- if 10 <= n % 100 <= 20 %}{{ n }}th
+{%- elif n % 10 == 1 %}{{ n }}st{% elif n % 10 == 2 %}{{ n }}nd
+{%- elif n % 10 == 3 %}{{ n }}rd{% else %}{{ n }}th{% endif -%}
+{%- endmacro %}
+
+{% macro rank_toggle(target, off='Show ranks', on='Hide ranks') %}
+<button type="button" class="ranktoggle no-print" data-target="{{ target }}"
+        data-off="{{ off }}" data-on="{{ on }}" aria-pressed="false">{{ off }}</button>
+{% endmacro %}
+
 {% macro sample_banner(games_played, thing='These figures') %}
 {% if games_played <= 2 %}
 <p class="banner alert"><strong>Small sample.</strong> {{ thing }} come from
@@ -41,9 +63,11 @@ Rate stats are still noisy at this stage of the tournament.</p>
 {% endif %}
 {% endmacro %}
 
-{% macro player_table(players, per_game=True, caption='', details=None, scope='') %}
+{% macro player_table(players, per_game=True, caption='', details=None, scope='',
+                      pcts=None, table_id='players') %}
+{% if pcts %}{{ rank_toggle('#' ~ table_id, 'Show percentiles', 'Hide percentiles') }}{% endif %}
 <div class="scroll-x">
-<table class="{{ 'expandable' if details else '' }}">
+<table id="{{ table_id }}" class="{{ 'expandable' if details else '' }}">
 {% if caption %}<caption>{{ caption }}</caption>{% endif %}
 <thead>
   <tr>
@@ -74,10 +98,10 @@ Rate stats are still noisy at this stage of the tournament.</p>
     <td class="left name">{% if d %}<span class="twisty" aria-hidden="true">&#9656;</span>{% endif %}{{ p.full_name }}</td>
     {% if per_game %}
       <td>{{ p.games }}</td>
-      <td>{{ num(p.minutes_pg) }}</td>
-      <td>{{ num(p.pts_pg) }}</td>
-      <td>{{ num(p.reb_pg) }}</td>
-      <td>{{ num(p.ast_pg) }}</td>
+      {{ rk(p.minutes_pg, (pcts or {}).get(p.person_id), 'minutes_pg') }}
+      {{ rk(p.pts_pg, (pcts or {}).get(p.person_id), 'pts_pg') }}
+      {{ rk(p.reb_pg, (pcts or {}).get(p.person_id), 'reb_pg') }}
+      {{ rk(p.ast_pg, (pcts or {}).get(p.person_id), 'ast_pg') }}
     {% else %}
       <td>{{ num(p.minutes) }}</td>
       <td>{{ p.PTS }}</td>
@@ -86,22 +110,28 @@ Rate stats are still noisy at this stage of the tournament.</p>
       <td class="{{ tone(p.PM) }}">{{ '%+d'|format(p.PM or 0) }}</td>
     {% endif %}
     <td>{{ p.FGM }}/{{ p.FGA }}</td>
-    <td>{{ num(p.fg_pct) }}</td>
+    {{ rk(p.fg_pct, (pcts or {}).get(p.person_id), 'fg_pct') }}
     <td>{{ p.FG3M }}/{{ p.FG3A }}</td>
-    <td>{{ num(p.fg3_pct) }}</td>
+    {{ rk(p.fg3_pct, (pcts or {}).get(p.person_id), 'fg3_pct') }}
     <td>{{ p.FTM }}/{{ p.FTA }}</td>
-    <td>{{ num(p.ft_pct) }}</td>
-    <td>{{ num(p.pts_per_fga, 2) }}</td>
-    <td>{{ num(p.usage_pct) }}</td>
-    <td>{{ num(p.treb_pct) }}</td>
-    <td>{{ num(p.ast_pct) }}</td>
-    <td>{{ num(p.tov_pct) }}</td>
-    <td>{{ num(p.fouls_drawn_per40) }}</td>
+    {{ rk(p.ft_pct, (pcts or {}).get(p.person_id), 'ft_pct') }}
+    {{ rk(p.pts_per_fga, (pcts or {}).get(p.person_id), 'pts_per_fga', 2) }}
+    {{ rk(p.usage_pct, (pcts or {}).get(p.person_id), 'usage_pct') }}
+    {{ rk(p.treb_pct, (pcts or {}).get(p.person_id), 'treb_pct') }}
+    {{ rk(p.ast_pct, (pcts or {}).get(p.person_id), 'ast_pct') }}
+    {{ rk(p.tov_pct, (pcts or {}).get(p.person_id), 'tov_pct') }}
+    {{ rk(p.fouls_drawn_per40, (pcts or {}).get(p.person_id), 'fouls_drawn_per40') }}
   </tr>
 {% endfor %}
 </tbody>
 </table>
 </div>
+{% if pcts and pcts.get('_pool') %}
+<p class="note">Ranks are against the {{ pcts['_pool'].size }} players in the
+event averaging at least {{ '%.0f'|format(pcts['_pool'].min_mpg) }} minutes a
+game. Players below that threshold are listed but not ranked, because a
+percentile off six minutes a night describes the sample, not the player.</p>
+{% endif %}
 {% if details %}
 <p class="note">Click a player for their shot chart and shooting breakdown.</p>
 <div class="player-panels">
@@ -387,3 +417,56 @@ all of them.</p>
 describe what this team allowed: Opp eFG% and Opp FTr are lower-is-better,
 TOV% forced and DREB% are higher-is-better.</p>
 {% endmacro %}
+
+
+{# Four factors on both sides of the ball, each ranked against the event. The
+   game sheet keeps the simpler team-versus-team table above; this one is for
+   pages where a team has a season to be ranked within. #}
+{% macro four_factor_ranked(own, opp, league, ranks, code, table_id='ff') %}
+{{ rank_toggle('#' ~ table_id) }}
+<div class="scroll-x">
+<table id="{{ table_id }}">
+<thead><tr>
+  <th class="left">Factor</th><th>{{ code }}</th><th>Event avg</th><th class="left">Rank</th>
+</tr></thead>
+<tbody>
+  <tr class="subhead"><td class="left" colspan="4">Offence</td></tr>
+  {% for key, label, hint, src in [
+      ('efg_pct','eFG%','high is better', own),
+      ('tov_pct','TOV%','low is better', own),
+      ('oreb_pct','OREB%','high is better', own),
+      ('ft_rate','FTA/FGA','high is better', own)] %}
+  <tr>
+    <td class="left">{{ label }} <span class="unit">{{ hint }}</span></td>
+    {{ rk(src.get(key), ranks, key) }}
+    <td class="muted">{{ num((league or {}).get(key)) }}</td>
+    <td class="left muted">{{ (ranks.get(key) or {}).get('label', '') }}</td>
+  </tr>
+  {% endfor %}
+  <tr class="subhead"><td class="left" colspan="4">Defence, what they allow</td></tr>
+  {% for key, label, hint, value, avg in [
+      ('opp_efg_pct','Opp eFG%','low is better', opp.get('efg_pct'), (league or {}).get('efg_pct')),
+      ('tov_forced_pct','TOV% forced','high is better', opp.get('tov_pct'), (league or {}).get('tov_pct')),
+      ('dreb_pct','DREB%','high is better', own.get('dreb_pct'), (league or {}).get('dreb_pct')),
+      ('opp_ft_rate','Opp FTA/FGA','low is better', opp.get('ft_rate'), (league or {}).get('ft_rate'))] %}
+  <tr>
+    <td class="left">{{ label }} <span class="unit">{{ hint }}</span></td>
+    {{ rk(value, ranks, key) }}
+    <td class="muted">{{ num(avg) }}</td>
+    <td class="left muted">{{ (ranks.get(key) or {}).get('label', '') }}</td>
+  </tr>
+  {% endfor %}
+</tbody>
+</table>
+</div>
+{% endmacro %}
+
+
+{# Like rk() but for tables whose columns belong to a switchable view group. #}
+{% macro rk_cell(value, ranks, key, digits=1, plus=False, klass='') -%}
+{%- set r = (ranks or {}).get(key) -%}
+<td class="{{ klass }}{% if r and r.tier %} t{{ r.tier }}{% endif %}">
+{%- if plus %}{{ signed(value, digits) }}{% else %}{{ num(value, digits) }}{% endif -%}
+{%- if r %}<span class="rk-chip">{{ ordinal_short(r.rank) }}</span>{% endif -%}
+</td>
+{%- endmacro %}

@@ -30,6 +30,14 @@
   --good: #006300;
   --bad: #b32020;
   --track: #e8e8e4;
+  /* Five-step diverging tint for rank shading. Blue reads as good and red as
+     bad; the middle tier is left unshaded so "average" looks like nothing.
+     Kept very light so black text stays far above contrast minimums, and the
+     rank number is always printed alongside so colour is never the only cue. */
+  --rk-1: #c5dcf4;
+  --rk-2: #e4eefa;
+  --rk-4: #fbe8e8;
+  --rk-5: #f5cfcf;
   --court-line: #9a998f;
 
   --page-w: 210mm;
@@ -240,7 +248,7 @@ a { color: var(--ink); text-underline-offset: 2px; }
     box-shadow: none;
   }
   .masthead { break-after: avoid; page-break-after: avoid; }
-  .no-print, .sitebar, .viewtoggle { display: none !important; }
+  .no-print, .sitebar, .viewtoggle, .ranktoggle { display: none !important; }
   /* Expanded players print; collapsed ones stay out of the way. */
   tr.expander { cursor: auto; }
   .twisty { display: none; }
@@ -316,6 +324,22 @@ th[data-sortable]::after {
 th[data-sortable][data-dir="asc"]::after { content: "\2191"; opacity: 1; }
 th[data-sortable][data-dir="desc"]::after { content: "\2193"; opacity: 1; }
 
+/* --- Rank shading -------------------------------------------------------- */
+.rk-chip {
+  display: none; margin-left: 4px; font-size: 8.4px; color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+table.show-ranks .rk-chip { display: inline; }
+table.show-ranks td.t1 { background: var(--rk-1); }
+table.show-ranks td.t2 { background: var(--rk-2); }
+table.show-ranks td.t4 { background: var(--rk-4); }
+table.show-ranks td.t5 { background: var(--rk-5); }
+tr.subhead td {
+  font-size: 8.2px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ink-2); font-weight: 700; background: var(--band);
+  border-top: 1px solid var(--rule-mid);
+}
+
 /* --- View toggle --------------------------------------------------------- */
 .viewtoggle { display: flex; gap: 0; margin: 8px 0 0; }
 .viewtoggle button {
@@ -330,6 +354,11 @@ th[data-sortable][data-dir="desc"]::after { content: "\2193"; opacity: 1; }
   background: var(--ink); color: #fff; border-color: var(--ink);
 }
 table.view-off .c-def, table.view-def .c-off { display: none; }
+table.view-box .c-adv, table.view-box .c-shot, table.view-box .c-scoring,
+table.view-adv .c-box, table.view-adv .c-shot, table.view-adv .c-scoring,
+table.view-shot .c-adv, table.view-shot .c-box, table.view-shot .c-scoring,
+table.view-scoring .c-adv, table.view-scoring .c-box, table.view-scoring .c-shot
+  { display: none; }
 
 /* --- Expandable player rows ---------------------------------------------- */
 tr.expander { cursor: pointer; }
@@ -801,7 +830,7 @@ against what they allowed. The vertical rule marks the competition average.</p>
 <section>
 <h2>Box score &mdash; Azerbaijan</h2>
 <div class="scroll-x">
-<table class="expandable">
+<table id="players" class="expandable">
 <thead>
   <tr>
     <th class="left">#</th><th class="left" data-sortable>Player</th>
@@ -828,17 +857,17 @@ against what they allowed. The vertical rule marks the competition average.</p>
       <td>5</td>
       <td class="neg">-12</td>
     <td>5/18</td>
-    <td>27.8</td>
+    <td class="">27.8</td>
     <td>1/7</td>
-    <td>14.3</td>
+    <td class="">14.3</td>
     <td>0/1</td>
-    <td>0.0</td>
-    <td>0.61</td>
-    <td>24.8</td>
-    <td>2.9</td>
-    <td>26.3</td>
-    <td>32.8</td>
-    <td>2.0</td>
+    <td class="">0.0</td>
+    <td class="">0.61</td>
+    <td class="">24.8</td>
+    <td class="">2.9</td>
+    <td class="">26.3</td>
+    <td class="">32.8</td>
+    <td class="">2.0</td>
   </tr>
   <tr class="expander" data-target="pd-369567" tabindex="0"
       role="button" aria-expanded="false"
@@ -851,17 +880,17 @@ against what they allowed. The vertical rule marks the competition average.</p>
       <td>1</td>
       <td class="neg">-10</td>
     <td>6/12</td>
-    <td>50.0</td>
+    <td class="">50.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
     <td>2/3</td>
-    <td>66.7</td>
-    <td>1.00</td>
-    <td>14.0</td>
-    <td>15.5</td>
-    <td>6.2</td>
-    <td>7.0</td>
-    <td>3.3</td>
+    <td class="">66.7</td>
+    <td class="">1.00</td>
+    <td class="">14.0</td>
+    <td class="">15.5</td>
+    <td class="">6.2</td>
+    <td class="">7.0</td>
+    <td class="">3.3</td>
   </tr>
   <tr class="expander" data-target="pd-333797" tabindex="0"
       role="button" aria-expanded="false"
@@ -874,17 +903,17 @@ against what they allowed. The vertical rule marks the competition average.</p>
       <td>1</td>
       <td class="neg">-1</td>
     <td>4/12</td>
-    <td>33.3</td>
+    <td class="">33.3</td>
     <td>2/6</td>
-    <td>33.3</td>
+    <td class="">33.3</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>0.83</td>
-    <td>13.5</td>
-    <td>8.8</td>
-    <td>5.9</td>
-    <td>7.7</td>
-    <td>0.0</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">0.83</td>
+    <td class="">13.5</td>
+    <td class="">8.8</td>
+    <td class="">5.9</td>
+    <td class="">7.7</td>
+    <td class="">0.0</td>
   </tr>
   <tr class="expander" data-target="pd-343511" tabindex="0"
       role="button" aria-expanded="false"
@@ -897,17 +926,17 @@ against what they allowed. The vertical rule marks the competition average.</p>
       <td>1</td>
       <td class="pos">+2</td>
     <td>4/14</td>
-    <td>28.6</td>
+    <td class="">28.6</td>
     <td>0/1</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>2/3</td>
-    <td>66.7</td>
-    <td>0.57</td>
-    <td>22.9</td>
-    <td>10.2</td>
-    <td>6.2</td>
-    <td>28.1</td>
-    <td>2.4</td>
+    <td class="">66.7</td>
+    <td class="">0.57</td>
+    <td class="">22.9</td>
+    <td class="">10.2</td>
+    <td class="">6.2</td>
+    <td class="">28.1</td>
+    <td class="">2.4</td>
   </tr>
   <tr class="expander" data-target="pd-369566" tabindex="0"
       role="button" aria-expanded="false"
@@ -920,17 +949,17 @@ against what they allowed. The vertical rule marks the competition average.</p>
       <td>3</td>
       <td class="neg">-2</td>
     <td>1/4</td>
-    <td>25.0</td>
+    <td class="">25.0</td>
     <td>0/2</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>0.50</td>
-    <td>19.0</td>
-    <td>6.0</td>
-    <td>28.7</td>
-    <td>60.0</td>
-    <td>2.1</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">0.50</td>
+    <td class="">19.0</td>
+    <td class="">6.0</td>
+    <td class="">28.7</td>
+    <td class="">60.0</td>
+    <td class="">2.1</td>
   </tr>
   <tr class="expander" data-target="pd-343497" tabindex="0"
       role="button" aria-expanded="false"
@@ -943,17 +972,17 @@ against what they allowed. The vertical rule marks the competition average.</p>
       <td>2</td>
       <td class="neg">-9</td>
     <td>3/8</td>
-    <td>37.5</td>
+    <td class="">37.5</td>
     <td>0/3</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>0/1</td>
-    <td>0.0</td>
-    <td>0.75</td>
-    <td>30.7</td>
-    <td>0.0</td>
-    <td>30.8</td>
-    <td>37.2</td>
-    <td>2.5</td>
+    <td class="">0.0</td>
+    <td class="">0.75</td>
+    <td class="">30.7</td>
+    <td class="">0.0</td>
+    <td class="">30.8</td>
+    <td class="">37.2</td>
+    <td class="">2.5</td>
   </tr>
   <tr class="expander" data-target="pd-394147" tabindex="0"
       role="button" aria-expanded="false"
@@ -966,17 +995,17 @@ against what they allowed. The vertical rule marks the competition average.</p>
       <td>0</td>
       <td class="neg">-20</td>
     <td>1/2</td>
-    <td>50.0</td>
+    <td class="">50.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>1.00</td>
-    <td>8.5</td>
-    <td>3.0</td>
-    <td>0.0</td>
-    <td>33.3</td>
-    <td>3.1</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">1.00</td>
+    <td class="">8.5</td>
+    <td class="">3.0</td>
+    <td class="">0.0</td>
+    <td class="">33.3</td>
+    <td class="">3.1</td>
   </tr>
   <tr class="expander" data-target="pd-343504" tabindex="0"
       role="button" aria-expanded="false"
@@ -989,17 +1018,17 @@ against what they allowed. The vertical rule marks the competition average.</p>
       <td>1</td>
       <td class="neg">-8</td>
     <td>0/3</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>0/1</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>0.00</td>
-    <td>26.7</td>
-    <td>11.3</td>
-    <td>24.6</td>
-    <td>40.0</td>
-    <td>0.0</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">0.00</td>
+    <td class="">26.7</td>
+    <td class="">11.3</td>
+    <td class="">24.6</td>
+    <td class="">40.0</td>
+    <td class="">0.0</td>
   </tr>
 </tbody>
 </table>
@@ -1291,7 +1320,7 @@ splits and true shooting.</p>
 <section>
 <h2>Box score &mdash; Great Britain</h2>
 <div class="scroll-x">
-<table class="expandable">
+<table id="players" class="expandable">
 <thead>
   <tr>
     <th class="left">#</th><th class="left" data-sortable>Player</th>
@@ -1318,17 +1347,17 @@ splits and true shooting.</p>
       <td>7</td>
       <td class="pos">+19</td>
     <td>7/14</td>
-    <td>50.0</td>
+    <td class="">50.0</td>
     <td>2/6</td>
-    <td>33.3</td>
+    <td class="">33.3</td>
     <td>1/1</td>
-    <td>100.0</td>
-    <td>1.14</td>
-    <td>24.2</td>
-    <td>3.0</td>
-    <td>75.3</td>
-    <td>12.2</td>
-    <td>3.2</td>
+    <td class="">100.0</td>
+    <td class="">1.14</td>
+    <td class="">24.2</td>
+    <td class="">3.0</td>
+    <td class="">75.3</td>
+    <td class="">12.2</td>
+    <td class="">3.2</td>
   </tr>
   <tr class="expander" data-target="pd-375361" tabindex="0"
       role="button" aria-expanded="false"
@@ -1341,17 +1370,17 @@ splits and true shooting.</p>
       <td>1</td>
       <td class="pos">+8</td>
     <td>2/11</td>
-    <td>18.2</td>
+    <td class="">18.2</td>
     <td>2/11</td>
-    <td>18.2</td>
+    <td class="">18.2</td>
     <td>0/1</td>
-    <td>0.0</td>
-    <td>0.55</td>
-    <td>23.4</td>
-    <td>5.0</td>
-    <td>7.8</td>
-    <td>20.8</td>
-    <td>1.8</td>
+    <td class="">0.0</td>
+    <td class="">0.55</td>
+    <td class="">23.4</td>
+    <td class="">5.0</td>
+    <td class="">7.8</td>
+    <td class="">20.8</td>
+    <td class="">1.8</td>
   </tr>
   <tr class="expander" data-target="pd-419116" tabindex="0"
       role="button" aria-expanded="false"
@@ -1364,17 +1393,17 @@ splits and true shooting.</p>
       <td>1</td>
       <td class="pos">+22</td>
     <td>4/10</td>
-    <td>40.0</td>
+    <td class="">40.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>0.80</td>
-    <td>16.3</td>
-    <td>11.8</td>
-    <td>9.3</td>
-    <td>0.0</td>
-    <td>1.8</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">0.80</td>
+    <td class="">16.3</td>
+    <td class="">11.8</td>
+    <td class="">9.3</td>
+    <td class="">0.0</td>
+    <td class="">1.8</td>
   </tr>
   <tr class="expander" data-target="pd-371816" tabindex="0"
       role="button" aria-expanded="false"
@@ -1387,17 +1416,17 @@ splits and true shooting.</p>
       <td>0</td>
       <td class="pos">+1</td>
     <td>3/13</td>
-    <td>23.1</td>
+    <td class="">23.1</td>
     <td>0/4</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>1/2</td>
-    <td>50.0</td>
-    <td>0.46</td>
-    <td>26.7</td>
-    <td>12.2</td>
-    <td>0.0</td>
-    <td>12.6</td>
-    <td>3.6</td>
+    <td class="">50.0</td>
+    <td class="">0.46</td>
+    <td class="">26.7</td>
+    <td class="">12.2</td>
+    <td class="">0.0</td>
+    <td class="">12.6</td>
+    <td class="">3.6</td>
   </tr>
   <tr class="expander" data-target="pd-345068" tabindex="0"
       role="button" aria-expanded="false"
@@ -1410,17 +1439,17 @@ splits and true shooting.</p>
       <td>0</td>
       <td class="pos">+11</td>
     <td>4/8</td>
-    <td>50.0</td>
+    <td class="">50.0</td>
     <td>1/3</td>
-    <td>33.3</td>
+    <td class="">33.3</td>
     <td>2/4</td>
-    <td>50.0</td>
-    <td>1.12</td>
-    <td>16.8</td>
-    <td>3.6</td>
-    <td>0.0</td>
-    <td>0.0</td>
-    <td>5.6</td>
+    <td class="">50.0</td>
+    <td class="">1.12</td>
+    <td class="">16.8</td>
+    <td class="">3.6</td>
+    <td class="">0.0</td>
+    <td class="">0.0</td>
+    <td class="">5.6</td>
   </tr>
   <tr class="expander" data-target="pd-368772" tabindex="0"
       role="button" aria-expanded="false"
@@ -1433,17 +1462,17 @@ splits and true shooting.</p>
       <td>2</td>
       <td class="pos">+6</td>
     <td>1/4</td>
-    <td>25.0</td>
+    <td class="">25.0</td>
     <td>1/2</td>
-    <td>50.0</td>
+    <td class="">50.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>0.75</td>
-    <td>13.8</td>
-    <td>10.7</td>
-    <td>15.5</td>
-    <td>50.0</td>
-    <td>0.0</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">0.75</td>
+    <td class="">13.8</td>
+    <td class="">10.7</td>
+    <td class="">15.5</td>
+    <td class="">50.0</td>
+    <td class="">0.0</td>
   </tr>
   <tr class="expander" data-target="pd-344959" tabindex="0"
       role="button" aria-expanded="false"
@@ -1456,17 +1485,17 @@ splits and true shooting.</p>
       <td>3</td>
       <td class="pos">+3</td>
     <td>1/3</td>
-    <td>33.3</td>
+    <td class="">33.3</td>
     <td>0/1</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>2/4</td>
-    <td>50.0</td>
-    <td>0.67</td>
-    <td>19.2</td>
-    <td>6.8</td>
-    <td>30.2</td>
-    <td>45.7</td>
-    <td>4.8</td>
+    <td class="">50.0</td>
+    <td class="">0.67</td>
+    <td class="">19.2</td>
+    <td class="">6.8</td>
+    <td class="">30.2</td>
+    <td class="">45.7</td>
+    <td class="">4.8</td>
   </tr>
   <tr class="expander" data-target="pd-368774" tabindex="0"
       role="button" aria-expanded="false"
@@ -1479,17 +1508,17 @@ splits and true shooting.</p>
       <td>1</td>
       <td class="neg">-5</td>
     <td>0/2</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>0/2</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>0.00</td>
-    <td>8.8</td>
-    <td>12.1</td>
-    <td>12.2</td>
-    <td>33.3</td>
-    <td>0.0</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">0.00</td>
+    <td class="">8.8</td>
+    <td class="">12.1</td>
+    <td class="">12.2</td>
+    <td class="">33.3</td>
+    <td class="">0.0</td>
   </tr>
   <tr class="expander" data-target="pd-369721" tabindex="0"
       role="button" aria-expanded="false"
@@ -1502,17 +1531,17 @@ splits and true shooting.</p>
       <td>1</td>
       <td class="pos">+5</td>
     <td>2/4</td>
-    <td>50.0</td>
+    <td class="">50.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>1.00</td>
-    <td>13.0</td>
-    <td>3.3</td>
-    <td>18.5</td>
-    <td>0.0</td>
-    <td>0.0</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">1.00</td>
+    <td class="">13.0</td>
+    <td class="">3.3</td>
+    <td class="">18.5</td>
+    <td class="">0.0</td>
+    <td class="">0.0</td>
   </tr>
   <tr class="expander" data-target="pd-419383" tabindex="0"
       role="button" aria-expanded="false"
@@ -1525,17 +1554,17 @@ splits and true shooting.</p>
       <td>0</td>
       <td class="neg">-5</td>
     <td>1/4</td>
-    <td>25.0</td>
+    <td class="">25.0</td>
     <td>0/1</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
-    <td>0.50</td>
-    <td>18.5</td>
-    <td>19.1</td>
-    <td>0.0</td>
-    <td>20.0</td>
-    <td>0.0</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td class="">0.50</td>
+    <td class="">18.5</td>
+    <td class="">19.1</td>
+    <td class="">0.0</td>
+    <td class="">20.0</td>
+    <td class="">0.0</td>
   </tr>
   <tr class="expander" data-target="pd-372944" tabindex="0"
       role="button" aria-expanded="false"
@@ -1548,17 +1577,17 @@ splits and true shooting.</p>
       <td>0</td>
       <td class="neg">-6</td>
     <td>1/3</td>
-    <td>33.3</td>
+    <td class="">33.3</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
     <td>2/3</td>
-    <td>66.7</td>
-    <td>0.67</td>
-    <td>25.2</td>
-    <td>14.7</td>
-    <td>0.0</td>
-    <td>18.8</td>
-    <td>10.3</td>
+    <td class="">66.7</td>
+    <td class="">0.67</td>
+    <td class="">25.2</td>
+    <td class="">14.7</td>
+    <td class="">0.0</td>
+    <td class="">18.8</td>
+    <td class="">10.3</td>
   </tr>
   <tr class="expander" data-target="pd-368777" tabindex="0"
       role="button" aria-expanded="false"
@@ -1571,17 +1600,17 @@ splits and true shooting.</p>
       <td>0</td>
       <td class="pos">+1</td>
     <td>0/4</td>
-    <td>0.0</td>
+    <td class="">0.0</td>
     <td>0/0</td>
-    <td><span class="muted">&ndash;</span></td>
+    <td class=""><span class="muted">&ndash;</span></td>
     <td>1/2</td>
-    <td>50.0</td>
-    <td>0.00</td>
-    <td>40.5</td>
-    <td>6.1</td>
-    <td>0.0</td>
-    <td>29.1</td>
-    <td>6.4</td>
+    <td class="">50.0</td>
+    <td class="">0.00</td>
+    <td class="">40.5</td>
+    <td class="">6.1</td>
+    <td class="">0.0</td>
+    <td class="">29.1</td>
+    <td class="">6.4</td>
   </tr>
 </tbody>
 </table>
@@ -2203,7 +2232,7 @@ plus-minus over two minutes as noise.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Sun 02 Aug 2026, 20:43 (Irish time)</span>
+  <span>Generated Sun 02 Aug 2026, 20:55 (Irish time)</span>
 </div>
 
 <div class="running-foot">
@@ -2335,6 +2364,18 @@ plus-minus over two minutes as noise.</p>
     if (!row) return;
     e.preventDefault();
     toggleRow(row);
+  });
+
+  // Rank shading toggle. Off by default so the default page stays a clean
+  // printed table; turning it on adds the rank number and a tint.
+  document.addEventListener('click', function (e) {
+    var button = e.target.closest('button.ranktoggle');
+    if (!button) return;
+    var table = document.querySelector(button.dataset.target);
+    if (!table) return;
+    var on = table.classList.toggle('show-ranks');
+    button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    button.textContent = on ? button.dataset.on : button.dataset.off;
   });
 
   // Offence / defence / combined toggle.
