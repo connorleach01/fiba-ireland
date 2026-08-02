@@ -133,6 +133,12 @@ them must say so.
 **Free throws are logged at `x:0, y:0`** and carry no location. Exclude them from
 shot charts.
 
+**About 0.4% of attempts fall outside the plotted half court** (half-court heaves
+out to 13 metres). The SVG does not clip, so left alone they float over the
+heading. `charts.shot_chart` clamps them to the frame and says how many were
+moved. Only genuine outliers are counted: nudging a baseline attempt in by a
+marker radius is presentation, not a moved datum.
+
 ## Design rules
 
 The output is a **printed stats report, not a dashboard**. A4 paper geometry,
@@ -161,6 +167,12 @@ they render about 16px wide. Unknown codes fall back to a neutral chip.
 
 **Charts do not repeat what the table already says.** The four-factor bars are
 deliberately unlabelled because the table above them carries the numbers.
+
+**Offence and defence sit side by side in a `.chartpair` grid**, offence left and
+defence right, on every page that shows shots. It is a CSS grid rather than flex
+so the two halves are exactly equal: the courts then render at the same size and
+the zone tables beneath them start on the same line. Each column carries one
+heading, so `zone_table` is called with `caption=''` there.
 
 **Small samples are labelled and thin ones are withheld.** Per-100 figures are
 not published below `analysis.MIN_RATE_SECONDS` (180s) of shared court time; the

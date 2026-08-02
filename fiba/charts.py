@@ -103,6 +103,27 @@ def shot_chart(shots: list[dict], *, title: str = "", made_label: str = "Made",
     )
     lines.append("</g>")
 
+    # A small number of attempts are half-court heaves that fall outside the
+    # plotted area (about 0.4% of the sample, out to 13 metres). Clamping them to
+    # the edge keeps them counted and keeps the drawing inside its frame; left
+    # alone they float over the heading, because the SVG does not clip.
+    clamped = 0
+
+    def place(shot, radius):
+        """Keep a marker inside the frame, and count only genuine outliers.
+
+        Nudging a baseline attempt in by a marker radius is presentation; a
+        half-court heave landing outside the drawing is a real datum being
+        moved, and only that is worth telling the reader about.
+        """
+        nonlocal clamped
+        x, y = sx(shot["x"]), sy(shot["y"])
+        if not (0 <= x <= view_w and 0 <= y <= view_h):
+            clamped += 1
+        cx = min(max(x, radius), view_w - radius)
+        cy = min(max(y, radius), view_h - radius)
+        return cx, cy
+
     # Markers. Missed sit underneath so makes stay legible in a dense cluster.
     # Shrink the marker as the plot fills up, otherwise a tournament-wide chart
     # is a solid mass of overlapping circles.
@@ -121,8 +142,9 @@ def shot_chart(shots: list[dict], *, title: str = "", made_label: str = "Made",
         lines.append(f'<g class="shot {css}">')
         for shot in group:
             label = shot.get("text") or ("made" if made_state else "missed")
+            cx, cy = place(shot, radius)
             lines.append(
-                f'<circle cx="{sx(shot["x"]):.1f}" cy="{sy(shot["y"]):.1f}" '
+                f'<circle cx="{cx:.1f}" cy="{cy:.1f}" '
                 f'r="{radius}"><title>{_esc(label)}</title></circle>'
             )
         lines.append("</g>")
@@ -138,10 +160,14 @@ def shot_chart(shots: list[dict], *, title: str = "", made_label: str = "Made",
         f'({len(plotted) - made_count})</span>'
         "</div>"
     )
-    note = (
-        '<p class="viz-note">Free throws carry no court location and are '
-        "excluded.</p>"
-    )
+    note_parts = ["Free throws carry no court location and are excluded."]
+    if clamped:
+        plural = "" if clamped == 1 else "s"
+        note_parts.append(
+            f"{clamped} attempt{plural} from beyond the plotted area are shown "
+            "at the edge."
+        )
+    note = '<p class="viz-note">' + " ".join(note_parts) + "</p>"
     return f'<figure class="viz">{"".join(lines)}{legend}{note}</figure>'
 
 

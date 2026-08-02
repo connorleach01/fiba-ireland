@@ -102,20 +102,17 @@
   <div>
     <h3>Shots {{ p.identity.name }} took</h3>
     {{ charts.shots }}
+    {{ m.zone_table(zones, caption='') }}
   </div>
   <div>
     <h3>Shots {{ p.identity.name }} allowed</h3>
     {{ charts.shots_faced }}
+    {{ m.zone_table(faced_zones, caption='') }}
   </div>
 </div>
-</section>
-
-<section>
-<h2>Shooting by zone</h2>
-<div class="cols">
-  <div>{{ m.zone_table(zones, caption='Shots ' ~ p.identity.name ~ ' took') }}</div>
-  <div>{{ m.zone_table(faced_zones, caption='Shots ' ~ p.identity.name ~ ' allowed') }}</div>
-</div>
+<p class="note">Where a team lets opponents shoot from is the clearest read on
+their defence: a high rim share means the paint is open, a high three share
+means they run shooters off the line but concede space outside.</p>
 </section>
 
 <section>

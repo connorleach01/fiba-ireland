@@ -353,10 +353,19 @@ tr.expander[aria-expanded="true"] td { background: var(--band); }
 .detail-stats table { margin-top: 0; }
 .detail-stats caption { padding-bottom: 3px; }
 
-/* --- Paired charts ------------------------------------------------------- */
-.chartpair { display: flex; gap: 18px; flex-wrap: wrap; }
-.chartpair > figure, .chartpair > div { flex: 1 1 240px; min-width: 0; }
+/* --- Paired charts -------------------------------------------------------
+   A grid, not flex: the two halves must be exactly equal so the courts render
+   at the same size and the tables beneath them start on the same line. Offence
+   sits on the left and defence on the right, in that order, on every page. */
+.chartpair {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 18px;
+}
+.chartpair > div { min-width: 0; }
 .chartpair h3 { margin-top: 0; }
+.chartpair .viz { margin-top: 2px; }
+/* Hold the courts to a common height so a stray legend wrap cannot nudge one
+   table out of line with the other. */
+.chartpair .viz-shotchart { width: 100%; height: auto; }
 
 /* --- Flags --------------------------------------------------------------- */
 .flag {
@@ -373,6 +382,8 @@ td .flag, li .flag { margin-right: 5px; }
   :root { --page-pad: 12px; }
   .sheet { width: 100%; margin: 0; min-height: 0; box-shadow: none; }
   .cols { display: block; }
+  .chartpair { grid-template-columns: minmax(0, 1fr); }
+  .chartpair > div + div { margin-top: 14px; }
   .cols > * + * { margin-top: 12px; }
   .col-narrow { flex: none; }
   table { min-width: 460px; }
@@ -397,7 +408,7 @@ td .flag, li .flag { margin-right: 5px; }
 <header class="masthead">
   <div class="kicker">
     <span>FIBA U16 Eurobasket 2026 Division B &middot; Dashboard</span>
-    <span>Sun 02 Aug 2026, 19:48 (Irish time)</span>
+    <span>Sun 02 Aug 2026, 20:30 (Irish time)</span>
   </div>
   <h1>Ireland analytics</h1>
   <p class="sub">0 of 81 games played across the event
@@ -455,7 +466,7 @@ scouting report for them. It will appear here as soon as they finish a game.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Sun 02 Aug 2026, 19:48 (Irish time)</span>
+  <span>Generated Sun 02 Aug 2026, 20:30 (Irish time)</span>
 </div>
 
 <div class="running-foot">

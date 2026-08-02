@@ -46,34 +46,28 @@
 {{ charts.four_factors }}
 </section>
 
-<section class="keep">
+<section>
 <h2>How they score</h2>
-<div class="cols">
-  <div>
-    {{ m.scoring_share(box_rows, per_game=True) }}
-    {{ m.zone_table(zones, caption='Shots ' ~ p.identity.name ~ ' took') }}
-  </div>
-  <div class="col-narrow">
-    <h3>Shots {{ p.identity.name }} took</h3>
-    {{ charts.shots }}
-  </div>
-</div>
+{{ m.scoring_share(box_rows, per_game=True) }}
 </section>
 
 <section class="keep">
-<h2>What they allow</h2>
+<h2>Shooting</h2>
 <div class="chartpair">
+  <div>
+    <h3>Shots {{ p.identity.name }} took</h3>
+    {{ charts.shots }}
+    {{ m.zone_table(zones, caption='') }}
+  </div>
   <div>
     <h3>Shots {{ p.identity.name }} allowed</h3>
     {{ charts.shots_faced }}
-  </div>
-  <div>
-    {{ m.zone_table(faced_zones, caption='Shots ' ~ p.identity.name ~ ' allowed') }}
-    <p class="note">Where a team lets opponents shoot from is the clearest read
-    on their defence: a high rim share means the paint is open, a high three
-    share means they run shooters off the line but concede space outside.</p>
+    {{ m.zone_table(faced_zones, caption='') }}
   </div>
 </div>
+<p class="note">Where a team lets opponents shoot from is the clearest read on
+their defence: a high rim share means the paint is open, a high three share
+means they run shooters off the line but concede space outside.</p>
 </section>
 
 <section>
