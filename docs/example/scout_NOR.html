@@ -241,6 +241,10 @@ a { color: var(--ink); text-underline-offset: 2px; }
   }
   .masthead { break-after: avoid; page-break-after: avoid; }
   .no-print, .sitebar, .viewtoggle { display: none !important; }
+  .refbar {
+    display: block !important; background: none; color: var(--ink-3);
+    border-bottom: 1px solid var(--rule-mid); text-align: left; padding: 0 0 4px;
+  }
   /* Whatever is on screen, print the full picture. */
   table.view-off .c-def, table.view-def .c-off { display: table-cell !important; }
   th[data-sortable]::after { content: "" !important; }
@@ -255,6 +259,14 @@ a { color: var(--ink); text-underline-offset: 2px; }
   }
 }
 .running-foot { display: none; }
+
+/* --- Reference marker ---------------------------------------------------- */
+.refbar {
+  background: var(--warning); color: #1a1a19;
+  font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+  font-weight: 700; text-align: center; padding: 5px 10px;
+}
+.refbar a { color: inherit; }
 
 /* --- Site navigation ----------------------------------------------------- */
 .sitebar {
@@ -348,6 +360,9 @@ td .flag, li .flag { margin-right: 5px; }
 </style>
 </head>
 <body>
+<div class="refbar">
+  Reference set &middot; FIBA U18 Eurobasket 2026 Division B &middot; not live U16 data
+</div>
 <nav class="sitebar no-print">
   <div class="inner">
     <a class="brand" href="index.html">IRL U16</a>
@@ -401,7 +416,7 @@ td .flag, li .flag { margin-right: 5px; }
 <header class="masthead">
   <div class="kicker">
     <span>FIBA U18 Eurobasket 2026 Division B &middot; Scouting report</span>
-    <span>Sun 02 Aug 2026, 19:11 (Irish time)</span>
+    <span>Sun 02 Aug 2026, 19:20 (Irish time)</span>
   </div>
   <h1><svg class="flag" viewBox="0 0 3 2" width="24" height="16" role="img" aria-label="NOR flag"><rect width="3" height="2" fill="#ba0c2f"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#00205b"/><rect y=".86" width="3" height=".28" fill="#00205b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Norway</h1>
   <p class="sub">1&ndash;6 over 7 games
@@ -1088,7 +1103,7 @@ judged on.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Sun 02 Aug 2026, 19:11 (Irish time)</span>
+  <span>Generated Sun 02 Aug 2026, 19:20 (Irish time)</span>
 </div>
 
 <div class="running-foot">

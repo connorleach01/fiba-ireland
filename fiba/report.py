@@ -130,7 +130,8 @@ def _mark(value):
 
 def build_scout(conn, event_slug: str, org_id: int,
                 subject_org_id: int = IRELAND_ORG_ID,
-                fixture_text: str | None = None, nav: dict | None = None) -> str | None:
+                fixture_text: str | None = None, nav: dict | None = None,
+                reference: str | None = None) -> str | None:
     """Opponent profile: what they do, who does it, and how they line up."""
     profile = analysis.team_profile(conn, event_slug, org_id)
     if profile["games_played"] == 0:
@@ -158,7 +159,7 @@ def build_scout(conn, event_slug: str, org_id: int,
         lineups_available=lineups_available,
         bench=bench,
         fixture=fixture_text,
-        nav=nav, page="scout",
+        nav=nav, page="scout", reference=reference,
         **_inks(profile["identity"]["code"], None),
         charts={
             "four_factors": _mark(charts.four_factor_bars(
@@ -174,7 +175,8 @@ def build_scout(conn, event_slug: str, org_id: int,
 
 
 def build_review(conn, event_slug: str, game_id: int,
-                 org_id: int = IRELAND_ORG_ID, nav: dict | None = None) -> str | None:
+                 org_id: int = IRELAND_ORG_ID, nav: dict | None = None,
+                 reference: str | None = None) -> str | None:
     """Self-scout for one game."""
     row = conn.execute(
         "SELECT * FROM team_game_stats WHERE event_slug=? AND game_id=? AND org_id=?",
@@ -223,7 +225,7 @@ def build_review(conn, event_slug: str, game_id: int,
         lineups_available=bool(game["lineups_ok"]),
         periods=period_labels,
         our_periods=our_periods, their_periods=their_periods,
-        nav=nav, page="review",
+        nav=nav, page="review", reference=reference,
         **_inks(us["code"], them["code"]),
         charts={
             "four_factors": _mark(charts.four_factor_bars(
@@ -243,7 +245,8 @@ def build_review(conn, event_slug: str, game_id: int,
 
 
 def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
-                     nav: dict | None = None) -> str | None:
+                     nav: dict | None = None,
+                     reference: str | None = None) -> str | None:
     """Cumulative view that grows as the event goes on."""
     profile = analysis.team_profile(conn, event_slug, org_id)
     if profile["games_played"] == 0:
@@ -262,7 +265,7 @@ def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
         generated_at=_now_text(),
         profile=profile, league=league, players=players, zones=zones,
         lineups=lineups[:10], lineups_available=lineups_available,
-        nav=nav, page="tournament",
+        nav=nav, page="tournament", reference=reference,
         **_inks(profile["identity"]["code"], None),
         charts={
             "four_factors": _mark(charts.four_factor_bars(
@@ -277,7 +280,7 @@ def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
 
 def build_teams(conn, event_slug: str,
                 highlight_org_id: int = IRELAND_ORG_ID,
-                nav: dict | None = None) -> str:
+                nav: dict | None = None, reference: str | None = None) -> str:
     """Leaderboard across every team in the event."""
     profiles = []
     for team in analysis.event_teams(conn, event_slug):
@@ -297,14 +300,20 @@ def build_teams(conn, event_slug: str,
         league=analysis.event_averages(conn, event_slug),
         games_played=games_played,
         highlight_org_id=highlight_org_id,
-        nav=nav, page="teams",
+        nav=nav, page="teams", reference=reference,
     )
     return _write("tournament_teams.html", html)
 
 
 def build_index(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
-                entries: dict | None = None, nav: dict | None = None) -> str:
-    """Landing page linking everything, newest first."""
+                entries: dict | None = None, nav: dict | None = None,
+                reference: str | None = None) -> str:
+    """The dashboard.
+
+    This is the page staff land on, so it answers the three questions they
+    actually have before it lists anything: how are we doing, who is next, and
+    what happened last time out.
+    """
     entries = entries or {}
     total = conn.execute(
         "SELECT COUNT(*) AS n FROM games WHERE event_slug=?", (event_slug,)
@@ -313,22 +322,53 @@ def build_index(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
         "SELECT COUNT(*) AS n FROM games WHERE event_slug=? AND parsed_at IS NOT NULL",
         (event_slug,)).fetchone()["n"]
 
+    profile = analysis.team_profile(conn, event_slug, org_id)
+    league = analysis.event_averages(conn, event_slug)
+
+    # Next fixture, with a link to that opponent's scouting report.
     upcoming = analysis.next_opponent(conn, event_slug, org_id)
     next_up = None
     if upcoming:
-        opponent = analysis.team_identity(conn, event_slug, upcoming["opponent_org_id"])
-        when = _local(upcoming["game_utc"], upcoming["game_datetime"])
-        next_up = f"{opponent['name']} &mdash; {when}"
+        other = analysis.team_identity(conn, event_slug, upcoming["opponent_org_id"])
+        other_profile = analysis.team_profile(conn, event_slug,
+                                              upcoming["opponent_org_id"])
+        next_up = {
+            "identity": other,
+            "when": _local(upcoming["game_utc"], upcoming["game_datetime"]),
+            "venue": upcoming.get("venue_name") or upcoming.get("host_city"),
+            "record": f"{other_profile['wins']}-{other_profile['losses']}",
+            "games_played": other_profile["games_played"],
+            "net_rating": other_profile["four_factors"].get("net_rating"),
+            "pace": other_profile["pace"],
+            "scout_href": (scout_filename(other["code"])
+                           if other_profile["games_played"] else None),
+        }
+
+    # Most recent results, newest first.
+    recent = []
+    for game in reversed(profile["games"]):
+        recent.append({
+            "opponent": game["opponent_identity"],
+            "won": bool(game["won"]),
+            "score": game["score"],
+            "opp_score": game["opp_score"],
+            "net_rating": game["four_factors"].get("net_rating"),
+            "when": _local(game["game_utc"], game["game_datetime"]),
+            "href": review_filename(
+                (game["game_utc"] or "")[:10] or str(game["game_id"]),
+                profile["identity"]["code"], game["opponent_identity"]["code"]),
+        })
 
     html = _env.get_template("index.html.j2").render(
         event_name=_event_name(conn, event_slug),
         generated_at=_now_text(),
         games_total=total, games_done=done,
-        next_up=_mark(next_up) if next_up else None,
+        profile=profile, league=league,
+        next_up=next_up, recent=recent[:5],
         standing=entries.get("standing", []),
         scouts=entries.get("scouts", []),
         reviews=entries.get("reviews", []),
-        nav=nav, page="index",
+        nav=nav, page="index", reference=reference,
         # Before the first game the live pages are empty, so point at a filled-in
         # example rather than showing the staff a blank site.
         example_href=("example/index.html"
@@ -351,18 +391,20 @@ def _safe(label: str, fn, *args, **kwargs):
         return None
 
 
-def build_all(conn, event_slug: str, org_id: int = IRELAND_ORG_ID) -> dict:
+def build_all(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
+              reference: str | None = None) -> dict:
     """Regenerate the full report set. Cheap enough to just always do."""
     written = {"standing": [], "scouts": [], "reviews": []}
     nav = build_nav(conn, event_slug, org_id)
 
     tournament = _safe("tournament", build_tournament, conn, event_slug, org_id,
-                       nav=nav)
+                       nav=nav, reference=reference)
     if tournament:
         written["standing"].append(
             {"href": tournament, "title": "Ireland: tournament to date",
              "when": "updated now"})
-    teams_page = _safe("teams", build_teams, conn, event_slug, org_id, nav=nav)
+    teams_page = _safe("teams", build_teams, conn, event_slug, org_id, nav=nav,
+                       reference=reference)
     if teams_page:
         written["standing"].append(
             {"href": teams_page,
@@ -379,17 +421,30 @@ def build_all(conn, event_slug: str, org_id: int = IRELAND_ORG_ID) -> dict:
         if team["org_id"] == next_opp_id and upcoming:
             fixture = _local(upcoming["game_utc"], upcoming["game_datetime"])
         name = _safe(f"scout {team['org_id']}", build_scout, conn, event_slug,
-                     team["org_id"], org_id, fixture, nav=nav)
+                     team["org_id"], org_id, fixture, nav=nav,
+                     reference=reference)
         if name:
-            title = f"Scouting: {team['name']}"
-            if team["org_id"] == next_opp_id:
-                title = f"NEXT OPPONENT &mdash; {team['name']}"
-            written["scouts"].append(
-                {"href": name, "title": _mark(title),
-                 "when": fixture or f"{team['games']} games"})
+            other = analysis.team_profile(conn, event_slug, team["org_id"])
+            written["scouts"].append({
+                "href": name,
+                "code": team["code"],
+                "name": team["name"],
+                "title": f"Scouting: {team['name']}",
+                "when": fixture or f"{team['games']} games",
+                "is_next": team["org_id"] == next_opp_id,
+                "games_played": other["games_played"],
+                "wins": other["wins"],
+                "losses": other["losses"],
+                "win_pct": (other["wins"] / other["games_played"]
+                            if other["games_played"] else 0.0),
+                "net_rating": other["four_factors"].get("net_rating"),
+                "pace": other["pace"],
+            })
 
-    # Next opponent first.
-    written["scouts"].sort(key=lambda r: 0 if "NEXT OPPONENT" in str(r["title"]) else 1)
+    # The team we play next sits at the top; the rest rank by net rating, so the
+    # list doubles as a read on who is actually good.
+    written["scouts"].sort(
+        key=lambda r: (0 if r["is_next"] else 1, -(r["net_rating"] or -999)))
 
     for row in conn.execute(
         "SELECT g.game_id, g.game_utc, g.game_datetime FROM games g "
@@ -399,7 +454,7 @@ def build_all(conn, event_slug: str, org_id: int = IRELAND_ORG_ID) -> dict:
         (event_slug, org_id),
     ):
         name = _safe(f"review {row['game_id']}", build_review, conn, event_slug,
-                     row["game_id"], org_id, nav=nav)
+                     row["game_id"], org_id, nav=nav, reference=reference)
         if name:
             opponent = conn.execute(
                 "SELECT opp_org_id FROM team_game_stats "
@@ -410,5 +465,6 @@ def build_all(conn, event_slug: str, org_id: int = IRELAND_ORG_ID) -> dict:
                 {"href": name, "title": f"Review: Ireland v {identity['name']}",
                  "when": _local(row["game_utc"], row["game_datetime"])})
 
-    _safe("index", build_index, conn, event_slug, org_id, written, nav=nav)
+    _safe("index", build_index, conn, event_slug, org_id, written, nav=nav,
+          reference=reference)
     return written

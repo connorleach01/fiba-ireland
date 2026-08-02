@@ -241,6 +241,10 @@ a { color: var(--ink); text-underline-offset: 2px; }
   }
   .masthead { break-after: avoid; page-break-after: avoid; }
   .no-print, .sitebar, .viewtoggle { display: none !important; }
+  .refbar {
+    display: block !important; background: none; color: var(--ink-3);
+    border-bottom: 1px solid var(--rule-mid); text-align: left; padding: 0 0 4px;
+  }
   /* Whatever is on screen, print the full picture. */
   table.view-off .c-def, table.view-def .c-off { display: table-cell !important; }
   th[data-sortable]::after { content: "" !important; }
@@ -255,6 +259,14 @@ a { color: var(--ink); text-underline-offset: 2px; }
   }
 }
 .running-foot { display: none; }
+
+/* --- Reference marker ---------------------------------------------------- */
+.refbar {
+  background: var(--warning); color: #1a1a19;
+  font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
+  font-weight: 700; text-align: center; padding: 5px 10px;
+}
+.refbar a { color: inherit; }
 
 /* --- Site navigation ----------------------------------------------------- */
 .sitebar {
@@ -350,6 +362,11 @@ td .flag, li .flag { margin-right: 5px; }
 {% endif %}
 </head>
 <body>
+{% if reference %}
+<div class="refbar">
+  Reference set &middot; {{ reference }} &middot; not live U16 data
+</div>
+{% endif %}
 {% if nav %}
 <nav class="sitebar no-print">
   <div class="inner">

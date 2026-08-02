@@ -100,6 +100,10 @@ def main(argv=None) -> int:
                         help="ingest every finished game of an event, then exit")
     parser.add_argument("--rebuild", action="store_true",
                         help="regenerate reports from stored data, then exit")
+    parser.add_argument("--example", metavar="SLUG", nargs="?",
+                        const="fiba-u18-eurobasket-2026-division-b",
+                        help="build a reference report set from a completed event "
+                             "into docs/example/, then exit")
     parser.add_argument("--no-publish", action="store_true",
                         help="build reports but do not commit or push the site")
     parser.add_argument("--publish", action="store_true",
@@ -122,6 +126,24 @@ def main(argv=None) -> int:
                  args.backfill, len(summary["ingested"]), len(summary["failed"]))
         for game_id, message in summary["failed"]:
             log.error("  %s: %s", game_id, message)
+        return 0
+
+    if args.example:
+        # A worked example from a finished event. It lives in its own directory
+        # with its own navigation, and every page is stamped so nobody mistakes
+        # last season's data for a live result.
+        target = REPORTS_DIR / "example"
+        target.mkdir(parents=True, exist_ok=True)
+        original, report.REPORTS_DIR = report.REPORTS_DIR, target
+        try:
+            label = args.example.replace("-", " ").title().replace("Fiba", "FIBA")
+            written = report.build_all(conn, args.example, args.org, reference=label)
+        finally:
+            report.REPORTS_DIR = original
+        log.info("example built into %s: %d scouts, %d reviews",
+                 target, len(written["scouts"]), len(written["reviews"]))
+        if not args.no_publish:
+            deploy.publish(f"Rebuild example from {args.example}")
         return 0
 
     if args.publish:

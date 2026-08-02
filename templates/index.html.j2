@@ -1,12 +1,18 @@
 {% extends "_base.html.j2" %}
+{% import "_macros.j2" as m %}
 
-{% block title %}{{ event_name }} reports{% endblock %}
-{% block eyebrow %}{{ event_name }} &middot; Report index{% endblock %}
+{% set ff = profile.four_factors %}
+
+{% block title %}{{ event_name }} dashboard{% endblock %}
+{% block eyebrow %}{{ event_name }} &middot; Dashboard{% endblock %}
 {% block heading %}Ireland analytics{% endblock %}
 {% block subtitle %}
-{{ games_done }} of {{ games_total }} games played{% if next_up %} &middot; Next up: {{ next_up }}{% endif %}
+{{ games_done }} of {{ games_total }} games played across the event
+{% if profile.games_played %}
+&middot; Ireland {{ profile.wins }}&ndash;{{ profile.losses }}
+{% endif %}
 {% endblock %}
-{% block footid %}Report index{% endblock %}
+{% block footid %}Dashboard{% endblock %}
 
 {% block content %}
 
@@ -15,6 +21,76 @@
 yet, so the pages below are still empty. This
 <a href="{{ example_href }}">full report set from Ireland's U18 EuroBasket</a>
 shows exactly what will appear here after each game.</p>
+{% endif %}
+
+{% if profile.games_played %}
+<section class="keep">
+<h2>Ireland to date</h2>
+<div class="statline">
+  {{ m.stat('Record', '%d&ndash;%d'|format(profile.wins, profile.losses),
+            '%d games'|format(profile.games_played)) }}
+  {{ m.stat('Points for', '%.1f'|format(profile.points_for_pg or 0), 'per game') }}
+  {{ m.stat('Points against', '%.1f'|format(profile.points_against_pg or 0), 'per game') }}
+  {{ m.stat('Net', '%+.1f'|format(ff.net_rating or 0), 'per 100 poss',
+            'pos' if (ff.net_rating or 0) > 0 else 'neg') }}
+  {{ m.stat('Pace', '%.1f'|format(profile.pace or 0),
+            'event %.1f'|format(league.pace or 0)) }}
+  {{ m.stat('True shooting', '%.1f%%'|format(ff.ts_pct or 0), 'TS%') }}
+</div>
+</section>
+{% endif %}
+
+{% if next_up %}
+<section class="keep">
+<h2>Next up</h2>
+<div class="statline">
+  {{ m.stat('Opponent',
+            flag(next_up.identity.code, 20) ~ next_up.identity.name,
+            next_up.when) }}
+  {{ m.stat('Their record', next_up.record,
+            '%d games'|format(next_up.games_played)) }}
+  {{ m.stat('Their net',
+            ('%+.1f'|format(next_up.net_rating)) if next_up.net_rating is not none else '&ndash;',
+            'per 100 poss', m.tone(next_up.net_rating)) }}
+  {{ m.stat('Their pace',
+            ('%.1f'|format(next_up.pace)) if next_up.pace is not none else '&ndash;',
+            'poss/game') }}
+</div>
+{% if next_up.scout_href %}
+<p class="note"><a href="{{ next_up.scout_href }}"><strong>Open the
+{{ next_up.identity.name }} scouting report &rarr;</strong></a>
+{% if next_up.venue %} &middot; {{ next_up.venue }}{% endif %}</p>
+{% else %}
+<p class="note">{{ next_up.identity.name }} have not played yet, so there is no
+scouting report for them. It will appear here as soon as they finish a game.</p>
+{% endif %}
+</section>
+{% endif %}
+
+{% if recent %}
+<section>
+<h2>Recent results</h2>
+<div class="scroll-x">
+<table>
+<thead><tr>
+  <th class="left">Opponent</th><th class="left">Result</th>
+  <th>Net/100</th><th class="left">Played</th><th class="left">Report</th>
+</tr></thead>
+<tbody>
+{% for r in recent %}
+  <tr>
+    <td class="left name">{{ flag(r.opponent.code) }}{{ r.opponent.name }}</td>
+    <td class="left {{ 'pos' if r.won else 'neg' }}">
+      {{ 'W' if r.won else 'L' }} {{ r.score }}&ndash;{{ r.opp_score }}</td>
+    <td class="{{ m.tone(r.net_rating) }}">{{ m.signed(r.net_rating) }}</td>
+    <td class="left muted">{{ r.when }}</td>
+    <td class="left"><a href="{{ r.href }}">Review</a></td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</section>
 {% endif %}
 
 <section>
@@ -29,26 +105,32 @@ shows exactly what will appear here after each game.</p>
 <section>
 <h2>Scouting reports</h2>
 {% if scouts %}
-<ul class="report-list">
+<div class="scroll-x">
+<table>
+<thead><tr>
+  <th class="left" data-sortable>Team</th><th data-sortable>Gm</th>
+  <th data-sortable>W&ndash;L</th><th data-sortable>Net/100</th>
+  <th data-sortable>Pace</th><th class="left">Report</th>
+</tr></thead>
+<tbody>
 {% for r in scouts %}
-  <li><a href="{{ r.href }}">{{ r.title }}</a><span class="when">{{ r.when }}</span></li>
+  <tr{% if r.is_next %} class="highlight"{% endif %}>
+    <td class="left name">{{ flag(r.code) }}{{ r.name }}
+      {% if r.is_next %}<span class="unit">next opponent</span>{% endif %}</td>
+    <td>{{ r.games_played }}</td>
+    <td data-value="{{ '%.4f'|format(r.win_pct) }}">{{ r.wins }}&ndash;{{ r.losses }}</td>
+    <td class="{{ m.tone(r.net_rating) }}">{{ m.signed(r.net_rating) }}</td>
+    <td>{{ m.num(r.pace, 0) }}</td>
+    <td class="left"><a href="{{ r.href }}">Scout</a></td>
+  </tr>
 {% endfor %}
-</ul>
+</tbody>
+</table>
+</div>
+<p class="note">Every team that has played a game has a scouting report. Click a
+column to sort, so you can find the teams shooting or turning it over most.</p>
 {% else %}
 <p class="note">No opponent has played a game yet.</p>
-{% endif %}
-</section>
-
-<section>
-<h2>Game reviews</h2>
-{% if reviews %}
-<ul class="report-list">
-{% for r in reviews %}
-  <li><a href="{{ r.href }}">{{ r.title }}</a><span class="when">{{ r.when }}</span></li>
-{% endfor %}
-</ul>
-{% else %}
-<p class="note">No games played yet.</p>
 {% endif %}
 </section>
 
