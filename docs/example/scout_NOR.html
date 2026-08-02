@@ -299,6 +299,9 @@ a { color: var(--ink); text-underline-offset: 2px; }
 .sitebar a:hover, .sitebar .drop > button:hover { background: rgba(255,255,255,.14); }
 .sitebar a.current { background: #fff; color: var(--ink); }
 .sitebar .brand { font-weight: 700; letter-spacing: .04em; opacity: .72; }
+/* The brand doubles as the home link now that the Dashboard tab is gone, so it
+   has to read as one when you are on it. */
+.sitebar .brand.current { opacity: 1; }
 .sitebar .spacer { flex: 1; }
 .drop { position: relative; display: inline-flex; }
 .drop-panel {
@@ -454,8 +457,8 @@ td .flag, li .flag { margin-right: 5px; }
 </div>
 <nav class="sitebar no-print">
   <div class="inner">
-    <a class="brand" href="index.html">IRL U16</a>
-    <a href="index.html" >Dashboard</a>
+    <a class="brand"
+       href="index.html">IRL U16</a>
       <a href="irl_tournament.html" >Ireland</a>
     <a href="tournament_teams.html" >Teams</a>
     <div class="drop">
@@ -493,7 +496,7 @@ td .flag, li .flag { margin-right: 5px; }
 <header class="masthead">
   <div class="kicker">
     <span>FIBA U18 Eurobasket 2026 Division B &middot; Scouting report</span>
-    <span>Mon 03 Aug 2026, 00:49 (Irish time)</span>
+    <span>Mon 03 Aug 2026, 00:56 (Irish time)</span>
   </div>
   <h1><svg class="flag" viewBox="0 0 3 2" width="24" height="16" role="img" aria-label="NOR flag"><rect width="3" height="2" fill="#ba0c2f"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#00205b"/><rect y=".86" width="3" height=".28" fill="#00205b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Norway</h1>
   <p class="sub">1&ndash;6 over 7 games
@@ -1922,7 +1925,7 @@ TOV% forced and DREB% are higher-is-better.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Mon 03 Aug 2026, 00:49 (Irish time)</span>
+  <span>Generated Mon 03 Aug 2026, 00:56 (Irish time)</span>
 </div>
 
 <div class="running-foot">

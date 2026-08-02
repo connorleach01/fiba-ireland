@@ -235,9 +235,16 @@ cost the staff the other twenty-five reports.
 
 ## Navigation model
 
-Nav is Dashboard, Ireland, Teams, and a Scouting dropdown. **There is no Games
-menu**: individual games are reached from the team they belong to, through the
-game log on that team's page or the dashboard's recent results.
+Nav is Ireland, Teams, and a Scouting dropdown, with the **IRL U16 brand as the
+home link**. **There is no Games menu**: individual games are reached from the
+team they belong to, through the game log on that team's page or the dashboard's
+recent results.
+
+**There is no Dashboard tab either.** The dashboard is `index.html`, so it is
+where staff already are when they open the site; a tab pointing at it only ever
+mattered on the way back, and the brand does that job. The page itself still
+builds and is still the landing page: do not confuse removing the tab with
+removing the dashboard.
 
 **Ireland's page is a scouting sheet.** `tournament.html.j2` deliberately carries
 the same sections in the same order as `scout.html.j2`, down to the ranked stat
@@ -334,7 +341,7 @@ reason, and if you do, say why in the commit.
   reader wanted ranks or not. `four_factor_table`, the game-sheet version, never
   took ranks at all and its dead `ranks` argument is gone with it.
 - **Player position column**, dropped for width once shooting splits went in.
-- **A Games nav menu**, see the navigation model above.
+- **A Games nav menu**, and **a Dashboard tab**, see the navigation model above.
 - **Ranks on game sheets.** One game is not a ranking.
 
 ## Conventions
