@@ -1,0 +1,174 @@
+{# Shared fragments for the printed report layout. #}
+
+{% macro num(value, digits=1, suffix='') -%}
+{%- if value is none -%}<span class="muted">&ndash;</span>
+{%- else -%}{{ '%.*f'|format(digits, value) }}{{ suffix }}{%- endif -%}
+{%- endmacro %}
+
+{% macro signed(value, digits=1) -%}
+{%- if value is none -%}<span class="muted">&ndash;</span>
+{%- else -%}{{ '%+.*f'|format(digits, value) }}{%- endif -%}
+{%- endmacro %}
+
+{# Colour a cell by sign, but never colour a value we chose not to publish. #}
+{% macro tone(value) -%}
+{%- if value is none -%}{%- elif value > 0 -%}pos{%- elif value < 0 -%}neg{%- endif -%}
+{%- endmacro %}
+
+{# One cell of a ruled stat strip. Use inside {% call %} or a .statline div. #}
+{% macro stat(label, figure, sub='', klass='') %}
+<div class="stat">
+  <div class="label">{{ label }}</div>
+  <div class="figure {{ klass }}">{{ figure }}</div>
+  {% if sub %}<div class="sub">{{ sub }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro sample_banner(games_played, thing='These figures') %}
+{% if games_played <= 2 %}
+<p class="banner alert"><strong>Small sample.</strong> {{ thing }} come from
+{{ games_played }} game{{ '' if games_played == 1 else 's' }}. Treat as indicative
+only and weight recent film over the numbers.</p>
+{% elif games_played <= 4 %}
+<p class="banner"><strong>Limited sample:</strong> {{ games_played }} games.
+Rate stats are still noisy at this stage of the tournament.</p>
+{% endif %}
+{% endmacro %}
+
+{% macro player_table(players, per_game=True, caption='') %}
+<div class="scroll-x">
+<table>
+{% if caption %}<caption>{{ caption }}</caption>{% endif %}
+<thead>
+  <tr>
+    <th class="left">#</th><th class="left" data-sortable>Player</th>
+    <th class="left" data-sortable>Pos</th>
+    {% if per_game %}
+      <th data-sortable>GP</th><th data-sortable>MPG</th><th data-sortable>PPG</th>
+      <th data-sortable>RPG</th><th data-sortable>APG</th>
+    {% else %}
+      <th data-sortable>MIN</th><th data-sortable>PTS</th><th data-sortable>REB</th>
+      <th data-sortable>AST</th><th data-sortable>+/&ndash;</th>
+    {% endif %}
+    <th>FG</th><th>3PT</th><th>FT</th>
+    <th data-sortable>USG%</th><th data-sortable>TS%</th><th data-sortable>eFG%</th>
+    <th data-sortable>REB%</th><th data-sortable>AST%</th>
+    <th data-sortable>TOV%</th><th data-sortable>FD/40</th>
+  </tr>
+</thead>
+<tbody>
+{% for p in players %}
+  <tr>
+    <td class="left">{{ p.uniform_number or '' }}</td>
+    <td class="left name">{{ p.full_name }}</td>
+    <td class="left muted">{{ p.position or '' }}</td>
+    {% if per_game %}
+      <td>{{ p.games }}</td>
+      <td>{{ num(p.minutes_pg) }}</td>
+      <td>{{ num(p.pts_pg) }}</td>
+      <td>{{ num(p.reb_pg) }}</td>
+      <td>{{ num(p.ast_pg) }}</td>
+    {% else %}
+      <td>{{ num(p.minutes) }}</td>
+      <td>{{ p.PTS }}</td>
+      <td>{{ p.REB }}</td>
+      <td>{{ p.AS }}</td>
+      <td class="{{ tone(p.PM) }}">{{ '%+d'|format(p.PM or 0) }}</td>
+    {% endif %}
+    <td>{{ p.FGM }}/{{ p.FGA }}</td>
+    <td>{{ p.FG3M }}/{{ p.FG3A }}</td>
+    <td>{{ p.FTM }}/{{ p.FTA }}</td>
+    <td>{{ num(p.usage_pct) }}</td>
+    <td>{{ num(p.ts_pct) }}</td>
+    <td>{{ num(p.efg_pct) }}</td>
+    <td>{{ num(p.treb_pct) }}</td>
+    <td>{{ num(p.ast_pct) }}</td>
+    <td>{{ num(p.tov_pct) }}</td>
+    <td>{{ num(p.fouls_drawn_per40) }}</td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endmacro %}
+
+{% macro lineup_table(lineups, caption='', note='') %}
+{% if lineups %}
+<div class="scroll-x">
+<table>
+{% if caption %}<caption>{{ caption }}</caption>{% endif %}
+<thead>
+  <tr>
+    <th class="left">Lineup</th><th data-sortable>MIN</th><th data-sortable>Gm</th>
+    <th data-sortable>PF</th><th data-sortable>PA</th><th data-sortable>+/&ndash;</th>
+    <th data-sortable>Net/100</th>
+  </tr>
+</thead>
+<tbody>
+{% for l in lineups %}
+  <tr>
+    <td class="left">{% for p in l.players %}{{ p.uniform_number }} {{ p.full_name.split()[-1] }}{% if not loop.last %} &middot; {% endif %}{% endfor %}</td>
+    <td>{{ num(l.minutes) }}</td>
+    <td>{{ l.games }}</td>
+    <td>{{ l.points_for }}</td>
+    <td>{{ l.points_against }}</td>
+    <td class="{{ tone(l.plus_minus) }}">{{ '%+d'|format(l.plus_minus) }}</td>
+    <td class="{{ tone(l.net_per_100) }}">{{ signed(l.net_per_100) }}</td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<p class="note">{{ note }}Net/100 assumes two possessions per minute and is
+withheld below three minutes together. Minutes are the sample each lineup is
+judged on.</p>
+{% else %}
+<p class="note">No lineup met the minimum minutes threshold.</p>
+{% endif %}
+{% endmacro %}
+
+{% macro zone_table(zones) %}
+<div class="scroll-x">
+<table>
+<caption>Shooting by zone</caption>
+<thead><tr><th class="left">Zone</th><th data-sortable>M</th><th data-sortable>A</th>
+<th data-sortable>FG%</th><th data-sortable>Share</th><th data-sortable>Pts/att</th></tr></thead>
+<tbody>
+{% for z in zones if z.attempts %}
+  <tr>
+    <td class="left">{{ z.zone }}</td>
+    <td>{{ z.makes }}</td>
+    <td>{{ z.attempts }}</td>
+    <td>{{ num(z.fg_pct) }}</td>
+    <td>{{ num(z.share_pct) }}</td>
+    <td>{{ num(z.points_per_attempt, 2) }}</td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endmacro %}
+
+{% macro four_factor_table(team_ff, opp_ff, league, team_label, opp_label) %}
+<div class="scroll-x">
+<table>
+<thead><tr>
+  <th class="left">Factor</th><th>{{ team_label }}</th><th>{{ opp_label }}</th>
+  <th>Diff</th><th>Event avg</th>
+</tr></thead>
+<tbody>
+{% for key, label, higher in [('efg_pct','eFG%',True), ('tov_pct','TOV%',False), ('oreb_pct','OREB%',True), ('ft_rate','FTA/FGA',True)] %}
+  {% set a = team_ff.get(key) %}{% set b = opp_ff.get(key) %}
+  {% set d = (a - b) if (a is not none and b is not none) else none %}
+  <tr>
+    <td class="left">{{ label }} <span class="unit">{{ 'high' if higher else 'low' }} is better</span></td>
+    <td>{{ num(a) }}</td>
+    <td>{{ num(b) }}</td>
+    <td class="{{ tone(d if higher else (-d if d is not none else none)) }}">{{ signed(d) }}</td>
+    <td class="muted">{{ num((league or {}).get(key)) }}</td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endmacro %}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Runs the poller in the background and restarts it if it dies or the Mac reboots.
+
+  Install:
+      cp com.fiba.ireland.watch.plist ~/Library/LaunchAgents/
+      launchctl load ~/Library/LaunchAgents/com.fiba.ireland.watch.plist
+
+  Stop:
+      launchctl unload ~/Library/LaunchAgents/com.fiba.ireland.watch.plist
+
+  Watch the log:
+      tail -f ~/code/fiba-ireland/data/watch.log
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.fiba.ireland.watch</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/connorleach/code/fiba-ireland/.venv/bin/python</string>
+    <string>-m</string>
+    <string>fiba.watch</string>
+    <string>--interval</string>
+    <string>300</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/connorleach/code/fiba-ireland</string>
+
+  <key>RunAtLoad</key>
+  <true/>
+
+  <!-- Restart if the process exits for any reason, with a pause so a persistent
+       failure does not spin. -->
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>60</integer>
+
+  <key>StandardOutPath</key>
+  <string>/Users/connorleach/code/fiba-ireland/data/watch.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/connorleach/code/fiba-ireland/data/watch.log</string>
+</dict>
+</plist>

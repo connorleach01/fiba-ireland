@@ -1,0 +1,55 @@
+{% extends "_base.html.j2" %}
+
+{% block title %}{{ event_name }} reports{% endblock %}
+{% block eyebrow %}{{ event_name }} &middot; Report index{% endblock %}
+{% block heading %}Ireland analytics{% endblock %}
+{% block subtitle %}
+{{ games_done }} of {{ games_total }} games played{% if next_up %} &middot; Next up: {{ next_up }}{% endif %}
+{% endblock %}
+{% block footid %}Report index{% endblock %}
+
+{% block content %}
+
+{% if example_href %}
+<p class="banner"><strong>Worked example.</strong> The tournament has not started
+yet, so the pages below are still empty. This
+<a href="{{ example_href }}">full report set from Ireland's U18 EuroBasket</a>
+shows exactly what will appear here after each game.</p>
+{% endif %}
+
+<section>
+<h2>Standing reports</h2>
+<ul class="report-list">
+{% for r in standing %}
+  <li><a href="{{ r.href }}">{{ r.title }}</a><span class="when">{{ r.when }}</span></li>
+{% endfor %}
+</ul>
+</section>
+
+<section>
+<h2>Scouting reports</h2>
+{% if scouts %}
+<ul class="report-list">
+{% for r in scouts %}
+  <li><a href="{{ r.href }}">{{ r.title }}</a><span class="when">{{ r.when }}</span></li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="note">No opponent has played a game yet.</p>
+{% endif %}
+</section>
+
+<section>
+<h2>Game reviews</h2>
+{% if reviews %}
+<ul class="report-list">
+{% for r in reviews %}
+  <li><a href="{{ r.href }}">{{ r.title }}</a><span class="when">{{ r.when }}</span></li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="note">No games played yet.</p>
+{% endif %}
+</section>
+
+{% endblock %}

@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IRL v NED game review</title>
+<style>
+/* ---------------------------------------------------------------------------
+   A printed stats report, not a dashboard.
+
+   Paper geometry is A4. On screen the sheet is drawn at A4 width on a grey
+   desk; in print it fills the page and sections break cleanly. There is no
+   dark mode by design: this is meant to look like the thing that comes out of
+   the printer.
+   --------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  --paper: #ffffff;
+  --desk: #d8d8d4;
+  --ink: #0d0d0d;
+  --ink-2: #3d3d3b;
+  --ink-3: #6f6e6a;
+  --ink-4: #9a998f;
+  --rule-heavy: #0d0d0d;
+  --rule-mid: #8f8e88;
+  --rule-hair: #d3d2cc;
+  --band: #f2f2ef;
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --good: #006300;
+  --bad: #b32020;
+  --track: #e8e8e4;
+  --court-line: #9a998f;
+
+  --page-w: 210mm;
+  --page-pad: 14mm;
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--desk); }
+
+body {
+  margin: 0;
+  background: var(--desk);
+  color: var(--ink);
+  font: 400 11.2px/1.38 -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet {
+  width: var(--page-w);
+  min-height: 297mm;
+  margin: 16px auto;
+  padding: var(--page-pad);
+  background: var(--paper);
+  box-shadow: 0 1px 4px rgba(0,0,0,.28);
+}
+
+/* --- Masthead ------------------------------------------------------------ */
+.masthead {
+  border-top: 3px solid var(--rule-heavy);
+  border-bottom: 1.2px solid var(--rule-heavy);
+  padding: 6px 0 9px;
+  margin-bottom: 14px;
+}
+.masthead .kicker {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 12px;
+  font-size: 8.6px; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.masthead h1 {
+  font-size: 21px; font-weight: 700; letter-spacing: -.012em;
+  margin: 7px 0 3px; line-height: 1.12;
+}
+.masthead .sub { font-size: 10.6px; color: var(--ink-2); margin: 0; }
+
+/* --- Sections ------------------------------------------------------------ */
+h2 {
+  font-size: 9.4px; font-weight: 700; letter-spacing: .15em;
+  text-transform: uppercase;
+  margin: 17px 0 0; padding-bottom: 3px;
+  border-bottom: 1.2px solid var(--rule-heavy);
+  break-after: avoid; page-break-after: avoid;
+}
+h3 {
+  font-size: 8.8px; font-weight: 700; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--ink-2);
+  margin: 12px 0 5px;
+  break-after: avoid; page-break-after: avoid;
+}
+/* Short blocks stay whole. Long tables are allowed to flow across a page
+   break and are protected at the row level instead, because forcing a 14-row
+   box score onto a fresh page just leaves half a page blank. */
+section.keep { break-inside: avoid-page; page-break-inside: avoid; }
+section { break-inside: auto; }
+
+/* --- Stat strip (replaces the dashboard tiles) --------------------------- */
+.statline {
+  display: flex; flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule-mid);
+  margin-top: 0;
+}
+.statline .stat {
+  flex: 1 1 0; min-width: 84px;
+  padding: 7px 9px 8px;
+  border-left: 1px solid var(--rule-hair);
+}
+.statline .stat:first-child { border-left: 0; padding-left: 0; }
+.statline .label {
+  font-size: 7.9px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-3); white-space: nowrap; margin-bottom: 3px;
+}
+.statline .figure {
+  font-size: 17px; font-weight: 700; letter-spacing: -.02em; line-height: 1.05;
+  font-variant-numeric: proportional-nums;
+}
+.statline .sub { font-size: 9.2px; color: var(--ink-3); margin-top: 2px; }
+.figure.pos { color: var(--good); }
+.figure.neg { color: var(--bad); }
+
+/* --- Tables -------------------------------------------------------------- */
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table {
+  border-collapse: collapse; width: 100%;
+  font-size: 10.2px; margin-top: 7px;
+}
+caption {
+  caption-side: top; text-align: left;
+  font-size: 8.8px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-2); padding-bottom: 4px; font-weight: 700;
+}
+th, td { padding: 2.8px 5px; text-align: right; white-space: nowrap; }
+thead th {
+  font-size: 8.2px; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--ink-2); font-weight: 700;
+  border-top: 1.2px solid var(--rule-heavy);
+  border-bottom: 1px solid var(--rule-mid);
+  padding-top: 4px; padding-bottom: 4px;
+}
+tbody td { border-bottom: 1px solid var(--rule-hair); }
+tbody tr:last-child td { border-bottom: 1px solid var(--rule-mid); }
+th.left, td.left { text-align: left; white-space: normal; }
+td.name { font-weight: 600; white-space: nowrap; }
+tr.total td {
+  font-weight: 700; border-top: 1px solid var(--rule-mid);
+  border-bottom: 1.2px solid var(--rule-heavy); background: var(--band);
+}
+tr.highlight td { background: var(--band); font-weight: 700; }
+td.pos { color: var(--good); }
+td.neg { color: var(--bad); }
+.muted { color: var(--ink-4); }
+.unit { font-size: 8.6px; color: var(--ink-3); font-weight: 400; }
+tr { break-inside: avoid; page-break-inside: avoid; }
+
+/* --- Two column block ---------------------------------------------------- */
+.cols { display: flex; gap: 16px; align-items: flex-start; }
+.cols > * { flex: 1 1 0; min-width: 0; }
+.col-narrow { flex: 0 0 44%; }
+
+/* --- Charts -------------------------------------------------------------- */
+.viz { margin: 7px 0 0; }
+.viz svg { display: block; width: 100%; height: auto; overflow: visible; }
+.viz .track { fill: var(--track); }
+.viz .bar.series-1 { fill: var(--series-1); }
+.viz .bar.series-2 { fill: var(--series-2); }
+.viz .reference { stroke: var(--ink); stroke-width: 1.4; }
+.viz .grid { stroke: var(--rule-hair); stroke-width: 1; }
+.viz .zero { stroke: var(--rule-mid); stroke-width: 1; }
+.viz .line { fill: none; stroke: var(--ink); stroke-width: 1.2;
+             stroke-linejoin: round; }
+.viz .fill-ahead { fill: var(--series-1); opacity: .22; }
+.viz .fill-behind { fill: var(--series-2); opacity: .22; }
+.viz text { font: 8.6px -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.viz .axis-label { fill: var(--ink); font-weight: 700; }
+.viz .axis-hint { fill: var(--ink-3); font-size: 7.6px; }
+.viz .axis-tick { fill: var(--ink-3); }
+.viz .value { fill: var(--ink); font-weight: 700; }
+
+.shot.made circle { fill: var(--series-1); stroke: var(--paper); stroke-width: 1; }
+.shot.missed circle { fill: none; stroke: var(--ink-4); stroke-width: 1; }
+
+.viz-legend {
+  display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px;
+  font-size: 8.8px; color: var(--ink-2);
+}
+.viz-legend .key { display: inline-flex; align-items: center; gap: 5px; }
+.swatch { width: 9px; height: 9px; display: inline-block; }
+.swatch.series-1, .swatch.made { background: var(--series-1); }
+.swatch.series-2 { background: var(--series-2); }
+.swatch.missed { border: 1px solid var(--ink-4); background: transparent; }
+.swatch.reference { background: var(--ink); width: 2px; height: 11px; }
+.swatch.fill-ahead { background: var(--series-1); opacity: .4; }
+.swatch.fill-behind { background: var(--series-2); opacity: .4; }
+.viz-note, .note {
+  font-size: 8.8px; color: var(--ink-3); margin: 5px 0 0; line-height: 1.35;
+}
+
+/* --- Notices ------------------------------------------------------------- */
+.banner {
+  border: 1px solid var(--rule-mid); border-left: 3px solid var(--ink);
+  padding: 6px 9px; margin: 8px 0 0;
+  font-size: 9.4px; color: var(--ink-2); background: var(--band);
+}
+.banner.alert { border-left-color: var(--bad); }
+
+details.table-view { margin-top: 6px; }
+details.table-view summary {
+  cursor: pointer; font-size: 8.8px; color: var(--ink-3);
+  letter-spacing: .06em; text-transform: uppercase;
+}
+
+/* --- Index list ---------------------------------------------------------- */
+.report-list { list-style: none; padding: 0; margin: 6px 0 0; }
+.report-list li {
+  border-bottom: 1px solid var(--rule-hair); padding: 6px 0;
+  display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+}
+.report-list .when { font-size: 9px; color: var(--ink-3); white-space: nowrap; }
+a { color: var(--ink); text-underline-offset: 2px; }
+
+/* --- Colophon ------------------------------------------------------------ */
+.colophon {
+  margin-top: 18px; padding-top: 6px;
+  border-top: 1px solid var(--rule-mid);
+  font-size: 8.4px; color: var(--ink-3);
+  display: flex; justify-content: space-between; gap: 12px;
+}
+
+/* --- Print --------------------------------------------------------------- */
+@page { size: A4; margin: 12mm 13mm 14mm; }
+
+@media print {
+  html, body { background: #fff; }
+  .sheet {
+    width: auto; min-height: 0; margin: 0; padding: 0;
+    box-shadow: none;
+  }
+  .masthead { break-after: avoid; page-break-after: avoid; }
+  .no-print, .sitebar, .viewtoggle { display: none !important; }
+  /* Whatever is on screen, print the full picture. */
+  table.view-off .c-def, table.view-def .c-off { display: table-cell !important; }
+  th[data-sortable]::after { content: "" !important; }
+  details.table-view { display: none; }   /* the chart already carries the data */
+  a { text-decoration: none; }
+  /* Repeat the report identity at the foot of every printed page. */
+  .running-foot {
+    display: block; position: fixed; bottom: -9mm; left: 0; right: 0;
+    font-size: 7.6px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-3);
+    border-top: 1px solid var(--rule-hair); padding-top: 2px;
+  }
+}
+.running-foot { display: none; }
+
+/* --- Site navigation ----------------------------------------------------- */
+.sitebar {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--ink); color: #fff;
+  border-bottom: 2px solid var(--ink);
+}
+.sitebar .inner {
+  max-width: var(--page-w); margin: 0 auto; padding: 0 var(--page-pad);
+  display: flex; align-items: stretch; gap: 2px; flex-wrap: wrap;
+}
+.sitebar a, .sitebar .drop > button {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 8px 10px; color: #fff; text-decoration: none;
+  font-size: 9.4px; letter-spacing: .13em; text-transform: uppercase;
+  font-weight: 600; background: none; border: 0; cursor: pointer;
+  font-family: inherit;
+}
+.sitebar a:hover, .sitebar .drop > button:hover { background: rgba(255,255,255,.14); }
+.sitebar a.current { background: #fff; color: var(--ink); }
+.sitebar .brand { font-weight: 700; letter-spacing: .04em; opacity: .72; }
+.sitebar .spacer { flex: 1; }
+.drop { position: relative; display: inline-flex; }
+.drop-panel {
+  display: none; position: absolute; top: 100%; left: 0; min-width: 224px;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--rule-mid); box-shadow: 0 4px 14px rgba(0,0,0,.22);
+  max-height: 60vh; overflow-y: auto; padding: 3px 0;
+}
+.drop.open .drop-panel { display: block; }
+.drop-panel a {
+  display: flex; align-items: center; color: var(--ink);
+  padding: 5px 11px; font-size: 10px; letter-spacing: 0; text-transform: none;
+  font-weight: 400; white-space: nowrap;
+}
+.drop-panel a:hover { background: var(--band); }
+
+/* --- Sortable tables ----------------------------------------------------- */
+th[data-sortable] { cursor: pointer; user-select: none; position: relative; }
+th[data-sortable]:hover { color: var(--ink); }
+th[data-sortable]::after {
+  content: "\2195"; opacity: .28; margin-left: 3px; font-size: 8px;
+}
+th[data-sortable][data-dir="asc"]::after { content: "\2191"; opacity: 1; }
+th[data-sortable][data-dir="desc"]::after { content: "\2193"; opacity: 1; }
+
+/* --- View toggle --------------------------------------------------------- */
+.viewtoggle { display: flex; gap: 0; margin: 8px 0 0; }
+.viewtoggle button {
+  font: 600 8.8px/1 -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: .12em; text-transform: uppercase;
+  padding: 6px 12px; cursor: pointer;
+  background: var(--paper); color: var(--ink-2);
+  border: 1px solid var(--rule-mid); margin-left: -1px;
+}
+.viewtoggle button:first-child { margin-left: 0; }
+.viewtoggle button[aria-pressed="true"] {
+  background: var(--ink); color: #fff; border-color: var(--ink);
+}
+table.view-off .c-def, table.view-def .c-off { display: none; }
+
+/* --- Flags --------------------------------------------------------------- */
+.flag {
+  display: inline-block; vertical-align: -1px; flex: none;
+  margin-right: 5px; border-radius: 1px;
+}
+h1 .flag { vertical-align: -2px; margin: 0 6px 0 0; }
+h1 .flag.trail { margin: 0 0 0 6px; }
+td .flag, li .flag { margin-right: 5px; }
+.statline .flagrow { display: flex; align-items: center; }
+
+/* --- Small screens: keep it usable on a phone in a gym ------------------- */
+@media screen and (max-width: 820px) {
+  :root { --page-pad: 12px; }
+  .sheet { width: 100%; margin: 0; min-height: 0; box-shadow: none; }
+  .cols { display: block; }
+  .cols > * + * { margin-top: 12px; }
+  .col-narrow { flex: none; }
+  table { min-width: 460px; }
+  .statline .stat { flex: 1 1 33%; min-width: 33%; }
+  .sitebar .inner { padding: 0 8px; }
+  .sitebar a, .sitebar .drop > button { padding: 7px 8px; font-size: 9px; }
+}
+</style>
+<style>
+/* Team colours for this report, taken from the national flags. Checked for
+   contrast on paper and for separation under colour vision deficiency; where
+   two teams' colours are too close the second is shifted in lightness, keeping
+   its hue. Colour never carries identity alone: every chart is labelled. */
+.sheet { --series-1: #16794a; --series-2: #00327c; }
+</style>
+</head>
+<body>
+<nav class="sitebar no-print">
+  <div class="inner">
+    <a class="brand" href="index.html">IRL U16</a>
+    <a href="index.html" >Dashboard</a>
+      <a href="irl_tournament.html" >Ireland</a>
+    <a href="tournament_teams.html" >Teams</a>
+    <div class="drop">
+      <button type="button" aria-expanded="false">Scouting &#9662;</button>
+      <div class="drop-panel">
+          <a href="scout_AZE.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="AZE flag"><rect y="0.0000" width="3" height="0.6667" fill="#00b5e2"/><rect y="0.6667" width="3" height="0.6667" fill="#ed2939"/><rect y="1.3333" width="3" height="0.6667" fill="#3f9c35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Azerbaijan</a>
+          <a href="scout_BEL.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="BEL flag"><rect x="0.0000" width="1.0000" height="2" fill="#000000"/><rect x="1.0000" width="1.0000" height="2" fill="#fdda24"/><rect x="2.0000" width="1.0000" height="2" fill="#ef3340"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Belgium</a>
+          <a href="scout_BIH.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="BIH flag"><rect width="3" height="2" fill="#002395"/><circle cx="1.5" cy="1" r=".42" fill="#fecb00"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Bosnia and Herzegovina</a>
+          <a href="scout_CRO.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CRO flag"><rect y="0.0000" width="3" height="0.6667" fill="#ff0000"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#171796"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Croatia</a>
+          <a href="scout_CYP.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CYP flag"><rect width="3" height="2" fill="#ffffff"/><circle cx="1.5" cy="1" r=".42" fill="#d57800"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Cyprus</a>
+          <a href="scout_CZE.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CZE flag"><rect width="3" height="1" fill="#ffffff"/><rect y="1" width="3" height="1" fill="#d7141a"/><path d="M0 0 L1.5 1 L0 2 Z" fill="#11457e"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Czechia</a>
+          <a href="scout_FIN.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="FIN flag"><rect width="3" height="2" fill="#ffffff"/><rect x=".78" width=".52" height="2" fill="#003580"/><rect y=".74" width="3" height=".52" fill="#003580"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Finland</a>
+          <a href="scout_GEO.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="GEO flag"><rect width="3" height="2" fill="#ffffff"/><rect x="1.28" y=".3" width=".44" height="1.4" fill="#ff0000"/><rect x=".8" y=".78" width="1.4" height=".44" fill="#ff0000"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Georgia</a>
+          <a href="scout_GBR.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="GBR flag"><rect width="3" height="2" fill="#012169"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#ffffff" stroke-width=".44"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#c8102e" stroke-width=".22"/><path d="M1.5 0 V2 M0 1 H3" stroke="#ffffff" stroke-width=".72"/><path d="M1.5 0 V2 M0 1 H3" stroke="#c8102e" stroke-width=".42"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Great Britain</a>
+          <a href="scout_HUN.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="HUN flag"><rect y="0.0000" width="3" height="0.6667" fill="#cd2a3e"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#436f4d"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Hungary</a>
+          <a href="scout_ISL.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="ISL flag"><rect width="3" height="2" fill="#02529c"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#dc1e35"/><rect y=".86" width="3" height=".28" fill="#dc1e35"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Iceland</a>
+          <a href="scout_MNE.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="MNE flag"><rect width="3" height="2" fill="#c40308"/><circle cx="1.5" cy="1" r=".42" fill="#d0aa4b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Montenegro</a>
+          <a href="scout_NED.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NED flag"><rect y="0.0000" width="3" height="0.6667" fill="#ae1c28"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#21468b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Netherlands</a>
+          <a href="scout_MKD.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="MKD flag"><rect width="3" height="2" fill="#d20000"/><circle cx="1.5" cy="1" r=".42" fill="#f8e600"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>North Macedonia</a>
+          <a href="scout_NOR.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NOR flag"><rect width="3" height="2" fill="#ba0c2f"/><rect x=".78" width=".52" height="2" fill="#ffffff"/><rect y=".74" width="3" height=".52" fill="#ffffff"/><rect x=".9" width=".28" height="2" fill="#00205b"/><rect y=".86" width="3" height=".28" fill="#00205b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Norway</a>
+          <a href="scout_POL.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="POL flag"><rect y="0.0000" width="3" height="1.0000" fill="#ffffff"/><rect y="1.0000" width="3" height="1.0000" fill="#dc143c"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Poland</a>
+          <a href="scout_POR.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="POR flag"><rect width="3" height="2" fill="#da291c"/><rect width="1.2000" height="2" fill="#046a38"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Portugal</a>
+          <a href="scout_ROU.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="ROU flag"><rect x="0.0000" width="1.0000" height="2" fill="#002b7f"/><rect x="1.0000" width="1.0000" height="2" fill="#fcd116"/><rect x="2.0000" width="1.0000" height="2" fill="#ce1126"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Romania</a>
+          <a href="scout_SWE.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="SWE flag"><rect width="3" height="2" fill="#006aa7"/><rect x=".78" width=".52" height="2" fill="#fecc00"/><rect y=".74" width="3" height=".52" fill="#fecc00"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Sweden</a>
+          <a href="scout_SUI.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="SUI flag"><rect width="3" height="2" fill="#d52b1e"/><rect x="1.28" y=".3" width=".44" height="1.4" fill="#ffffff"/><rect x=".8" y=".78" width="1.4" height=".44" fill="#ffffff"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Switzerland</a>
+          <a href="scout_UKR.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="UKR flag"><rect y="0.0000" width="3" height="1.0000" fill="#005bbb"/><rect y="1.0000" width="3" height="1.0000" fill="#ffd500"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Ukraine</a>
+      </div>
+    </div>
+    <div class="drop">
+      <button type="button" aria-expanded="false">Games &#9662;</button>
+      <div class="drop-panel">
+          <a href="2026-08-02_IRL-v-POR_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="POR flag"><rect width="3" height="2" fill="#da291c"/><rect width="1.2000" height="2" fill="#046a38"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Portugal (W 82-60)</a>
+          <a href="2026-08-01_IRL-v-SWE_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="SWE flag"><rect width="3" height="2" fill="#006aa7"/><rect x=".78" width=".52" height="2" fill="#fecc00"/><rect y=".74" width="3" height=".52" fill="#fecc00"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Sweden (L 105-106)</a>
+          <a href="2026-07-29_IRL-v-NED_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NED flag"><rect y="0.0000" width="3" height="0.6667" fill="#ae1c28"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#21468b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Netherlands (L 67-89)</a>
+          <a href="2026-07-28_IRL-v-GBR_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="GBR flag"><rect width="3" height="2" fill="#012169"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#ffffff" stroke-width=".44"/><path d="M0 0 L3 2 M3 0 L0 2" stroke="#c8102e" stroke-width=".22"/><path d="M1.5 0 V2 M0 1 H3" stroke="#ffffff" stroke-width=".72"/><path d="M1.5 0 V2 M0 1 H3" stroke="#c8102e" stroke-width=".42"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Great Britain (L 63-70)</a>
+          <a href="2026-07-26_IRL-v-BEL_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="BEL flag"><rect x="0.0000" width="1.0000" height="2" fill="#000000"/><rect x="1.0000" width="1.0000" height="2" fill="#fdda24"/><rect x="2.0000" width="1.0000" height="2" fill="#ef3340"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Belgium (L 63-88)</a>
+          <a href="2026-07-25_IRL-v-CYP_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="CYP flag"><rect width="3" height="2" fill="#ffffff"/><circle cx="1.5" cy="1" r=".42" fill="#d57800"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Cyprus (W 80-60)</a>
+          <a href="2026-07-24_IRL-v-FIN_review.html"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="FIN flag"><rect width="3" height="2" fill="#ffffff"/><rect x=".78" width=".52" height="2" fill="#003580"/><rect y=".74" width="3" height=".52" fill="#003580"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>v Finland (W 78-76)</a>
+      </div>
+    </div>
+    <span class="spacer"></span>
+    <a href="#" onclick="window.print();return false;">Print</a>
+  </div>
+</nav>
+<div class="sheet">
+
+<header class="masthead">
+  <div class="kicker">
+    <span>FIBA U18 Eurobasket 2026 Division B &middot; Game review</span>
+    <span>Wed 29 Jul, 19:30</span>
+  </div>
+  <h1><svg class="flag" viewBox="0 0 3 2" width="24" height="16" role="img" aria-label="IRL flag"><rect x="0.0000" width="1.0000" height="2" fill="#169b62"/><rect x="1.0000" width="1.0000" height="2" fill="#ffffff"/><rect x="2.0000" width="1.0000" height="2" fill="#ff883e"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Ireland 67&ndash;89 Netherlands<span class="flag-wrap"><svg class="flag" viewBox="0 0 3 2" width="24" height="16" role="img" aria-label="NED flag"><rect y="0.0000" width="3" height="0.6667" fill="#ae1c28"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#21468b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg></span></h1>
+  <p class="sub">Loss &middot; Dvorana Marino Cvetkovic &middot;
+79 possessions
+&middot; Net -27.7 per 100
+</p>
+</header>
+
+
+<section class="keep">
+<h2>Result</h2>
+<div class="statline">
+  <div class="stat">
+  <div class="label">Final</div>
+  <div class="figure neg">67&ndash;89</div>
+<div class="sub">Loss</div></div>
+
+  <div class="stat">
+  <div class="label">Off rating</div>
+  <div class="figure ">84.4</div>
+<div class="sub">points / 100 poss</div></div>
+
+  <div class="stat">
+  <div class="label">Def rating</div>
+  <div class="figure ">112.1</div>
+<div class="sub">allowed / 100 poss</div></div>
+
+  <div class="stat">
+  <div class="label">Net</div>
+  <div class="figure neg">-27.7</div>
+<div class="sub">per 100 poss</div></div>
+
+  <div class="stat">
+  <div class="label">Pace</div>
+  <div class="figure ">79</div>
+<div class="sub">event avg 80</div></div>
+
+  <div class="stat">
+  <div class="label">True shooting</div>
+  <div class="figure ">46.2%</div>
+<div class="sub">TS%</div></div>
+
+</div>
+
+<div class="cols" style="margin-top:10px">
+  <div>
+    <table>
+      <caption>Score by period</caption>
+      <thead><tr><th class="left">Team</th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Final</th></tr></thead>
+      <tbody>
+        <tr class="highlight"><td class="left"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="IRL flag"><rect x="0.0000" width="1.0000" height="2" fill="#169b62"/><rect x="1.0000" width="1.0000" height="2" fill="#ffffff"/><rect x="2.0000" width="1.0000" height="2" fill="#ff883e"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>IRL</td>
+<td>17</td><td>23</td><td>13</td><td>14</td>          <td>67</td></tr>
+        <tr><td class="left"><svg class="flag" viewBox="0 0 3 2" width="16" height="11" role="img" aria-label="NED flag"><rect y="0.0000" width="3" height="0.6667" fill="#ae1c28"/><rect y="0.6667" width="3" height="0.6667" fill="#ffffff"/><rect y="1.3333" width="3" height="0.6667" fill="#21468b"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>NED</td>
+<td>26</td><td>19</td><td>24</td><td>20</td>          <td>89</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <table>
+      <caption>Scoring breakdown</caption>
+      <thead><tr><th class="left">Category</th><th>IRL</th><th>NED</th><th>Diff</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="left">Points in paint</td><td>32</td><td>40</td>
+          <td class="neg">-8</td>
+        </tr>
+        <tr>
+          <td class="left">Fast break</td><td>8</td><td>25</td>
+          <td class="neg">-17</td>
+        </tr>
+        <tr>
+          <td class="left">Second chance</td><td>10</td><td>21</td>
+          <td class="neg">-11</td>
+        </tr>
+        <tr>
+          <td class="left">Off turnovers</td><td>10</td><td>22</td>
+          <td class="neg">-12</td>
+        </tr>
+        <tr>
+          <td class="left">Bench points</td><td>18</td><td>45</td>
+          <td class="neg">-27</td>
+        </tr>
+        <tr>
+          <td class="left">Turnovers</td><td>23</td><td>10</td>
+          <td class="neg">+13</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</section>
+
+<section class="keep">
+<h2>Four factors</h2>
+<div class="scroll-x">
+<table>
+<thead><tr>
+  <th class="left">Factor</th><th>IRL</th><th>NED</th>
+  <th>Diff</th><th>Event avg</th>
+</tr></thead>
+<tbody>
+  <tr>
+    <td class="left">eFG% <span class="unit">high is better</span></td>
+    <td>43.8</td>
+    <td>50.7</td>
+    <td class="neg">-6.8</td>
+    <td class="muted">44.3</td>
+  </tr>
+  <tr>
+    <td class="left">TOV% <span class="unit">low is better</span></td>
+    <td>29.0</td>
+    <td>12.6</td>
+    <td class="neg">+16.4</td>
+    <td class="muted">22.1</td>
+  </tr>
+  <tr>
+    <td class="left">OREB% <span class="unit">high is better</span></td>
+    <td>34.1</td>
+    <td>29.5</td>
+    <td class="pos">+4.5</td>
+    <td class="muted">33.9</td>
+  </tr>
+  <tr>
+    <td class="left">FTA/FGA <span class="unit">high is better</span></td>
+    <td>26.2</td>
+    <td>29.2</td>
+    <td class="neg">-3.0</td>
+    <td class="muted">30.6</td>
+  </tr>
+</tbody>
+</table>
+</div>
+
+<figure class="viz"><svg class="viz-factors" viewBox="0 0 640 112" width="100%" height="112" role="img" aria-label="Four factors comparison"><text x="0" y="16" class="axis-label">eFG%</text><rect x="96" y="4" width="536" height="8" rx="1" class="track" /><rect x="96" y="4" width="403.1" height="8" rx="1" class="bar series-1"><title>IRL eFG% 43.8</title></rect><rect x="96" y="15" width="536" height="8" rx="1" class="track" /><rect x="96" y="15" width="466.1" height="8" rx="1" class="bar series-2"><title>NED eFG% 50.7</title></rect><line x1="503.1" y1="2" x2="503.1" y2="25" class="reference"><title>Event average 44.3</title></line><text x="0" y="42" class="axis-label">TOV%</text><rect x="96" y="30" width="536" height="8" rx="1" class="track" /><rect x="96" y="30" width="466.1" height="8" rx="1" class="bar series-1"><title>IRL TOV% 29.0</title></rect><rect x="96" y="41" width="536" height="8" rx="1" class="track" /><rect x="96" y="41" width="202.6" height="8" rx="1" class="bar series-2"><title>NED TOV% 12.6</title></rect><line x1="451.7" y1="28" x2="451.7" y2="51" class="reference"><title>Event average 22.1</title></line><text x="0" y="68" class="axis-label">OREB%</text><rect x="96" y="56" width="536" height="8" rx="1" class="track" /><rect x="96" y="56" width="466.1" height="8" rx="1" class="bar series-1"><title>IRL OREB% 34.1</title></rect><rect x="96" y="67" width="536" height="8" rx="1" class="track" /><rect x="96" y="67" width="403.9" height="8" rx="1" class="bar series-2"><title>NED OREB% 29.5</title></rect><line x1="559.5" y1="54" x2="559.5" y2="77" class="reference"><title>Event average 33.9</title></line><text x="0" y="94" class="axis-label">FTA/FGA</text><rect x="96" y="82" width="536" height="8" rx="1" class="track" /><rect x="96" y="82" width="398.1" height="8" rx="1" class="bar series-1"><title>IRL FTA/FGA 26.2</title></rect><rect x="96" y="93" width="536" height="8" rx="1" class="track" /><rect x="96" y="93" width="444.0" height="8" rx="1" class="bar series-2"><title>NED FTA/FGA 29.2</title></rect><line x1="562.1" y1="80" x2="562.1" y2="103" class="reference"><title>Event average 30.6</title></line></svg><div class="viz-legend"><span class="key"><i class="swatch series-1"></i>IRL</span><span class="key"><i class="swatch series-2"></i>NED</span><span class="key"><i class="swatch reference"></i>Event average</span></div></figure>
+<p class="note">Bars are IRL against what IRL allowed. The
+vertical rule marks the competition average for that factor.</p>
+</section>
+
+<section class="keep">
+<h2>How the game moved</h2>
+<figure class="viz"><svg class="viz-timeline" viewBox="0 0 640 122" width="100%" height="122" role="img" aria-label="IRL score margin over the game"><defs><clipPath id="clip-ahead"><rect x="0" y="10" width="640" height="15.7"/></clipPath><clipPath id="clip-behind"><rect x="0" y="25.7" width="640" height="78.3"/></clipPath></defs><line x1="26" y1="10.0" x2="634" y2="10.0" class="grid" /><text x="21" y="13.5" class="axis-tick" text-anchor="end">+5</text><line x1="26" y1="25.7" x2="634" y2="25.7" class="zero" /><text x="21" y="29.2" class="axis-tick" text-anchor="end">0</text><line x1="26" y1="104.0" x2="634" y2="104.0" class="grid" /><text x="21" y="107.5" class="axis-tick" text-anchor="end">-25</text><text x="102.0" y="116" class="axis-tick" text-anchor="middle">Q1</text><line x1="178.0" y1="10" x2="178.0" y2="104" class="grid" /><text x="254.0" y="116" class="axis-tick" text-anchor="middle">Q2</text><line x1="330.0" y1="10" x2="330.0" y2="104" class="grid" /><text x="406.0" y="116" class="axis-tick" text-anchor="middle">Q3</text><line x1="482.0" y1="10" x2="482.0" y2="104" class="grid" /><text x="558.0" y="116" class="axis-tick" text-anchor="middle">Q4</text><path d="M 26,25.7 L 26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.3,25.7 26.3,25.7 26.3,25.7 26.3,25.7 29.8,25.7 29.8,25.7 30.3,25.7 30.3,25.7 33.9,25.7 33.9,25.7 34.4,25.7 34.4,25.7 38.4,25.7 38.4,25.7 39.2,25.7 39.2,25.7 40.2,25.7 40.2,25.7 40.2,25.7 40.2,25.7 46.0,25.7 46.0,25.7 47.0,25.7 47.0,25.7 51.6,25.7 51.6,25.7 51.6,25.7 51.6,25.7 51.6,25.7 51.6,22.5 51.6,22.5 51.6,22.5 52.3,22.5 52.3,22.5 53.6,22.5 53.6,13.1 53.6,13.1 53.6,13.1 58.7,13.1 58.7,13.1 58.7,13.1 58.7,13.1 58.7,13.1 58.7,16.3 58.7,16.3 58.7,16.3 58.9,16.3 58.9,16.3 59.2,16.3 59.2,16.3 63.7,16.3 63.7,10.0 67.3,10.0 67.3,10.0 67.3,10.0 67.3,10.0 67.3,10.0 67.3,13.1 67.3,13.1 67.3,13.1 67.3,13.1 67.3,16.3 67.3,16.3 67.3,16.3 67.3,16.3 67.3,16.3 70.1,16.3 70.1,10.0 70.1,10.0 70.1,10.0 73.1,10.0 73.1,10.0 73.9,10.0 73.9,10.0 75.1,10.0 75.1,19.4 80.0,19.4 80.0,19.4 84.8,19.4 84.8,19.4 85.3,19.4 85.3,19.4 87.6,19.4 87.6,19.4 88.3,19.4 88.3,19.4 89.3,19.4 89.3,25.7 89.3,25.7 89.3,25.7 94.4,25.7 94.4,19.4 94.4,19.4 94.4,19.4 96.4,19.4 96.4,19.4 96.4,19.4 96.4,19.4 98.5,19.4 98.5,19.4 99.2,19.4 99.2,19.4 100.2,19.4 100.2,19.4 100.7,19.4 100.7,19.4 101.7,19.4 101.7,19.4 101.7,19.4 101.7,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,19.4 102.3,19.4 102.3,19.4 102.3,19.4 102.3,19.4 102.5,19.4 102.5,13.1 102.8,13.1 102.8,13.1 102.8,13.1 102.8,13.1 102.8,13.1 102.8,13.1 103.0,13.1 103.0,13.1 106.1,13.1 106.1,13.1 106.1,13.1 106.1,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 108.8,13.1 108.8,22.5 118.7,22.5 118.7,22.5 119.7,22.5 119.7,22.5 122.3,22.5 122.3,31.9 122.5,31.9 122.5,31.9 122.5,31.9 122.5,31.9 122.5,31.9 122.5,31.9 127.3,31.9 127.3,31.9 127.3,31.9 127.3,31.9 130.4,31.9 130.4,38.2 132.4,38.2 132.4,38.2 132.4,38.2 132.4,38.2 133.7,38.2 133.7,38.2 134.4,38.2 134.4,38.2 134.4,38.2 134.4,44.5 137.5,44.5 137.5,44.5 137.5,44.5 137.5,44.5 138.7,44.5 138.7,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 147.3,50.7 147.3,50.7 147.3,50.7 147.3,50.7 149.4,50.7 149.4,50.7 150.4,50.7 150.4,50.7 150.4,50.7 150.4,50.7 150.6,50.7 150.6,50.7 151.4,50.7 151.4,50.7 151.4,50.7 151.4,50.7 154.7,50.7 154.7,41.3 154.7,41.3 154.7,41.3 157.0,41.3 157.0,47.6 160.5,47.6 160.5,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 164.8,47.6 164.8,47.6 165.1,47.6 165.1,47.6 171.2,47.6 171.2,47.6 171.2,47.6 171.2,47.6 171.9,47.6 171.9,53.9 171.9,53.9 171.9,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 180.3,53.9 180.3,47.6 180.3,47.6 180.3,47.6 183.6,47.6 183.6,53.9 184.6,53.9 184.6,53.9 184.6,53.9 184.6,53.9 186.9,53.9 186.9,53.9 186.9,53.9 186.9,53.9 188.1,53.9 188.1,60.1 192.2,60.1 192.2,60.1 192.7,60.1 192.7,60.1 193.5,60.1 193.5,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 198.8,60.1 198.8,60.1 198.8,60.1 198.8,60.1 200.8,60.1 200.8,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.9,53.9 204.9,57.0 204.9,57.0 204.9,60.1 207.1,60.1 207.1,60.1 207.1,60.1 207.1,60.1 207.1,60.1 207.1,57.0 207.1,57.0 207.1,57.0 207.1,57.0 207.1,53.9 209.2,53.9 209.2,53.9 209.2,53.9 209.2,53.9 210.2,53.9 210.2,53.9 212.7,53.9 212.7,53.9 215.0,53.9 215.0,53.9 215.7,53.9 215.7,53.9 221.1,53.9 221.1,44.5 223.6,44.5 223.6,44.5 223.6,44.5 223.6,44.5 225.9,44.5 225.9,44.5 226.6,44.5 226.6,44.5 226.6,44.5 226.6,38.2 226.6,38.2 226.6,38.2 228.9,38.2 228.9,38.2 228.9,38.2 228.9,38.2 234.0,38.2 234.0,38.2 237.5,38.2 237.5,47.6 237.5,47.6 237.5,47.6 242.3,47.6 242.3,47.6 243.1,47.6 243.1,47.6 243.1,47.6 243.1,47.6 243.4,47.6 243.4,47.6 243.6,47.6 243.6,41.3 246.9,41.3 246.9,41.3 247.7,41.3 247.7,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 251.5,41.3 251.5,41.3 251.5,41.3 251.5,41.3 253.7,41.3 253.7,41.3 254.5,41.3 254.5,41.3 256.3,41.3 256.3,41.3 257.0,41.3 257.0,41.3 259.8,41.3 259.8,41.3 259.8,41.3 259.8,41.3 260.8,41.3 260.8,41.3 261.6,41.3 261.6,41.3 261.9,41.3 261.9,41.3 262.4,41.3 262.4,41.3 267.4,41.3 267.4,41.3 267.9,41.3 267.9,41.3 271.5,41.3 271.5,41.3 271.5,41.3 271.5,41.3 272.5,41.3 272.5,41.3 273.3,41.3 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,50.7 274.8,50.7 274.8,50.7 274.8,50.7 274.8,50.7 276.8,50.7 276.8,50.7 276.8,50.7 276.8,50.7 281.1,50.7 281.1,50.7 282.4,50.7 282.4,50.7 285.9,50.7 285.9,41.3 285.9,41.3 285.9,41.3 289.5,41.3 289.5,41.3 290.0,41.3 290.0,41.3 292.0,41.3 292.0,31.9 292.0,31.9 292.0,31.9 299.3,31.9 299.3,31.9 300.6,31.9 300.6,31.9 300.9,31.9 300.9,31.9 301.6,31.9 301.6,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 307.7,31.9 307.7,31.9 309.2,31.9 309.2,31.9 313.0,31.9 313.0,25.7 313.0,25.7 313.0,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 315.1,25.7 315.1,25.7 315.1,25.7 315.1,25.7 317.3,25.7 317.3,31.9 317.3,31.9 317.3,31.9 319.9,31.9 319.9,31.9 319.9,31.9 319.9,31.9 320.9,31.9 320.9,38.2 320.9,38.2 320.9,38.2 324.7,38.2 324.7,38.2 324.7,38.2 324.7,38.2 324.7,38.2 324.7,38.2 327.2,38.2 327.2,38.2 327.7,38.2 327.7,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,35.1 328.0,35.1 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 329.7,31.9 329.7,41.3 329.7,41.3 329.7,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 336.1,41.3 336.1,47.6 339.6,47.6 339.6,47.6 344.7,47.6 344.7,47.6 344.7,47.6 344.7,47.6 344.7,47.6 344.7,50.7 344.7,50.7 344.7,53.9 349.3,53.9 349.3,47.6 349.3,47.6 349.3,47.6 354.1,47.6 354.1,47.6 354.6,47.6 354.6,47.6 356.9,47.6 356.9,47.6 357.9,47.6 357.9,47.6 360.1,47.6 360.1,47.6 360.9,47.6 360.9,47.6 362.7,47.6 362.7,47.6 363.2,47.6 363.2,47.6 364.7,47.6 364.7,47.6 365.0,47.6 365.0,47.6 365.0,47.6 365.0,47.6 365.0,47.6 365.0,47.6 367.2,47.6 367.2,57.0 372.6,57.0 372.6,57.0 373.1,57.0 373.1,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 376.6,57.0 376.6,66.4 376.6,66.4 376.6,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,63.3 384.2,63.3 384.2,63.3 385.0,63.3 385.0,63.3 386.7,63.3 386.7,63.3 386.7,63.3 386.7,63.3 388.0,63.3 388.0,57.0 391.8,57.0 391.8,57.0 391.8,57.0 391.8,57.0 397.6,57.0 397.6,57.0 398.4,57.0 398.4,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,60.1 398.9,60.1 398.9,63.3 398.9,63.3 398.9,63.3 398.9,63.3 398.9,63.3 403.5,63.3 403.5,63.3 403.5,63.3 403.5,63.3 403.5,63.3 403.5,57.0 405.5,57.0 405.5,57.0 405.5,57.0 405.5,57.0 405.5,57.0 405.5,60.1 405.7,60.1 405.7,63.3 411.6,63.3 411.6,63.3 412.1,63.3 412.1,63.3 412.3,63.3 412.3,63.3 412.3,63.3 412.3,63.3 416.4,63.3 416.4,72.7 416.4,72.7 416.4,72.7 420.4,72.7 420.4,72.7 424.2,72.7 424.2,72.7 425.0,72.7 425.0,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 428.3,72.7 428.3,72.7 428.3,72.7 428.3,72.7 429.8,72.7 429.8,72.7 429.8,72.7 429.8,72.7 429.8,72.7 429.8,69.5 429.8,69.5 429.8,69.5 430.3,69.5 430.3,69.5 432.3,69.5 432.3,69.5 432.3,69.5 432.3,69.5 432.3,69.5 432.3,72.7 432.3,72.7 432.3,75.8 437.2,75.8 437.2,75.8 437.2,75.8 437.2,75.8 442.7,75.8 442.7,75.8 443.2,75.8 443.2,75.8 446.5,75.8 446.5,75.8 446.5,75.8 446.5,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 453.1,75.8 453.1,75.8 454.1,75.8 454.1,75.8 455.1,75.8 455.1,75.8 455.1,75.8 455.1,75.8 457.4,75.8 457.4,75.8 457.4,75.8 457.4,75.8 461.7,75.8 461.7,82.1 464.5,82.1 464.5,72.7 464.5,72.7 464.5,72.7 467.6,72.7 467.6,72.7 468.1,72.7 468.1,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,69.5 468.3,69.5 468.3,66.4 468.3,66.4 468.3,66.4 468.3,66.4 468.3,66.4 472.6,66.4 472.6,66.4 473.1,66.4 473.1,66.4 474.9,66.4 474.9,72.7 477.4,72.7 477.4,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,75.8 477.9,75.8 477.9,75.8 478.7,75.8 478.7,75.8 481.0,75.8 481.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 485.5,75.8 485.5,69.5 485.5,69.5 485.5,69.5 488.1,69.5 488.1,69.5 488.6,69.5 488.6,69.5 488.8,69.5 488.8,69.5 488.8,69.5 488.8,69.5 488.8,69.5 488.8,69.5 492.6,69.5 492.6,78.9 492.6,78.9 492.6,78.9 497.5,78.9 497.5,78.9 498.5,78.9 498.5,78.9 498.5,78.9 498.5,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,75.8 503.0,75.8 503.0,85.2 503.0,85.2 503.0,85.2 506.3,85.2 506.3,78.9 509.1,78.9 509.1,85.2 513.4,85.2 513.4,85.2 513.4,85.2 513.4,85.2 514.2,85.2 514.2,85.2 515.9,85.2 515.9,85.2 516.7,85.2 516.7,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 520.8,85.2 520.8,85.2 521.3,85.2 521.3,85.2 523.0,85.2 523.0,91.5 527.3,91.5 527.3,91.5 527.9,91.5 527.9,91.5 527.9,91.5 527.9,91.5 528.9,91.5 528.9,91.5 529.6,91.5 529.6,91.5 530.1,91.5 530.1,91.5 531.1,91.5 531.1,100.9 531.1,100.9 531.1,100.9 535.7,100.9 535.7,100.9 536.2,100.9 536.2,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 541.0,100.9 541.0,100.9 542.3,100.9 542.3,100.9 542.8,100.9 542.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 549.1,100.9 549.1,100.9 550.1,100.9 550.1,100.9 551.9,100.9 551.9,100.9 552.4,100.9 552.4,100.9 554.7,100.9 554.7,100.9 555.7,100.9 555.7,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.5,100.9 557.5,100.9 561.3,100.9 561.3,94.6 568.1,94.6 568.1,94.6 568.9,94.6 568.9,94.6 570.9,94.6 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 574.7,100.9 574.7,91.5 574.7,91.5 574.7,91.5 578.0,91.5 578.0,91.5 578.0,91.5 578.0,91.5 584.3,91.5 584.3,91.5 584.9,91.5 584.9,91.5 584.9,91.5 584.9,91.5 590.2,91.5 590.2,91.5 590.9,91.5 590.9,91.5 590.9,91.5 590.9,91.5 590.9,91.5 590.9,91.5 595.0,91.5 595.0,91.5 595.0,91.5 595.0,91.5 598.3,91.5 598.3,91.5 598.8,91.5 598.8,91.5 599.5,91.5 599.5,85.2 604.9,85.2 604.9,85.2 604.9,85.2 604.9,85.2 608.4,85.2 608.4,85.2 608.9,85.2 608.9,85.2 612.5,85.2 612.5,91.5 617.5,91.5 617.5,91.5 618.3,91.5 618.3,91.5 619.6,91.5 619.6,97.7 624.9,97.7 624.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,94.6 629.9,94.6 629.9,94.6 632.7,94.6 632.7,94.6 633.5,94.6 633.5,94.6 634.0,94.6 634.0,94.6 634.0,94.6 634.0,94.6 L 634.0,25.7 Z" class="fill-ahead" clip-path="url(#clip-ahead)" /><path d="M 26,25.7 L 26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.3,25.7 26.3,25.7 26.3,25.7 26.3,25.7 29.8,25.7 29.8,25.7 30.3,25.7 30.3,25.7 33.9,25.7 33.9,25.7 34.4,25.7 34.4,25.7 38.4,25.7 38.4,25.7 39.2,25.7 39.2,25.7 40.2,25.7 40.2,25.7 40.2,25.7 40.2,25.7 46.0,25.7 46.0,25.7 47.0,25.7 47.0,25.7 51.6,25.7 51.6,25.7 51.6,25.7 51.6,25.7 51.6,25.7 51.6,22.5 51.6,22.5 51.6,22.5 52.3,22.5 52.3,22.5 53.6,22.5 53.6,13.1 53.6,13.1 53.6,13.1 58.7,13.1 58.7,13.1 58.7,13.1 58.7,13.1 58.7,13.1 58.7,16.3 58.7,16.3 58.7,16.3 58.9,16.3 58.9,16.3 59.2,16.3 59.2,16.3 63.7,16.3 63.7,10.0 67.3,10.0 67.3,10.0 67.3,10.0 67.3,10.0 67.3,10.0 67.3,13.1 67.3,13.1 67.3,13.1 67.3,13.1 67.3,16.3 67.3,16.3 67.3,16.3 67.3,16.3 67.3,16.3 70.1,16.3 70.1,10.0 70.1,10.0 70.1,10.0 73.1,10.0 73.1,10.0 73.9,10.0 73.9,10.0 75.1,10.0 75.1,19.4 80.0,19.4 80.0,19.4 84.8,19.4 84.8,19.4 85.3,19.4 85.3,19.4 87.6,19.4 87.6,19.4 88.3,19.4 88.3,19.4 89.3,19.4 89.3,25.7 89.3,25.7 89.3,25.7 94.4,25.7 94.4,19.4 94.4,19.4 94.4,19.4 96.4,19.4 96.4,19.4 96.4,19.4 96.4,19.4 98.5,19.4 98.5,19.4 99.2,19.4 99.2,19.4 100.2,19.4 100.2,19.4 100.7,19.4 100.7,19.4 101.7,19.4 101.7,19.4 101.7,19.4 101.7,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,19.4 102.3,19.4 102.3,19.4 102.3,19.4 102.3,19.4 102.5,19.4 102.5,13.1 102.8,13.1 102.8,13.1 102.8,13.1 102.8,13.1 102.8,13.1 102.8,13.1 103.0,13.1 103.0,13.1 106.1,13.1 106.1,13.1 106.1,13.1 106.1,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 108.8,13.1 108.8,22.5 118.7,22.5 118.7,22.5 119.7,22.5 119.7,22.5 122.3,22.5 122.3,31.9 122.5,31.9 122.5,31.9 122.5,31.9 122.5,31.9 122.5,31.9 122.5,31.9 127.3,31.9 127.3,31.9 127.3,31.9 127.3,31.9 130.4,31.9 130.4,38.2 132.4,38.2 132.4,38.2 132.4,38.2 132.4,38.2 133.7,38.2 133.7,38.2 134.4,38.2 134.4,38.2 134.4,38.2 134.4,44.5 137.5,44.5 137.5,44.5 137.5,44.5 137.5,44.5 138.7,44.5 138.7,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 147.3,50.7 147.3,50.7 147.3,50.7 147.3,50.7 149.4,50.7 149.4,50.7 150.4,50.7 150.4,50.7 150.4,50.7 150.4,50.7 150.6,50.7 150.6,50.7 151.4,50.7 151.4,50.7 151.4,50.7 151.4,50.7 154.7,50.7 154.7,41.3 154.7,41.3 154.7,41.3 157.0,41.3 157.0,47.6 160.5,47.6 160.5,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 164.8,47.6 164.8,47.6 165.1,47.6 165.1,47.6 171.2,47.6 171.2,47.6 171.2,47.6 171.2,47.6 171.9,47.6 171.9,53.9 171.9,53.9 171.9,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 180.3,53.9 180.3,47.6 180.3,47.6 180.3,47.6 183.6,47.6 183.6,53.9 184.6,53.9 184.6,53.9 184.6,53.9 184.6,53.9 186.9,53.9 186.9,53.9 186.9,53.9 186.9,53.9 188.1,53.9 188.1,60.1 192.2,60.1 192.2,60.1 192.7,60.1 192.7,60.1 193.5,60.1 193.5,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 198.8,60.1 198.8,60.1 198.8,60.1 198.8,60.1 200.8,60.1 200.8,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.9,53.9 204.9,57.0 204.9,57.0 204.9,60.1 207.1,60.1 207.1,60.1 207.1,60.1 207.1,60.1 207.1,60.1 207.1,57.0 207.1,57.0 207.1,57.0 207.1,57.0 207.1,53.9 209.2,53.9 209.2,53.9 209.2,53.9 209.2,53.9 210.2,53.9 210.2,53.9 212.7,53.9 212.7,53.9 215.0,53.9 215.0,53.9 215.7,53.9 215.7,53.9 221.1,53.9 221.1,44.5 223.6,44.5 223.6,44.5 223.6,44.5 223.6,44.5 225.9,44.5 225.9,44.5 226.6,44.5 226.6,44.5 226.6,44.5 226.6,38.2 226.6,38.2 226.6,38.2 228.9,38.2 228.9,38.2 228.9,38.2 228.9,38.2 234.0,38.2 234.0,38.2 237.5,38.2 237.5,47.6 237.5,47.6 237.5,47.6 242.3,47.6 242.3,47.6 243.1,47.6 243.1,47.6 243.1,47.6 243.1,47.6 243.4,47.6 243.4,47.6 243.6,47.6 243.6,41.3 246.9,41.3 246.9,41.3 247.7,41.3 247.7,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 251.5,41.3 251.5,41.3 251.5,41.3 251.5,41.3 253.7,41.3 253.7,41.3 254.5,41.3 254.5,41.3 256.3,41.3 256.3,41.3 257.0,41.3 257.0,41.3 259.8,41.3 259.8,41.3 259.8,41.3 259.8,41.3 260.8,41.3 260.8,41.3 261.6,41.3 261.6,41.3 261.9,41.3 261.9,41.3 262.4,41.3 262.4,41.3 267.4,41.3 267.4,41.3 267.9,41.3 267.9,41.3 271.5,41.3 271.5,41.3 271.5,41.3 271.5,41.3 272.5,41.3 272.5,41.3 273.3,41.3 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,50.7 274.8,50.7 274.8,50.7 274.8,50.7 274.8,50.7 276.8,50.7 276.8,50.7 276.8,50.7 276.8,50.7 281.1,50.7 281.1,50.7 282.4,50.7 282.4,50.7 285.9,50.7 285.9,41.3 285.9,41.3 285.9,41.3 289.5,41.3 289.5,41.3 290.0,41.3 290.0,41.3 292.0,41.3 292.0,31.9 292.0,31.9 292.0,31.9 299.3,31.9 299.3,31.9 300.6,31.9 300.6,31.9 300.9,31.9 300.9,31.9 301.6,31.9 301.6,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 307.7,31.9 307.7,31.9 309.2,31.9 309.2,31.9 313.0,31.9 313.0,25.7 313.0,25.7 313.0,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 315.1,25.7 315.1,25.7 315.1,25.7 315.1,25.7 317.3,25.7 317.3,31.9 317.3,31.9 317.3,31.9 319.9,31.9 319.9,31.9 319.9,31.9 319.9,31.9 320.9,31.9 320.9,38.2 320.9,38.2 320.9,38.2 324.7,38.2 324.7,38.2 324.7,38.2 324.7,38.2 324.7,38.2 324.7,38.2 327.2,38.2 327.2,38.2 327.7,38.2 327.7,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,35.1 328.0,35.1 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 329.7,31.9 329.7,41.3 329.7,41.3 329.7,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 336.1,41.3 336.1,47.6 339.6,47.6 339.6,47.6 344.7,47.6 344.7,47.6 344.7,47.6 344.7,47.6 344.7,47.6 344.7,50.7 344.7,50.7 344.7,53.9 349.3,53.9 349.3,47.6 349.3,47.6 349.3,47.6 354.1,47.6 354.1,47.6 354.6,47.6 354.6,47.6 356.9,47.6 356.9,47.6 357.9,47.6 357.9,47.6 360.1,47.6 360.1,47.6 360.9,47.6 360.9,47.6 362.7,47.6 362.7,47.6 363.2,47.6 363.2,47.6 364.7,47.6 364.7,47.6 365.0,47.6 365.0,47.6 365.0,47.6 365.0,47.6 365.0,47.6 365.0,47.6 367.2,47.6 367.2,57.0 372.6,57.0 372.6,57.0 373.1,57.0 373.1,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 376.6,57.0 376.6,66.4 376.6,66.4 376.6,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,63.3 384.2,63.3 384.2,63.3 385.0,63.3 385.0,63.3 386.7,63.3 386.7,63.3 386.7,63.3 386.7,63.3 388.0,63.3 388.0,57.0 391.8,57.0 391.8,57.0 391.8,57.0 391.8,57.0 397.6,57.0 397.6,57.0 398.4,57.0 398.4,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,60.1 398.9,60.1 398.9,63.3 398.9,63.3 398.9,63.3 398.9,63.3 398.9,63.3 403.5,63.3 403.5,63.3 403.5,63.3 403.5,63.3 403.5,63.3 403.5,57.0 405.5,57.0 405.5,57.0 405.5,57.0 405.5,57.0 405.5,57.0 405.5,60.1 405.7,60.1 405.7,63.3 411.6,63.3 411.6,63.3 412.1,63.3 412.1,63.3 412.3,63.3 412.3,63.3 412.3,63.3 412.3,63.3 416.4,63.3 416.4,72.7 416.4,72.7 416.4,72.7 420.4,72.7 420.4,72.7 424.2,72.7 424.2,72.7 425.0,72.7 425.0,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 428.3,72.7 428.3,72.7 428.3,72.7 428.3,72.7 429.8,72.7 429.8,72.7 429.8,72.7 429.8,72.7 429.8,72.7 429.8,69.5 429.8,69.5 429.8,69.5 430.3,69.5 430.3,69.5 432.3,69.5 432.3,69.5 432.3,69.5 432.3,69.5 432.3,69.5 432.3,72.7 432.3,72.7 432.3,75.8 437.2,75.8 437.2,75.8 437.2,75.8 437.2,75.8 442.7,75.8 442.7,75.8 443.2,75.8 443.2,75.8 446.5,75.8 446.5,75.8 446.5,75.8 446.5,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 453.1,75.8 453.1,75.8 454.1,75.8 454.1,75.8 455.1,75.8 455.1,75.8 455.1,75.8 455.1,75.8 457.4,75.8 457.4,75.8 457.4,75.8 457.4,75.8 461.7,75.8 461.7,82.1 464.5,82.1 464.5,72.7 464.5,72.7 464.5,72.7 467.6,72.7 467.6,72.7 468.1,72.7 468.1,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,69.5 468.3,69.5 468.3,66.4 468.3,66.4 468.3,66.4 468.3,66.4 468.3,66.4 472.6,66.4 472.6,66.4 473.1,66.4 473.1,66.4 474.9,66.4 474.9,72.7 477.4,72.7 477.4,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,75.8 477.9,75.8 477.9,75.8 478.7,75.8 478.7,75.8 481.0,75.8 481.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 485.5,75.8 485.5,69.5 485.5,69.5 485.5,69.5 488.1,69.5 488.1,69.5 488.6,69.5 488.6,69.5 488.8,69.5 488.8,69.5 488.8,69.5 488.8,69.5 488.8,69.5 488.8,69.5 492.6,69.5 492.6,78.9 492.6,78.9 492.6,78.9 497.5,78.9 497.5,78.9 498.5,78.9 498.5,78.9 498.5,78.9 498.5,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,75.8 503.0,75.8 503.0,85.2 503.0,85.2 503.0,85.2 506.3,85.2 506.3,78.9 509.1,78.9 509.1,85.2 513.4,85.2 513.4,85.2 513.4,85.2 513.4,85.2 514.2,85.2 514.2,85.2 515.9,85.2 515.9,85.2 516.7,85.2 516.7,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 520.8,85.2 520.8,85.2 521.3,85.2 521.3,85.2 523.0,85.2 523.0,91.5 527.3,91.5 527.3,91.5 527.9,91.5 527.9,91.5 527.9,91.5 527.9,91.5 528.9,91.5 528.9,91.5 529.6,91.5 529.6,91.5 530.1,91.5 530.1,91.5 531.1,91.5 531.1,100.9 531.1,100.9 531.1,100.9 535.7,100.9 535.7,100.9 536.2,100.9 536.2,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 541.0,100.9 541.0,100.9 542.3,100.9 542.3,100.9 542.8,100.9 542.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 549.1,100.9 549.1,100.9 550.1,100.9 550.1,100.9 551.9,100.9 551.9,100.9 552.4,100.9 552.4,100.9 554.7,100.9 554.7,100.9 555.7,100.9 555.7,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.5,100.9 557.5,100.9 561.3,100.9 561.3,94.6 568.1,94.6 568.1,94.6 568.9,94.6 568.9,94.6 570.9,94.6 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 574.7,100.9 574.7,91.5 574.7,91.5 574.7,91.5 578.0,91.5 578.0,91.5 578.0,91.5 578.0,91.5 584.3,91.5 584.3,91.5 584.9,91.5 584.9,91.5 584.9,91.5 584.9,91.5 590.2,91.5 590.2,91.5 590.9,91.5 590.9,91.5 590.9,91.5 590.9,91.5 590.9,91.5 590.9,91.5 595.0,91.5 595.0,91.5 595.0,91.5 595.0,91.5 598.3,91.5 598.3,91.5 598.8,91.5 598.8,91.5 599.5,91.5 599.5,85.2 604.9,85.2 604.9,85.2 604.9,85.2 604.9,85.2 608.4,85.2 608.4,85.2 608.9,85.2 608.9,85.2 612.5,85.2 612.5,91.5 617.5,91.5 617.5,91.5 618.3,91.5 618.3,91.5 619.6,91.5 619.6,97.7 624.9,97.7 624.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,94.6 629.9,94.6 629.9,94.6 632.7,94.6 632.7,94.6 633.5,94.6 633.5,94.6 634.0,94.6 634.0,94.6 634.0,94.6 634.0,94.6 L 634.0,25.7 Z" class="fill-behind" clip-path="url(#clip-behind)" /><polyline points="26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.0,25.7 26.3,25.7 26.3,25.7 26.3,25.7 26.3,25.7 29.8,25.7 29.8,25.7 30.3,25.7 30.3,25.7 33.9,25.7 33.9,25.7 34.4,25.7 34.4,25.7 38.4,25.7 38.4,25.7 39.2,25.7 39.2,25.7 40.2,25.7 40.2,25.7 40.2,25.7 40.2,25.7 46.0,25.7 46.0,25.7 47.0,25.7 47.0,25.7 51.6,25.7 51.6,25.7 51.6,25.7 51.6,25.7 51.6,25.7 51.6,22.5 51.6,22.5 51.6,22.5 52.3,22.5 52.3,22.5 53.6,22.5 53.6,13.1 53.6,13.1 53.6,13.1 58.7,13.1 58.7,13.1 58.7,13.1 58.7,13.1 58.7,13.1 58.7,16.3 58.7,16.3 58.7,16.3 58.9,16.3 58.9,16.3 59.2,16.3 59.2,16.3 63.7,16.3 63.7,10.0 67.3,10.0 67.3,10.0 67.3,10.0 67.3,10.0 67.3,10.0 67.3,13.1 67.3,13.1 67.3,13.1 67.3,13.1 67.3,16.3 67.3,16.3 67.3,16.3 67.3,16.3 67.3,16.3 70.1,16.3 70.1,10.0 70.1,10.0 70.1,10.0 73.1,10.0 73.1,10.0 73.9,10.0 73.9,10.0 75.1,10.0 75.1,19.4 80.0,19.4 80.0,19.4 84.8,19.4 84.8,19.4 85.3,19.4 85.3,19.4 87.6,19.4 87.6,19.4 88.3,19.4 88.3,19.4 89.3,19.4 89.3,25.7 89.3,25.7 89.3,25.7 94.4,25.7 94.4,19.4 94.4,19.4 94.4,19.4 96.4,19.4 96.4,19.4 96.4,19.4 96.4,19.4 98.5,19.4 98.5,19.4 99.2,19.4 99.2,19.4 100.2,19.4 100.2,19.4 100.7,19.4 100.7,19.4 101.7,19.4 101.7,19.4 101.7,19.4 101.7,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.0,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,25.7 102.3,19.4 102.3,19.4 102.3,19.4 102.3,19.4 102.3,19.4 102.5,19.4 102.5,13.1 102.8,13.1 102.8,13.1 102.8,13.1 102.8,13.1 102.8,13.1 102.8,13.1 103.0,13.1 103.0,13.1 106.1,13.1 106.1,13.1 106.1,13.1 106.1,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 106.3,13.1 108.8,13.1 108.8,22.5 118.7,22.5 118.7,22.5 119.7,22.5 119.7,22.5 122.3,22.5 122.3,31.9 122.5,31.9 122.5,31.9 122.5,31.9 122.5,31.9 122.5,31.9 122.5,31.9 127.3,31.9 127.3,31.9 127.3,31.9 127.3,31.9 130.4,31.9 130.4,38.2 132.4,38.2 132.4,38.2 132.4,38.2 132.4,38.2 133.7,38.2 133.7,38.2 134.4,38.2 134.4,38.2 134.4,38.2 134.4,44.5 137.5,44.5 137.5,44.5 137.5,44.5 137.5,44.5 138.7,44.5 138.7,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 144.8,50.7 147.3,50.7 147.3,50.7 147.3,50.7 147.3,50.7 149.4,50.7 149.4,50.7 150.4,50.7 150.4,50.7 150.4,50.7 150.4,50.7 150.6,50.7 150.6,50.7 151.4,50.7 151.4,50.7 151.4,50.7 151.4,50.7 154.7,50.7 154.7,41.3 154.7,41.3 154.7,41.3 157.0,41.3 157.0,47.6 160.5,47.6 160.5,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 161.8,47.6 164.8,47.6 164.8,47.6 165.1,47.6 165.1,47.6 171.2,47.6 171.2,47.6 171.2,47.6 171.2,47.6 171.9,47.6 171.9,53.9 171.9,53.9 171.9,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 178.0,53.9 180.3,53.9 180.3,47.6 180.3,47.6 180.3,47.6 183.6,47.6 183.6,53.9 184.6,53.9 184.6,53.9 184.6,53.9 184.6,53.9 186.9,53.9 186.9,53.9 186.9,53.9 186.9,53.9 188.1,53.9 188.1,60.1 192.2,60.1 192.2,60.1 192.7,60.1 192.7,60.1 193.5,60.1 193.5,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 194.0,60.1 198.8,60.1 198.8,60.1 198.8,60.1 198.8,60.1 200.8,60.1 200.8,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.3,53.9 204.9,53.9 204.9,57.0 204.9,57.0 204.9,60.1 207.1,60.1 207.1,60.1 207.1,60.1 207.1,60.1 207.1,60.1 207.1,57.0 207.1,57.0 207.1,57.0 207.1,57.0 207.1,53.9 209.2,53.9 209.2,53.9 209.2,53.9 209.2,53.9 210.2,53.9 210.2,53.9 212.7,53.9 212.7,53.9 215.0,53.9 215.0,53.9 215.7,53.9 215.7,53.9 221.1,53.9 221.1,44.5 223.6,44.5 223.6,44.5 223.6,44.5 223.6,44.5 225.9,44.5 225.9,44.5 226.6,44.5 226.6,44.5 226.6,44.5 226.6,38.2 226.6,38.2 226.6,38.2 228.9,38.2 228.9,38.2 228.9,38.2 228.9,38.2 234.0,38.2 234.0,38.2 237.5,38.2 237.5,47.6 237.5,47.6 237.5,47.6 242.3,47.6 242.3,47.6 243.1,47.6 243.1,47.6 243.1,47.6 243.1,47.6 243.4,47.6 243.4,47.6 243.6,47.6 243.6,41.3 246.9,41.3 246.9,41.3 247.7,41.3 247.7,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 248.9,41.3 251.5,41.3 251.5,41.3 251.5,41.3 251.5,41.3 253.7,41.3 253.7,41.3 254.5,41.3 254.5,41.3 256.3,41.3 256.3,41.3 257.0,41.3 257.0,41.3 259.8,41.3 259.8,41.3 259.8,41.3 259.8,41.3 260.8,41.3 260.8,41.3 261.6,41.3 261.6,41.3 261.9,41.3 261.9,41.3 262.4,41.3 262.4,41.3 267.4,41.3 267.4,41.3 267.9,41.3 267.9,41.3 271.5,41.3 271.5,41.3 271.5,41.3 271.5,41.3 272.5,41.3 272.5,41.3 273.3,41.3 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,47.6 273.3,50.7 274.8,50.7 274.8,50.7 274.8,50.7 274.8,50.7 276.8,50.7 276.8,50.7 276.8,50.7 276.8,50.7 281.1,50.7 281.1,50.7 282.4,50.7 282.4,50.7 285.9,50.7 285.9,41.3 285.9,41.3 285.9,41.3 289.5,41.3 289.5,41.3 290.0,41.3 290.0,41.3 292.0,41.3 292.0,31.9 292.0,31.9 292.0,31.9 299.3,31.9 299.3,31.9 300.6,31.9 300.6,31.9 300.9,31.9 300.9,31.9 301.6,31.9 301.6,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 304.4,31.9 307.7,31.9 307.7,31.9 309.2,31.9 309.2,31.9 313.0,31.9 313.0,25.7 313.0,25.7 313.0,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 313.5,25.7 315.1,25.7 315.1,25.7 315.1,25.7 315.1,25.7 317.3,25.7 317.3,31.9 317.3,31.9 317.3,31.9 319.9,31.9 319.9,31.9 319.9,31.9 319.9,31.9 320.9,31.9 320.9,38.2 320.9,38.2 320.9,38.2 324.7,38.2 324.7,38.2 324.7,38.2 324.7,38.2 324.7,38.2 324.7,38.2 327.2,38.2 327.2,38.2 327.7,38.2 327.7,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,38.2 328.0,35.1 328.0,35.1 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 328.0,31.9 329.7,31.9 329.7,41.3 329.7,41.3 329.7,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 330.0,41.3 336.1,41.3 336.1,47.6 339.6,47.6 339.6,47.6 344.7,47.6 344.7,47.6 344.7,47.6 344.7,47.6 344.7,47.6 344.7,50.7 344.7,50.7 344.7,53.9 349.3,53.9 349.3,47.6 349.3,47.6 349.3,47.6 354.1,47.6 354.1,47.6 354.6,47.6 354.6,47.6 356.9,47.6 356.9,47.6 357.9,47.6 357.9,47.6 360.1,47.6 360.1,47.6 360.9,47.6 360.9,47.6 362.7,47.6 362.7,47.6 363.2,47.6 363.2,47.6 364.7,47.6 364.7,47.6 365.0,47.6 365.0,47.6 365.0,47.6 365.0,47.6 365.0,47.6 365.0,47.6 367.2,47.6 367.2,57.0 372.6,57.0 372.6,57.0 373.1,57.0 373.1,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 374.6,57.0 376.6,57.0 376.6,66.4 376.6,66.4 376.6,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,66.4 379.7,63.3 384.2,63.3 384.2,63.3 385.0,63.3 385.0,63.3 386.7,63.3 386.7,63.3 386.7,63.3 386.7,63.3 388.0,63.3 388.0,57.0 391.8,57.0 391.8,57.0 391.8,57.0 391.8,57.0 397.6,57.0 397.6,57.0 398.4,57.0 398.4,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,57.0 398.9,60.1 398.9,60.1 398.9,63.3 398.9,63.3 398.9,63.3 398.9,63.3 398.9,63.3 403.5,63.3 403.5,63.3 403.5,63.3 403.5,63.3 403.5,63.3 403.5,57.0 405.5,57.0 405.5,57.0 405.5,57.0 405.5,57.0 405.5,57.0 405.5,60.1 405.7,60.1 405.7,63.3 411.6,63.3 411.6,63.3 412.1,63.3 412.1,63.3 412.3,63.3 412.3,63.3 412.3,63.3 412.3,63.3 416.4,63.3 416.4,72.7 416.4,72.7 416.4,72.7 420.4,72.7 420.4,72.7 424.2,72.7 424.2,72.7 425.0,72.7 425.0,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 427.3,72.7 428.3,72.7 428.3,72.7 428.3,72.7 428.3,72.7 429.8,72.7 429.8,72.7 429.8,72.7 429.8,72.7 429.8,72.7 429.8,69.5 429.8,69.5 429.8,69.5 430.3,69.5 430.3,69.5 432.3,69.5 432.3,69.5 432.3,69.5 432.3,69.5 432.3,69.5 432.3,72.7 432.3,72.7 432.3,75.8 437.2,75.8 437.2,75.8 437.2,75.8 437.2,75.8 442.7,75.8 442.7,75.8 443.2,75.8 443.2,75.8 446.5,75.8 446.5,75.8 446.5,75.8 446.5,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 448.6,75.8 453.1,75.8 453.1,75.8 454.1,75.8 454.1,75.8 455.1,75.8 455.1,75.8 455.1,75.8 455.1,75.8 457.4,75.8 457.4,75.8 457.4,75.8 457.4,75.8 461.7,75.8 461.7,82.1 464.5,82.1 464.5,72.7 464.5,72.7 464.5,72.7 467.6,72.7 467.6,72.7 468.1,72.7 468.1,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,72.7 468.3,69.5 468.3,69.5 468.3,66.4 468.3,66.4 468.3,66.4 468.3,66.4 468.3,66.4 472.6,66.4 472.6,66.4 473.1,66.4 473.1,66.4 474.9,66.4 474.9,72.7 477.4,72.7 477.4,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,72.7 477.7,75.8 477.9,75.8 477.9,75.8 478.7,75.8 478.7,75.8 481.0,75.8 481.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 482.0,75.8 485.5,75.8 485.5,69.5 485.5,69.5 485.5,69.5 488.1,69.5 488.1,69.5 488.6,69.5 488.6,69.5 488.8,69.5 488.8,69.5 488.8,69.5 488.8,69.5 488.8,69.5 488.8,69.5 492.6,69.5 492.6,78.9 492.6,78.9 492.6,78.9 497.5,78.9 497.5,78.9 498.5,78.9 498.5,78.9 498.5,78.9 498.5,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,78.9 499.0,75.8 503.0,75.8 503.0,85.2 503.0,85.2 503.0,85.2 506.3,85.2 506.3,78.9 509.1,78.9 509.1,85.2 513.4,85.2 513.4,85.2 513.4,85.2 513.4,85.2 514.2,85.2 514.2,85.2 515.9,85.2 515.9,85.2 516.7,85.2 516.7,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 517.2,85.2 520.8,85.2 520.8,85.2 521.3,85.2 521.3,85.2 523.0,85.2 523.0,91.5 527.3,91.5 527.3,91.5 527.9,91.5 527.9,91.5 527.9,91.5 527.9,91.5 528.9,91.5 528.9,91.5 529.6,91.5 529.6,91.5 530.1,91.5 530.1,91.5 531.1,91.5 531.1,100.9 531.1,100.9 531.1,100.9 535.7,100.9 535.7,100.9 536.2,100.9 536.2,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 540.3,100.9 541.0,100.9 541.0,100.9 542.3,100.9 542.3,100.9 542.8,100.9 542.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 545.8,100.9 549.1,100.9 549.1,100.9 550.1,100.9 550.1,100.9 551.9,100.9 551.9,100.9 552.4,100.9 552.4,100.9 554.7,100.9 554.7,100.9 555.7,100.9 555.7,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.2,100.9 557.5,100.9 557.5,100.9 561.3,100.9 561.3,94.6 568.1,94.6 568.1,94.6 568.9,94.6 568.9,94.6 570.9,94.6 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 570.9,100.9 574.7,100.9 574.7,91.5 574.7,91.5 574.7,91.5 578.0,91.5 578.0,91.5 578.0,91.5 578.0,91.5 584.3,91.5 584.3,91.5 584.9,91.5 584.9,91.5 584.9,91.5 584.9,91.5 590.2,91.5 590.2,91.5 590.9,91.5 590.9,91.5 590.9,91.5 590.9,91.5 590.9,91.5 590.9,91.5 595.0,91.5 595.0,91.5 595.0,91.5 595.0,91.5 598.3,91.5 598.3,91.5 598.8,91.5 598.8,91.5 599.5,91.5 599.5,85.2 604.9,85.2 604.9,85.2 604.9,85.2 604.9,85.2 608.4,85.2 608.4,85.2 608.9,85.2 608.9,85.2 612.5,85.2 612.5,91.5 617.5,91.5 617.5,91.5 618.3,91.5 618.3,91.5 619.6,91.5 619.6,97.7 624.9,97.7 624.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,91.5 629.9,94.6 629.9,94.6 629.9,94.6 632.7,94.6 632.7,94.6 633.5,94.6 633.5,94.6 634.0,94.6 634.0,94.6 634.0,94.6 634.0,94.6" class="line" /><text x="634" y="88.6" class="value" text-anchor="end">-22</text></svg><div class="viz-legend"><span class="key"><i class="swatch fill-ahead"></i>IRL ahead</span><span class="key"><i class="swatch fill-behind"></i>IRL behind</span></div></figure>
+</section>
+
+<section class="keep">
+<h2>Shooting</h2>
+<div class="cols">
+  <div>
+    <div class="scroll-x">
+<table>
+<caption>Shooting by zone</caption>
+<thead><tr><th class="left">Zone</th><th data-sortable>M</th><th data-sortable>A</th>
+<th data-sortable>FG%</th><th data-sortable>Share</th><th data-sortable>Pts/att</th></tr></thead>
+<tbody>
+  <tr>
+    <td class="left">Rim</td>
+    <td>13</td>
+    <td>29</td>
+    <td>44.8</td>
+    <td>44.6</td>
+    <td>0.90</td>
+  </tr>
+  <tr>
+    <td class="left">Paint</td>
+    <td>2</td>
+    <td>7</td>
+    <td>28.6</td>
+    <td>10.8</td>
+    <td>0.57</td>
+  </tr>
+  <tr>
+    <td class="left">Mid-range</td>
+    <td>3</td>
+    <td>4</td>
+    <td>75.0</td>
+    <td>6.2</td>
+    <td>1.50</td>
+  </tr>
+  <tr>
+    <td class="left">Corner 3</td>
+    <td>2</td>
+    <td>6</td>
+    <td>33.3</td>
+    <td>9.2</td>
+    <td>1.00</td>
+  </tr>
+  <tr>
+    <td class="left">Wing 3</td>
+    <td>2</td>
+    <td>9</td>
+    <td>22.2</td>
+    <td>13.8</td>
+    <td>0.67</td>
+  </tr>
+  <tr>
+    <td class="left">Top 3</td>
+    <td>3</td>
+    <td>10</td>
+    <td>30.0</td>
+    <td>15.4</td>
+    <td>0.90</td>
+  </tr>
+</tbody>
+</table>
+</div>
+
+  </div>
+  <div class="col-narrow">
+    <h3>IRL shot chart</h3>
+    <figure class="viz"><svg class="viz-shotchart" viewBox="0 0 268 197" width="300" height="219" role="img" aria-label="Ireland shot chart" preserveAspectRatio="xMidYMid meet"><g class="court" fill="none" stroke="var(--court-line)" stroke-width="1.1"><rect x="0.75" y="0.75" width="267.0" height="195.4" /><rect x="90.4" y="93.1" width="87.7" height="103.8" /><circle cx="134.2" cy="93.1" r="32.2" /><circle cx="134.2" cy="168.9" r="4.0" /><line x1="118.1" y1="175.4" x2="150.4" y2="175.4" /><path d="M 16.1 196.9 L 16.1 143.6 A 120.8 120.8 0 0 1 252.4 143.6 L 252.4 196.9" /></g><g class="shot missed"><circle cx="67.2" cy="50.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="0.2" cy="152.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="147.2" cy="160.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="46.2" cy="63.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="205.2" cy="47.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="94.2" cy="44.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="170.2" cy="36.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="54.2" cy="58.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="131.2" cy="150.9" r="3.6"><title>2PtsFG under the basket, points after turnover, layup missed</title></circle><circle cx="122.2" cy="143.9" r="3.6"><title>layup missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="101.2" cy="158.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="145.2" cy="160.9" r="3.6"><title>2PtsFG under the basket, jump shot missed</title></circle><circle cx="258.2" cy="123.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="122.2" cy="165.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="156.2" cy="160.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="254.2" cy="99.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="194.2" cy="41.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="161.2" cy="122.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="37.2" cy="65.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="124.2" cy="158.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="224.2" cy="56.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="111.2" cy="164.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="143.2" cy="30.9" r="3.6"><title>3pt jump shot from center missed</title></circle><circle cx="139.2" cy="145.9" r="3.6"><title>2pt driving layup missed</title></circle><circle cx="243.2" cy="78.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="112.2" cy="149.9" r="3.6"><title>layup missed</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket missed</title></circle><circle cx="150.2" cy="158.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="123.2" cy="153.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="145.2" cy="161.9" r="3.6"><title>2PtsFG under the basket, layup missed</title></circle><circle cx="147.2" cy="147.9" r="3.6"><title>layup missed</title></circle><circle cx="197.2" cy="116.9" r="3.6"><title>2PtsFG inside right, jump shot missed</title></circle><circle cx="5.2" cy="160.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="4.2" cy="150.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="134.2" cy="112.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="108.2" cy="28.9" r="3.6"><title>3pt jump shot missed</title></circle><circle cx="103.2" cy="150.9" r="3.6"><title>2pt jump shot missed</title></circle><circle cx="127.2" cy="31.9" r="3.6"><title>3pt jump shot from center missed</title></circle></g><g class="shot made"><circle cx="28.2" cy="79.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="152.2" cy="156.9" r="3.6"><title>2PtsFG under the basket, jump shot made</title></circle><circle cx="251.2" cy="136.9" r="3.6"><title>2PtsFG inside right, jump shot made</title></circle><circle cx="246.2" cy="135.9" r="3.6"><title>2PtsFG inside right, jump shot made</title></circle><circle cx="152.2" cy="153.9" r="3.6"><title>layup made</title></circle><circle cx="152.2" cy="139.9" r="3.6"><title>layup made</title></circle><circle cx="1.2" cy="143.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="151.2" cy="156.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="92.2" cy="154.9" r="3.6"><title>2PtsFG inside paint, points from fastbreak + after turnover, jump shot made</title></circle><circle cx="127.2" cy="32.9" r="3.6"><title>3pt jump shot from center made</title></circle><circle cx="137.2" cy="151.9" r="3.6"><title>2PtsFG under the basket, points from second chance + after turnover, layup made</title></circle><circle cx="152.2" cy="158.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="16.2" cy="100.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="262.2" cy="146.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="121.2" cy="166.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="118.2" cy="157.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="137.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, points from fastbreak + after turnover, dunk made</title></circle><circle cx="134.2" cy="165.9" r="3.6"><title>2PtsFG under the basket made</title></circle><circle cx="62.2" cy="41.9" r="3.6"><title>3pt jump shot made</title></circle><circle cx="147.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="116.2" cy="170.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle><circle cx="88.2" cy="157.9" r="3.6"><title>2pt jump shot made</title></circle><circle cx="131.2" cy="26.9" r="3.6"><title>3pt pullup jump shot made</title></circle><circle cx="153.2" cy="169.9" r="3.6"><title>2PtsFG under the basket, fast break, layup made</title></circle><circle cx="148.2" cy="163.9" r="3.6"><title>2PtsFG under the basket, layup made</title></circle></g></svg><div class="viz-legend"><span class="key"><i class="swatch made"></i>Made (25)</span><span class="key"><i class="swatch missed"></i>Missed (40)</span></div><p class="viz-note">Free throws carry no court location and are excluded.</p></figure>
+  </div>
+</div>
+</section>
+
+<section>
+<h2>Box score &mdash; Ireland</h2>
+<div class="scroll-x">
+<table>
+<thead>
+  <tr>
+    <th class="left">#</th><th class="left" data-sortable>Player</th>
+    <th class="left" data-sortable>Pos</th>
+      <th data-sortable>MIN</th><th data-sortable>PTS</th><th data-sortable>REB</th>
+      <th data-sortable>AST</th><th data-sortable>+/&ndash;</th>
+    <th>FG</th><th>3PT</th><th>FT</th>
+    <th data-sortable>USG%</th><th data-sortable>TS%</th><th data-sortable>eFG%</th>
+    <th data-sortable>REB%</th><th data-sortable>AST%</th>
+    <th data-sortable>TOV%</th><th data-sortable>FD/40</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="left">0</td>
+    <td class="left name">Kieran Quinn</td>
+    <td class="left muted">F</td>
+      <td>30.5</td>
+      <td>11</td>
+      <td>3</td>
+      <td>2</td>
+      <td class="neg">-7</td>
+    <td>4/10</td>
+    <td>3/8</td>
+    <td>0/0</td>
+    <td>16.5</td>
+    <td>55.0</td>
+    <td>55.0</td>
+    <td>4.5</td>
+    <td>13.3</td>
+    <td>16.7</td>
+    <td>2.6</td>
+  </tr>
+  <tr>
+    <td class="left">2</td>
+    <td class="left name">Declan Ehigie</td>
+    <td class="left muted">G</td>
+      <td>29.4</td>
+      <td>6</td>
+      <td>4</td>
+      <td>0</td>
+      <td class="neg">-3</td>
+    <td>2/5</td>
+    <td>0/3</td>
+    <td>2/3</td>
+    <td>16.1</td>
+    <td>47.5</td>
+    <td>40.0</td>
+    <td>6.2</td>
+    <td>0.0</td>
+    <td>44.2</td>
+    <td>2.7</td>
+  </tr>
+  <tr>
+    <td class="left">30</td>
+    <td class="left name">Mark Burns</td>
+    <td class="left muted">G</td>
+      <td>25.2</td>
+      <td>13</td>
+      <td>10</td>
+      <td>2</td>
+      <td class="neg">-11</td>
+    <td>3/10</td>
+    <td>0/1</td>
+    <td>7/10</td>
+    <td>28.9</td>
+    <td>45.1</td>
+    <td>30.0</td>
+    <td>18.0</td>
+    <td>15.7</td>
+    <td>17.2</td>
+    <td>12.7</td>
+  </tr>
+  <tr>
+    <td class="left">9</td>
+    <td class="left name">Fryderyk Klimas</td>
+    <td class="left muted">SG</td>
+      <td>25.1</td>
+      <td>6</td>
+      <td>2</td>
+      <td>6</td>
+      <td class="neg">-2</td>
+    <td>3/5</td>
+    <td>0/1</td>
+    <td>0/0</td>
+    <td>16.7</td>
+    <td>60.0</td>
+    <td>60.0</td>
+    <td>3.6</td>
+    <td>47.3</td>
+    <td>50.0</td>
+    <td>1.6</td>
+  </tr>
+  <tr>
+    <td class="left">24</td>
+    <td class="left name">Aidan McGrath</td>
+    <td class="left muted">F</td>
+      <td>21.9</td>
+      <td>13</td>
+      <td>10</td>
+      <td>0</td>
+      <td class="">+0</td>
+    <td>6/9</td>
+    <td>1/1</td>
+    <td>0/0</td>
+    <td>19.1</td>
+    <td>72.2</td>
+    <td>72.2</td>
+    <td>20.8</td>
+    <td>0.0</td>
+    <td>10.0</td>
+    <td>0.0</td>
+  </tr>
+  <tr>
+    <td class="left">21</td>
+    <td class="left name">Sean Patterson</td>
+    <td class="left muted">G</td>
+      <td>18.8</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td class="neg">-17</td>
+    <td>1/6</td>
+    <td>1/4</td>
+    <td>0/0</td>
+    <td>17.9</td>
+    <td>25.0</td>
+    <td>25.0</td>
+    <td>2.4</td>
+    <td>9.3</td>
+    <td>25.0</td>
+    <td>4.3</td>
+  </tr>
+  <tr>
+    <td class="left">4</td>
+    <td class="left name">Nathan Gbinigie</td>
+    <td class="left muted">F</td>
+      <td>18.7</td>
+      <td>4</td>
+      <td>3</td>
+      <td>2</td>
+      <td class="neg">-17</td>
+    <td>2/5</td>
+    <td>0/1</td>
+    <td>0/0</td>
+    <td>17.9</td>
+    <td>40.0</td>
+    <td>40.0</td>
+    <td>7.3</td>
+    <td>20.6</td>
+    <td>37.5</td>
+    <td>0.0</td>
+  </tr>
+  <tr>
+    <td class="left">13</td>
+    <td class="left name">Aivaras Buzas</td>
+    <td class="left muted">G</td>
+      <td>11.8</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td class="neg">-23</td>
+    <td>0/6</td>
+    <td>0/1</td>
+    <td>0/0</td>
+    <td>21.3</td>
+    <td>0.0</td>
+    <td>0.0</td>
+    <td>11.5</td>
+    <td>0.0</td>
+    <td>0.0</td>
+    <td>0.0</td>
+  </tr>
+  <tr>
+    <td class="left">8</td>
+    <td class="left name">Michael Cunningham Smyth</td>
+    <td class="left muted"></td>
+      <td>11.7</td>
+      <td>11</td>
+      <td>3</td>
+      <td>0</td>
+      <td class="neg">-19</td>
+    <td>4/9</td>
+    <td>2/5</td>
+    <td>1/4</td>
+    <td>42.3</td>
+    <td>51.1</td>
+    <td>55.6</td>
+    <td>11.7</td>
+    <td>0.0</td>
+    <td>8.5</td>
+    <td>6.9</td>
+  </tr>
+  <tr>
+    <td class="left">15</td>
+    <td class="left name">Patrick O'Keeffe</td>
+    <td class="left muted">F</td>
+      <td>4.2</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td class="pos">+2</td>
+    <td>0/0</td>
+    <td>0/0</td>
+    <td>0/0</td>
+    <td>10.1</td>
+    <td><span class="muted">&ndash;</span></td>
+    <td><span class="muted">&ndash;</span></td>
+    <td>11.0</td>
+    <td>0.0</td>
+    <td>100.0</td>
+    <td>0.0</td>
+  </tr>
+</tbody>
+</table>
+</div>
+
+<p class="note">USG% is the share of team possessions used while on court.
+TS% counts threes and free throws properly. FD/40 is fouls drawn per 40 minutes.</p>
+</section>
+
+<section>
+<h2>Lineups</h2>
+<div class="scroll-x">
+<table>
+<caption>Five-man units, at least 90 seconds together</caption><thead>
+  <tr>
+    <th class="left">Lineup</th><th data-sortable>MIN</th><th data-sortable>Gm</th>
+    <th data-sortable>PF</th><th data-sortable>PA</th><th data-sortable>+/&ndash;</th>
+    <th data-sortable>Net/100</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="left">0 Quinn &middot; 2 Ehigie &middot; 9 Klimas &middot; 30 Burns &middot; 24 McGrath</td>
+    <td>9.3</td>
+    <td>1</td>
+    <td>19</td>
+    <td>15</td>
+    <td class="pos">+4</td>
+    <td class="pos">+21.6</td>
+  </tr>
+  <tr>
+    <td class="left">4 Gbinigie &middot; 0 Quinn &middot; 2 Ehigie &middot; 21 Patterson &middot; 24 McGrath</td>
+    <td>4.7</td>
+    <td>1</td>
+    <td>10</td>
+    <td>3</td>
+    <td class="pos">+7</td>
+    <td class="pos">+75.0</td>
+  </tr>
+  <tr>
+    <td class="left">0 Quinn &middot; 2 Ehigie &middot; 9 Klimas &middot; 21 Patterson &middot; 15 O'Keeffe</td>
+    <td>3.9</td>
+    <td>1</td>
+    <td>7</td>
+    <td>4</td>
+    <td class="pos">+3</td>
+    <td class="pos">+38.6</td>
+  </tr>
+  <tr>
+    <td class="left">4 Gbinigie &middot; 0 Quinn &middot; 2 Ehigie &middot; 9 Klimas &middot; 30 Burns</td>
+    <td>3.6</td>
+    <td>1</td>
+    <td>5</td>
+    <td>9</td>
+    <td class="neg">-4</td>
+    <td class="neg">-55.3</td>
+  </tr>
+  <tr>
+    <td class="left">0 Quinn &middot; 13 Buzas &middot; 9 Klimas &middot; 30 Burns &middot; 8 Smyth</td>
+    <td>3.4</td>
+    <td>1</td>
+    <td>5</td>
+    <td>8</td>
+    <td class="neg">-3</td>
+    <td class="neg">-43.9</td>
+  </tr>
+  <tr>
+    <td class="left">13 Buzas &middot; 9 Klimas &middot; 30 Burns &middot; 24 McGrath &middot; 8 Smyth</td>
+    <td>3.2</td>
+    <td>1</td>
+    <td>7</td>
+    <td>11</td>
+    <td class="neg">-4</td>
+    <td class="neg">-62.2</td>
+  </tr>
+  <tr>
+    <td class="left">4 Gbinigie &middot; 2 Ehigie &middot; 21 Patterson &middot; 30 Burns &middot; 24 McGrath</td>
+    <td>2.9</td>
+    <td>1</td>
+    <td>3</td>
+    <td>2</td>
+    <td class="pos">+1</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+  </tr>
+  <tr>
+    <td class="left">4 Gbinigie &middot; 13 Buzas &middot; 21 Patterson &middot; 3 Elmahi &middot; 8 Smyth</td>
+    <td>2.5</td>
+    <td>1</td>
+    <td>0</td>
+    <td>12</td>
+    <td class="neg">-12</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+  </tr>
+  <tr>
+    <td class="left">4 Gbinigie &middot; 0 Quinn &middot; 2 Ehigie &middot; 21 Patterson &middot; 30 Burns</td>
+    <td>1.9</td>
+    <td>1</td>
+    <td>2</td>
+    <td>7</td>
+    <td class="neg">-5</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+  </tr>
+  <tr>
+    <td class="left">0 Quinn &middot; 13 Buzas &middot; 2 Ehigie &middot; 21 Patterson &middot; 24 McGrath</td>
+    <td>1.5</td>
+    <td>1</td>
+    <td>0</td>
+    <td>5</td>
+    <td class="neg">-5</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+  </tr>
+</tbody>
+</table>
+</div>
+<p class="note">Net/100 assumes two possessions per minute and is
+withheld below three minutes together. Minutes are the sample each lineup is
+judged on.</p>
+
+</section>
+
+<section>
+<h2>On / off</h2>
+<div class="scroll-x">
+<table>
+<thead>
+  <tr><th class="left">#</th><th class="left" data-sortable>Player</th>
+      <th data-sortable>On min</th><th data-sortable>On net/100</th>
+      <th data-sortable>Off min</th><th data-sortable>Off net/100</th>
+      <th data-sortable>Swing</th></tr>
+</thead>
+<tbody>
+  <tr>
+    <td class="left">0</td>
+    <td class="left name">Kieran Quinn</td>
+    <td>30.5</td>
+    <td class="neg">-11.5</td>
+    <td>9.5</td>
+    <td class="neg">-78.9</td>
+    <td class="pos">+67.5</td>
+  </tr>
+  <tr>
+    <td class="left">2</td>
+    <td class="left name">Declan Ehigie</td>
+    <td>29.4</td>
+    <td class="neg">-5.1</td>
+    <td>10.6</td>
+    <td class="neg">-90.0</td>
+    <td class="pos">+85.0</td>
+  </tr>
+  <tr>
+    <td class="left">30</td>
+    <td class="left name">Mark Burns</td>
+    <td>25.2</td>
+    <td class="neg">-21.8</td>
+    <td>14.8</td>
+    <td class="neg">-37.1</td>
+    <td class="pos">+15.3</td>
+  </tr>
+  <tr>
+    <td class="left">9</td>
+    <td class="left name">Fryderyk Klimas</td>
+    <td>25.1</td>
+    <td class="neg">-4.0</td>
+    <td>14.9</td>
+    <td class="neg">-67.2</td>
+    <td class="pos">+63.2</td>
+  </tr>
+  <tr>
+    <td class="left">24</td>
+    <td class="left name">Aidan McGrath</td>
+    <td>21.9</td>
+    <td class="">+0.0</td>
+    <td>18.1</td>
+    <td class="neg">-60.7</td>
+    <td class="pos">+60.7</td>
+  </tr>
+  <tr>
+    <td class="left">21</td>
+    <td class="left name">Sean Patterson</td>
+    <td>18.8</td>
+    <td class="neg">-45.3</td>
+    <td>21.2</td>
+    <td class="neg">-11.8</td>
+    <td class="neg">-33.5</td>
+  </tr>
+  <tr>
+    <td class="left">4</td>
+    <td class="left name">Nathan Gbinigie</td>
+    <td>18.7</td>
+    <td class="neg">-45.5</td>
+    <td>21.3</td>
+    <td class="neg">-11.7</td>
+    <td class="neg">-33.7</td>
+  </tr>
+  <tr>
+    <td class="left">13</td>
+    <td class="left name">Aivaras Buzas</td>
+    <td>11.8</td>
+    <td class="neg">-97.3</td>
+    <td>28.2</td>
+    <td class="pos">+1.8</td>
+    <td class="neg">-99.1</td>
+  </tr>
+  <tr>
+    <td class="left">8</td>
+    <td class="left name">Michael Cunningham Smyth</td>
+    <td>11.7</td>
+    <td class="neg">-81.5</td>
+    <td>28.4</td>
+    <td class="neg">-5.3</td>
+    <td class="neg">-76.3</td>
+  </tr>
+  <tr>
+    <td class="left">15</td>
+    <td class="left name">Patrick O'Keeffe</td>
+    <td>4.2</td>
+    <td class="pos">+24.1</td>
+    <td>35.9</td>
+    <td class="neg">-33.5</td>
+    <td class="pos">+57.6</td>
+  </tr>
+  <tr>
+    <td class="left">3</td>
+    <td class="left name">Shareef Elmahi</td>
+    <td>2.8</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+    <td>37.2</td>
+    <td class="neg">-12.1</td>
+    <td class=""><span class="muted">&ndash;</span></td>
+  </tr>
+</tbody>
+</table>
+</div>
+<p class="note">On/off from a single game covers very few possessions. Read it as
+a description of what happened, not as a measure of the player.</p>
+</section>
+
+
+<div class="colophon">
+  <span>Derived from the official FIBA box score and play-by-play.</span>
+  <span>Generated Sun 02 Aug 2026, 19:11 (Irish time)</span>
+</div>
+
+<div class="running-foot">
+  FIBA U18 Eurobasket 2026 Division B &middot; IRL v NED game review</div>
+
+</div>
+
+<script>
+/* Site behaviour. Kept to plain DOM work so a report stays one self-contained
+   file: no build step, no dependencies, and the page is fully readable with
+   JavaScript switched off. */
+(function () {
+  // Dropdown menus in the nav bar.
+  document.addEventListener('click', function (e) {
+    var button = e.target.closest('.drop > button');
+    document.querySelectorAll('.drop.open').forEach(function (d) {
+      if (!button || d !== button.parentNode) {
+        d.classList.remove('open');
+        d.querySelector('button').setAttribute('aria-expanded', 'false');
+      }
+    });
+    if (button) {
+      var drop = button.parentNode;
+      var open = drop.classList.toggle('open');
+      button.setAttribute('aria-expanded', open ? 'true' : 'false');
+      e.preventDefault();
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.drop.open').forEach(function (d) {
+        d.classList.remove('open');
+      });
+    }
+  });
+
+  // Sortable tables. A cell may carry data-value to sort on something other
+  // than what it displays, which is how "3-4" sorts by win percentage.
+  function cellValue(row, index) {
+    var cell = row.children[index];
+    if (!cell) return { n: null, s: '' };
+    if (cell.dataset.value !== undefined) {
+      var explicit = parseFloat(cell.dataset.value);
+      return { n: isNaN(explicit) ? null : explicit, s: cell.dataset.value };
+    }
+    var text = cell.textContent.trim();
+    var cleaned = text.replace(/[+,%\s]/g, '').replace(/\u2212/g, '-');
+    var number = parseFloat(cleaned);
+    var numeric = /^[-+]?[0-9.]+$/.test(cleaned) && !isNaN(number);
+    return { n: numeric ? number : null, s: text.toLowerCase() };
+  }
+
+  document.addEventListener('click', function (e) {
+    var th = e.target.closest('th[data-sortable]');
+    if (!th) return;
+    var table = th.closest('table');
+    var head = th.parentNode;
+    var index = Array.prototype.indexOf.call(head.children, th);
+    var dir = th.dataset.dir === 'desc' ? 'asc' : 'desc';
+
+    head.querySelectorAll('th[data-sortable]').forEach(function (other) {
+      if (other !== th) other.removeAttribute('data-dir');
+    });
+    th.dataset.dir = dir;
+
+    var body = table.tBodies[0];
+    var rows = Array.prototype.filter.call(body.rows, function (r) {
+      return !r.classList.contains('total');   // aggregate rows stay pinned
+    });
+    var pinned = Array.prototype.filter.call(body.rows, function (r) {
+      return r.classList.contains('total');
+    });
+
+    rows.sort(function (a, b) {
+      var x = cellValue(a, index), y = cellValue(b, index);
+      var result;
+      if (x.n !== null && y.n !== null) result = x.n - y.n;
+      else if (x.n !== null) result = 1;      // blanks sort to the bottom
+      else if (y.n !== null) result = -1;
+      else result = x.s.localeCompare(y.s);
+      return dir === 'asc' ? result : -result;
+    });
+
+    rows.concat(pinned).forEach(function (r) { body.appendChild(r); });
+
+    // Renumber a leading rank column if the table has one.
+    if (table.dataset.rankColumn !== undefined) {
+      var col = parseInt(table.dataset.rankColumn, 10);
+      rows.forEach(function (r, i) {
+        if (r.children[col]) r.children[col].textContent = i + 1;
+      });
+    }
+  });
+
+  // Offence / defence / combined toggle.
+  document.addEventListener('click', function (e) {
+    var button = e.target.closest('.viewtoggle button[data-view]');
+    if (!button) return;
+    var group = button.closest('.viewtoggle');
+    var table = document.querySelector(group.dataset.target);
+    if (!table) return;
+    group.querySelectorAll('button').forEach(function (b) {
+      b.setAttribute('aria-pressed', b === button ? 'true' : 'false');
+    });
+    table.classList.remove('view-off', 'view-def', 'view-all');
+    table.classList.add('view-' + button.dataset.view);
+  });
+})();
+</script>
+</body>
+</html>

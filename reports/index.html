@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FIBA U16 Eurobasket 2026 Division B reports</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --surface-1: #fcfcfb;
+  --plane: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11,11,11,0.10);
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --good: #0ca30c;
+  --critical: #d03b3b;
+  --warning: #fab219;
+  --court-line: #c3c2b7;
+  --track: #eeede8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface-1: #1a1a19;
+    --plane: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --good: #0ca30c;
+    --critical: #d03b3b;
+    --court-line: #4a4a46;
+    --track: #262624;
+  }
+}
+:root[data-theme="dark"] {
+  --surface-1: #1a1a19;
+  --plane: #0d0d0d;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255,255,255,0.10);
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --court-line: #4a4a46;
+  --track: #262624;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--plane);
+  color: var(--text-primary);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px 64px; }
+
+header.masthead { margin-bottom: 22px; }
+.eyebrow {
+  font-size: 12px; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--text-muted); margin: 0 0 6px;
+}
+h1 { font-size: 27px; line-height: 1.2; margin: 0 0 6px; font-weight: 650; }
+.subtitle { color: var(--text-secondary); margin: 0; font-size: 14px; }
+
+h2 {
+  font-size: 17px; font-weight: 650; margin: 30px 0 12px;
+  padding-bottom: 7px; border-bottom: 1px solid var(--border);
+}
+h3 { font-size: 14px; font-weight: 650; margin: 18px 0 8px; color: var(--text-secondary); }
+
+.card {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px; margin-bottom: 14px;
+}
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 10px; }
+.tile {
+  background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+}
+.tile .label {
+  font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--text-muted); margin-bottom: 5px;
+}
+.tile .figure { font-size: 25px; font-weight: 650; line-height: 1.1; }
+.tile .sub { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+.tile .figure.pos { color: var(--good); }
+.tile .figure.neg { color: var(--critical); }
+
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 460px; }
+th, td { padding: 7px 8px; text-align: right; white-space: nowrap; }
+th {
+  font-size: 11px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 600;
+  border-bottom: 1px solid var(--axis);
+}
+td { border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+th.left, td.left { text-align: left; white-space: normal; }
+tbody tr:last-child td { border-bottom: none; }
+tr.total td { font-weight: 650; border-top: 1px solid var(--axis); }
+td.pos { color: var(--good); }
+td.neg { color: var(--critical); }
+.muted { color: var(--text-muted); }
+
+/* Charts */
+.viz { margin: 0; }
+.viz svg { display: block; max-width: 100%; height: auto; overflow: visible; }
+.viz .track { fill: var(--track); }
+.viz .bar.series-1 { fill: var(--series-1); }
+.viz .bar.series-2 { fill: var(--series-2); }
+.viz .reference { stroke: var(--text-muted); stroke-width: 2; }
+.viz .grid { stroke: var(--grid); stroke-width: 1; }
+.viz .zero { stroke: var(--axis); stroke-width: 1.5; }
+.viz .line { fill: none; stroke: var(--text-secondary); stroke-width: 2;
+             stroke-linejoin: round; }
+.viz .fill-ahead { fill: var(--series-1); opacity: .30; }
+.viz .fill-behind { fill: var(--critical); opacity: .30; }
+.viz text { font: 11px system-ui, -apple-system, sans-serif; }
+.viz .axis-label { fill: var(--text-primary); font-weight: 600; }
+.viz .axis-hint { fill: var(--text-muted); font-size: 10px; }
+.viz .axis-tick { fill: var(--text-muted); }
+.viz .value { fill: var(--text-secondary); font-weight: 600;
+              font-variant-numeric: tabular-nums; }
+
+.viz-shotchart { background: transparent; }
+.shot.made circle { fill: var(--series-1); stroke: var(--surface-1); stroke-width: 1.6; }
+.shot.missed circle { fill: none; stroke: var(--text-muted); stroke-width: 1.6; }
+
+.viz-legend {
+  display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px;
+  font-size: 12px; color: var(--text-secondary);
+}
+.viz-legend .key { display: inline-flex; align-items: center; gap: 6px; }
+.swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.swatch.series-1, .swatch.made { background: var(--series-1); }
+.swatch.series-2 { background: var(--series-2); }
+.swatch.missed { border: 1.6px solid var(--text-muted); background: transparent; }
+.swatch.reference { background: var(--text-muted); width: 3px; height: 13px; border-radius: 1px; }
+.swatch.fill-ahead { background: var(--series-1); opacity: .45; }
+.swatch.fill-behind { background: var(--critical); opacity: .45; }
+.viz-note { font-size: 11.5px; color: var(--text-muted); margin: 8px 0 0; }
+
+.banner {
+  border-left: 3px solid var(--warning); background: var(--surface-1);
+  border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 14px;
+  font-size: 13px; color: var(--text-secondary);
+}
+.banner.alert { border-left-color: var(--critical); }
+
+details.table-view { margin-top: 10px; }
+details.table-view summary {
+  cursor: pointer; font-size: 12px; color: var(--text-secondary);
+  padding: 4px 0;
+}
+
+footer.colophon {
+  margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text-muted);
+}
+a { color: var(--series-1); }
+.report-list { list-style: none; padding: 0; margin: 0; }
+.report-list li {
+  border-bottom: 1px solid var(--grid); padding: 11px 0;
+  display: flex; justify-content: space-between; gap: 12px; align-items: baseline;
+}
+.report-list li:last-child { border-bottom: none; }
+.report-list .when { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="masthead">
+  <p class="eyebrow">FIBA U16 Eurobasket 2026 Division B</p>
+  <h1>Ireland analytics</h1>
+  <p class="subtitle">0 of 81 games played &middot; newest reports first
+</p>
+</header>
+
+
+<p class="banner"><strong>Next up:</strong> Netherlands &mdash; Thu 06 Aug, 10:00</p>
+
+<h2>Standing reports</h2>
+<ul class="report-list">
+  <li><a href="tournament_teams.html">All teams: four factors and ratings</a>
+      <span class="when">updated now</span></li>
+</ul>
+
+<h2>Scouting reports</h2>
+<p class="viz-note">No opponent has played a game yet.</p>
+
+<h2>Game reviews</h2>
+<p class="viz-note">No games played yet.</p>
+
+
+<footer class="colophon">
+  Generated Sun 02 Aug 2026, 18:27 (Irish time) from the FIBA LiveStats feed.
+  Figures are derived from the official box score and play-by-play.
+</footer>
+</div>
+</body>
+</html>

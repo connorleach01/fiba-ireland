@@ -1,0 +1,140 @@
+{% extends "_base.html.j2" %}
+{% import "_macros.j2" as m %}
+
+{% block title %}{{ us.code }} v {{ them.code }} game review{% endblock %}
+{% block eyebrow %}{{ event_name }} &middot; Game review{% endblock %}
+{% block kickerright %}{{ played_at }}{% endblock %}
+{% block heading %}{{ flag(us.code, 24) }}{{ us.name }} {{ score }}&ndash;{{ opp_score }} {{ them.name }}<span class="flag-wrap">{{ flag(them.code, 24) }}</span>{% endblock %}
+{% block subtitle %}
+{{ 'Win' if won else 'Loss' }}{% if venue %} &middot; {{ venue }}{% endif %} &middot;
+{{ '%.0f'|format(ff.possessions or 0) }} possessions
+&middot; Net {{ '%+.1f'|format(ff.net_rating or 0) }} per 100
+{% endblock %}
+{% block footid %}{{ us.code }} v {{ them.code }} game review{% endblock %}
+
+{% block content %}
+
+<section class="keep">
+<h2>Result</h2>
+<div class="statline">
+  {{ m.stat('Final', '%d&ndash;%d'|format(score, opp_score), 'Win' if won else 'Loss',
+            'pos' if won else 'neg') }}
+  {{ m.stat('Off rating', '%.1f'|format(ff.off_rating or 0), 'points / 100 poss') }}
+  {{ m.stat('Def rating', '%.1f'|format(ff.def_rating or 0), 'allowed / 100 poss') }}
+  {{ m.stat('Net', '%+.1f'|format(ff.net_rating or 0), 'per 100 poss',
+            'pos' if (ff.net_rating or 0) > 0 else 'neg') }}
+  {{ m.stat('Pace', '%.0f'|format(ff.possessions or 0),
+            'event avg %.0f'|format(league.pace or 0)) }}
+  {{ m.stat('True shooting', '%.1f%%'|format(ff.ts_pct or 0), 'TS%') }}
+</div>
+
+<div class="cols" style="margin-top:10px">
+  <div>
+    <table>
+      <caption>Score by period</caption>
+      <thead><tr><th class="left">Team</th>{% for q in periods %}<th>{{ q }}</th>{% endfor %}<th>Final</th></tr></thead>
+      <tbody>
+        <tr class="highlight"><td class="left">{{ flag(us.code) }}{{ us.code }}</td>
+          {% for q in periods %}<td>{{ our_periods.get(q, '') }}</td>{% endfor %}
+          <td>{{ score }}</td></tr>
+        <tr><td class="left">{{ flag(them.code) }}{{ them.code }}</td>
+          {% for q in periods %}<td>{{ their_periods.get(q, '') }}</td>{% endfor %}
+          <td>{{ opp_score }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <table>
+      <caption>Scoring breakdown</caption>
+      <thead><tr><th class="left">Category</th><th>{{ us.code }}</th><th>{{ them.code }}</th><th>Diff</th></tr></thead>
+      <tbody>
+      {% for label, key in [('Points in paint','A_PIP'), ('Fast break','A_FBP'),
+                            ('Second chance','A_SCP'), ('Off turnovers','A_PAT'),
+                            ('Bench points','A_PFB'), ('Turnovers','TO')] %}
+        {% set a = totals[key] or 0 %}{% set b = opp_totals[key] or 0 %}
+        <tr>
+          <td class="left">{{ label }}</td><td>{{ a }}</td><td>{{ b }}</td>
+          <td class="{{ m.tone((b - a) if key == 'TO' else (a - b)) }}">{{ '%+d'|format(a - b) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+</section>
+
+<section class="keep">
+<h2>Four factors</h2>
+{{ m.four_factor_table(ff, off, league, us.code, them.code) }}
+{{ charts.four_factors }}
+<p class="note">Bars are {{ us.code }} against what {{ us.code }} allowed. The
+vertical rule marks the competition average for that factor.</p>
+</section>
+
+<section class="keep">
+<h2>How the game moved</h2>
+{{ charts.timeline }}
+</section>
+
+<section class="keep">
+<h2>Shooting</h2>
+<div class="cols">
+  <div>
+    {{ m.zone_table(zones) }}
+  </div>
+  <div class="col-narrow">
+    <h3>{{ us.code }} shot chart</h3>
+    {{ charts.shots }}
+  </div>
+</div>
+</section>
+
+<section>
+<h2>Box score &mdash; {{ us.name }}</h2>
+{{ m.player_table(players, per_game=False) }}
+<p class="note">USG% is the share of team possessions used while on court.
+TS% counts threes and free throws properly. FD/40 is fouls drawn per 40 minutes.</p>
+</section>
+
+<section>
+<h2>Lineups</h2>
+{% if lineups_available %}
+{{ m.lineup_table(lineups, 'Five-man units, at least 90 seconds together') }}
+{% else %}
+<p class="banner alert">Lineup reconstruction did not pass validation for this
+game, so lineup and on/off figures are withheld rather than shown unverified.</p>
+{% endif %}
+</section>
+
+{% if lineups_available %}
+<section>
+<h2>On / off</h2>
+<div class="scroll-x">
+<table>
+<thead>
+  <tr><th class="left">#</th><th class="left" data-sortable>Player</th>
+      <th data-sortable>On min</th><th data-sortable>On net/100</th>
+      <th data-sortable>Off min</th><th data-sortable>Off net/100</th>
+      <th data-sortable>Swing</th></tr>
+</thead>
+<tbody>
+{% for p in on_off %}
+  <tr>
+    <td class="left">{{ p.uniform_number or '' }}</td>
+    <td class="left name">{{ p.full_name }}</td>
+    <td>{{ m.num(p.on_minutes) }}</td>
+    <td class="{{ m.tone(p.on_net) }}">{{ m.signed(p.on_net) }}</td>
+    <td>{{ m.num(p.off_minutes) }}</td>
+    <td class="{{ m.tone(p.off_net) }}">{{ m.signed(p.off_net) }}</td>
+    <td class="{{ m.tone(p.swing) }}">{{ m.signed(p.swing) }}</td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<p class="note">On/off from a single game covers very few possessions. Read it as
+a description of what happened, not as a measure of the player.</p>
+</section>
+{% endif %}
+
+{% endblock %}

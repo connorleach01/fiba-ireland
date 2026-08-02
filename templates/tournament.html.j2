@@ -1,0 +1,115 @@
+{% extends "_base.html.j2" %}
+{% import "_macros.j2" as m %}
+
+{% set p = profile %}
+{% set ff = p.four_factors %}
+
+{% block title %}{{ p.identity.name }} tournament report{% endblock %}
+{% block eyebrow %}{{ event_name }} &middot; Tournament to date{% endblock %}
+{% block heading %}{{ flag(p.identity.code, 24) }}{{ p.identity.name }}{% endblock %}
+{% block subtitle %}
+{{ p.wins }}&ndash;{{ p.losses }} over {{ p.games_played }} game{{ '' if p.games_played == 1 else 's' }}
+&middot; {{ '%.1f'|format(p.points_for_pg or 0) }} scored, {{ '%.1f'|format(p.points_against_pg or 0) }} allowed per game
+&middot; Updated after every result
+{% endblock %}
+{% block footid %}{{ p.identity.name }} tournament report{% endblock %}
+
+{% block content %}
+
+{{ m.sample_banner(p.games_played) }}
+
+<section class="keep">
+<h2>Where we stand</h2>
+<div class="statline">
+  {{ m.stat('Record', '%d&ndash;%d'|format(p.wins, p.losses),
+            '%d games'|format(p.games_played)) }}
+  {{ m.stat('Off rating', '%.1f'|format(ff.off_rating or 0), 'per 100 poss') }}
+  {{ m.stat('Def rating', '%.1f'|format(ff.def_rating or 0), 'per 100 poss') }}
+  {{ m.stat('Net', '%+.1f'|format(ff.net_rating or 0), 'per 100 poss',
+            'pos' if (ff.net_rating or 0) > 0 else 'neg') }}
+  {{ m.stat('Pace', '%.1f'|format(p.pace or 0),
+            'event %.1f'|format(league.pace or 0)) }}
+  {{ m.stat('True shooting', '%.1f%%'|format(ff.ts_pct or 0), 'TS%') }}
+</div>
+</section>
+
+<section class="keep">
+<h2>Four factors, all games</h2>
+{{ m.four_factor_table(ff, p.opp_four_factors, league, p.identity.code, 'Opponents') }}
+{{ charts.four_factors }}
+</section>
+
+<section>
+<h2>Game by game</h2>
+<div class="scroll-x">
+<table>
+<thead>
+  <tr><th class="left" data-sortable>Opponent</th><th data-sortable>Result</th>
+      <th data-sortable>eFG%</th><th data-sortable>TOV%</th>
+      <th data-sortable>OREB%</th><th data-sortable>FTA/FGA</th>
+      <th data-sortable>Poss</th><th data-sortable>ORtg</th>
+      <th data-sortable>DRtg</th><th data-sortable>Net/100</th></tr>
+</thead>
+<tbody>
+{% for g in p.games %}
+  <tr>
+    <td class="left name">{{ flag(g.opponent_identity.code) }}{{ g.opponent_identity.name }}</td>
+    <td class="{{ 'pos' if g.won else 'neg' }}">
+      {{ 'W' if g.won else 'L' }} {{ g.score }}&ndash;{{ g.opp_score }}</td>
+    <td>{{ m.num(g.four_factors.efg_pct) }}</td>
+    <td>{{ m.num(g.four_factors.tov_pct) }}</td>
+    <td>{{ m.num(g.four_factors.oreb_pct) }}</td>
+    <td>{{ m.num(g.four_factors.ft_rate) }}</td>
+    <td>{{ m.num(g.four_factors.possessions, 0) }}</td>
+    <td>{{ m.num(g.four_factors.off_rating) }}</td>
+    <td>{{ m.num(g.four_factors.def_rating) }}</td>
+    <td class="{{ m.tone(g.four_factors.net_rating) }}">
+      {{ m.signed(g.four_factors.net_rating) }}</td>
+  </tr>
+{% endfor %}
+<tr class="total">
+  <td class="left">Tournament</td>
+  <td>{{ p.wins }}&ndash;{{ p.losses }}</td>
+  <td>{{ m.num(ff.efg_pct) }}</td>
+  <td>{{ m.num(ff.tov_pct) }}</td>
+  <td>{{ m.num(ff.oreb_pct) }}</td>
+  <td>{{ m.num(ff.ft_rate) }}</td>
+  <td>{{ m.num(p.pace, 0) }}</td>
+  <td>{{ m.num(ff.off_rating) }}</td>
+  <td>{{ m.num(ff.def_rating) }}</td>
+  <td class="{{ m.tone(ff.net_rating) }}">{{ m.signed(ff.net_rating) }}</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section>
+<h2>Players, tournament to date</h2>
+{{ m.player_table(players, per_game=True) }}
+</section>
+
+<section class="keep">
+<h2>Shooting</h2>
+<div class="cols">
+  <div>
+    {{ m.zone_table(zones) }}
+  </div>
+  <div class="col-narrow">
+    <h3>Shot chart, all games</h3>
+    {{ charts.shots }}
+  </div>
+</div>
+</section>
+
+<section>
+<h2>Most-used lineups</h2>
+{% if lineups_available %}
+{{ m.lineup_table(lineups, 'Aggregated across the tournament') }}
+{% else %}
+<p class="banner alert">Lineup data is withheld: reconstruction did not pass
+validation for these games.</p>
+{% endif %}
+</section>
+
+{% endblock %}

@@ -1,0 +1,11 @@
+# Local working state, not part of the published site.
+.venv/
+__pycache__/
+*.pyc
+
+# Scraped pages and the database are rebuildable from FIBA and are large.
+raw/
+data/
+
+# The pre-tournament dress rehearsal on the U18 event.
+reports_dress_rehearsal_u18/

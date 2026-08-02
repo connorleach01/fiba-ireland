@@ -1,0 +1,105 @@
+{% extends "_base.html.j2" %}
+{% import "_macros.j2" as m %}
+
+{% block title %}Team leaderboard{% endblock %}
+{% block eyebrow %}{{ event_name }} &middot; Team leaderboard{% endblock %}
+{% block heading %}All teams: four factors and ratings{% endblock %}
+{% block subtitle %}
+{{ teams|length }} teams &middot; {{ games_played }} games played &middot;
+Click any column to sort
+{% endblock %}
+{% block footid %}Team leaderboard{% endblock %}
+
+{% block content %}
+
+<section>
+<h2>Leaderboard</h2>
+
+<div class="viewtoggle no-print" data-target="#leaderboard">
+  <button type="button" data-view="off" aria-pressed="false">Offence</button>
+  <button type="button" data-view="def" aria-pressed="false">Defence</button>
+  <button type="button" data-view="all" aria-pressed="true">Combined</button>
+</div>
+
+<div class="scroll-x">
+<table id="leaderboard" class="view-all" data-rank-column="0">
+<thead>
+  <tr>
+    <th class="left">#</th>
+    <th class="left" data-sortable>Team</th>
+    <th data-sortable>Gm</th>
+    <th data-sortable>W&ndash;L</th>
+    <th data-sortable>PF</th>
+    <th data-sortable>PA</th>
+    <th data-sortable>Pace</th>
+    <th class="c-off" data-sortable>eFG%</th>
+    <th class="c-off" data-sortable>TOV%</th>
+    <th class="c-off" data-sortable>OREB%</th>
+    <th class="c-off" data-sortable>FTA/FGA</th>
+    <th class="c-off" data-sortable>ORtg</th>
+    <th class="c-def" data-sortable>Opp eFG%</th>
+    <th class="c-def" data-sortable>TOV% frc</th>
+    <th class="c-def" data-sortable>DREB%</th>
+    <th class="c-def" data-sortable>Opp FTr</th>
+    <th class="c-def" data-sortable>DRtg</th>
+    <th data-sortable>Net/100</th>
+  </tr>
+</thead>
+<tbody>
+{% for t in teams %}
+  {% set o = t.four_factors %}{% set d = t.opp_four_factors %}
+  <tr{% if t.identity.org_id == highlight_org_id %} class="highlight"{% endif %}>
+    <td class="left muted">{{ loop.index }}</td>
+    <td class="left name">{{ flag(t.identity.code) }}{{ t.identity.name }}</td>
+    <td>{{ t.games_played }}</td>
+    <td data-value="{{ '%.4f'|format(t.wins / t.games_played if t.games_played else 0) }}">{{ t.wins }}&ndash;{{ t.losses }}</td>
+    <td>{{ m.num(t.points_for_pg) }}</td>
+    <td>{{ m.num(t.points_against_pg) }}</td>
+    <td>{{ m.num(t.pace, 0) }}</td>
+
+    <td class="c-off">{{ m.num(o.efg_pct) }}</td>
+    <td class="c-off">{{ m.num(o.tov_pct) }}</td>
+    <td class="c-off">{{ m.num(o.oreb_pct) }}</td>
+    <td class="c-off">{{ m.num(o.ft_rate) }}</td>
+    <td class="c-off">{{ m.num(o.off_rating) }}</td>
+
+    <td class="c-def">{{ m.num(d.efg_pct) }}</td>
+    <td class="c-def">{{ m.num(d.tov_pct) }}</td>
+    <td class="c-def">{{ m.num(o.dreb_pct) }}</td>
+    <td class="c-def">{{ m.num(d.ft_rate) }}</td>
+    <td class="c-def">{{ m.num(o.def_rating) }}</td>
+
+    <td class="{{ m.tone(o.net_rating) }}">{{ m.signed(o.net_rating) }}</td>
+  </tr>
+{% endfor %}
+<tr class="total">
+  <td class="left"></td>
+  <td class="left">Event average</td>
+  <td>&ndash;</td><td>&ndash;</td>
+  <td>{{ m.num(league.points_pg) }}</td>
+  <td>{{ m.num(league.points_pg) }}</td>
+  <td>{{ m.num(league.pace, 0) }}</td>
+  <td class="c-off">{{ m.num(league.efg_pct) }}</td>
+  <td class="c-off">{{ m.num(league.tov_pct) }}</td>
+  <td class="c-off">{{ m.num(league.oreb_pct) }}</td>
+  <td class="c-off">{{ m.num(league.ft_rate) }}</td>
+  <td class="c-off">{{ m.num(league.off_rating) }}</td>
+  <td class="c-def">{{ m.num(league.efg_pct) }}</td>
+  <td class="c-def">{{ m.num(league.tov_pct) }}</td>
+  <td class="c-def">{{ m.num(league.dreb_pct) }}</td>
+  <td class="c-def">{{ m.num(league.ft_rate) }}</td>
+  <td class="c-def">{{ m.num(league.def_rating) }}</td>
+  <td>&ndash;</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="note">Defensive columns describe what a team allows: <strong>Opp eFG%</strong>
+and <strong>Opp FTr</strong> are lower-is-better, <strong>TOV% frc</strong> (turnovers
+forced) and <strong>DREB%</strong> are higher-is-better. Because every game contributes
+both teams, the event average is identical on offence and defence by construction.
+Teams enter the tournament having played different numbers of games; the Gm column
+shows the sample behind each row.</p>
+</section>
+
+{% endblock %}
