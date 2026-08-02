@@ -25,17 +25,21 @@
 <div class="statline">
   {{ m.stat('Record', '%d&ndash;%d'|format(p.wins, p.losses),
             '%d games'|format(p.games_played)) }}
-  {{ m.stat('Off rating', '%.1f'|format(ff.off_rating or 0),
-            m.rank_note(ranks, 'off_rating') or 'per 100 poss') }}
-  {{ m.stat('Def rating', '%.1f'|format(ff.def_rating or 0),
-            m.rank_note(ranks, 'def_rating') or 'per 100 poss') }}
-  {{ m.stat('Net', '%+.1f'|format(ff.net_rating or 0),
-            m.rank_note(ranks, 'net_rating') or 'per 100 poss',
-            'pos' if (ff.net_rating or 0) > 0 else 'neg') }}
-  {{ m.stat('Pace', '%.1f'|format(p.pace or 0),
-            m.rank_note(ranks, 'pace', 'fastest ') or 'poss/game') }}
-  {{ m.stat('3PT rate', '%.1f%%'|format(ff.fg3_rate or 0), 'of shots') }}
+  {{ m.stat_ranked('Off rating', '%.1f'|format(ff.off_rating or 0),
+                   ranks, 'off_rating', 'per 100 poss') }}
+  {{ m.stat_ranked('Def rating', '%.1f'|format(ff.def_rating or 0),
+                   ranks, 'def_rating', 'per 100 poss') }}
+  {{ m.stat_ranked('Net', '%+.1f'|format(ff.net_rating or 0),
+                   ranks, 'net_rating', 'per 100 poss',
+                   'pos' if (ff.net_rating or 0) > 0 else 'neg') }}
+  {{ m.stat_ranked('Pace', '%.1f'|format(p.pace or 0),
+                   ranks, 'pace', 'poss/game', qualifier='fastest') }}
+  {{ m.stat_ranked('3PT rate', '%.1f%%'|format(ff.fg3_rate or 0),
+                   ranks, 'fg3_rate', 'of shots', qualifier='highest') }}
 </div>
+<p class="note">Shading marks where a team sits in the event: blue is good, red
+is poor, and pace and three-point rate carry a rank but no shading, because
+playing fast or shooting a lot of threes is a style rather than an achievement.</p>
 </section>
 
 <section>
@@ -51,21 +55,23 @@
 
 <section>
 <h2>How they score</h2>
-{{ m.scoring_share(box_rows, per_game=True) }}
+{{ m.scoring_share(box_rows, per_game=True, ranks=ranks, table_id='scoring') }}
 </section>
 
 <section class="keep">
 <h2>Shooting</h2>
+{{ m.rank_toggle('table.zones') }}
 <div class="chartpair">
   <div>
     <h3>Shots {{ p.identity.name }} took</h3>
     {{ charts.shots }}
-    {{ m.zone_table(zones, caption='') }}
+    {{ m.zone_table(zones, caption='', ranks=ranks, klass='zones') }}
   </div>
   <div>
     <h3>Shots {{ p.identity.name }} allowed</h3>
     {{ charts.shots_faced }}
-    {{ m.zone_table(faced_zones, caption='') }}
+    {{ m.zone_table(faced_zones, caption='', ranks=ranks, prefix='opp_',
+                    klass='zones') }}
   </div>
 </div>
 <p class="note">Where a team lets opponents shoot from is the clearest read on

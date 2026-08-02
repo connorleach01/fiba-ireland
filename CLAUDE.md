@@ -132,6 +132,15 @@ turnovers, bench) and do not sum to total points: a fast-break layup is also
 points in the paint, and bench points cut across all of them. Any table showing
 them must say so.
 
+**Column-group views are mutually exclusive CSS, so the stale class must come
+off.** A table in a `viewtoggle` group hides everything not in the chosen group:
+`table.view-adv .c-box { display: none }` and so on. Leave two `view-` classes on
+the same table and both rules apply, so **every column hides and the table
+renders empty**. That is exactly what the leaderboard did once it grew from three
+views to four and the handler was still removing only the three original class
+names. The handler now strips any class beginning `view-` rather than a fixed
+list; keep it that way if you add a fifth view.
+
 **A failing template does not look like a failure.** `report._safe()` logs the
 exception and moves on, so the page keeps whatever content it had from the last
 build and the run reports success. If a change does not appear to take effect,
@@ -256,6 +265,20 @@ they still get a rank but never a shading tier, because taking a lot of threes o
 playing fast is a style, not an achievement. The denominator counts only teams
 that have played.
 
+**`TEAM_METRICS` holds more than the leaderboard shows.** Every shot zone is
+declared on both sides of the ball, share and accuracy, so the zone tables on a
+scouting page can shade every cell; the leaderboard's Shooting view picks a
+readable handful of them. The zone entries are generated in a loop from
+`metrics.ZONE_ORDER` with `setdefault`, so a hand-written entry above always wins
+over the generated default, which is how `opp_rim_share` keeps its direction
+while the other conceded shares stay unshaded. `zone_metric()` builds the key and
+`zone_breakdown()` stamps the same slugs onto every row it emits, so a template
+never spells a metric name itself. If you add a zone, both sides follow for free.
+
+`fg3_rate` is ranked but sits in no leaderboard group: the profile strip needs a
+rank for the exact number it prints, and the zone-derived `three_share` already
+covers that ground on the leaderboard.
+
 `analysis.player_percentiles()` does the same for players, against **every player
 who has taken the floor**. There is no minutes threshold: a table where the last
 three rows are blank reads as broken, and a deep bench player ranking 254th of
@@ -274,9 +297,18 @@ Both are event-wide, so `build_all` computes them **once** and threads them
 through as `context`; do not call them per page.
 
 Shading is a five-step diverging tint (blue good, red bad, unshaded middle) that
-is off by default and turned on by a `rank_toggle`. The rank number always prints
-alongside the tint, so colour is never the only cue. Game sheets get no ranks at
-all: a single game is not a ranking.
+is off by default in tables and turned on by a `rank_toggle`. The rank number
+always prints alongside the tint, so colour is never the only cue. Game sheets
+get no ranks at all: a single game is not a ranking.
+
+The **profile strip is the exception: its shading is always on**, no toggle. It
+carries six figures rather than sixty and it is the headline of the page, so
+`stat_ranked` prints the rank under every figure and tints the card.
+
+**`rank_toggle` takes a CSS selector, not an id.** The two shot-zone tables sit
+side by side under one heading and share one button (`table.zones`), so the
+handler uses `querySelectorAll` and drives every match. Passing `#some-id` still
+works and is what the single-table cases do.
 
 `LEADERBOARD_GROUPS` drives the leaderboard's four views, so adding a column is a
 one-line change there plus an entry in `TEAM_METRICS`.
@@ -297,6 +329,10 @@ reason, and if you do, say why in the commit.
   number on a scale coaches read directly, but eFG% is what they already know, so
   eFG% is back and Pts/att stays only in the per-zone breakdowns, where points
   per attempt is the standard way to compare a corner three to a rim finish.
+- **The greyed-out Rank column in the four-factor table.** It duplicated the rank
+  chip that the toggle already reveals, and it printed on every page whether the
+  reader wanted ranks or not. `four_factor_table`, the game-sheet version, never
+  took ranks at all and its dead `ranks` argument is gone with it.
 - **Player position column**, dropped for width once shooting splits went in.
 - **A Games nav menu**, see the navigation model above.
 - **Ranks on game sheets.** One game is not a ranking.

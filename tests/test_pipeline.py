@@ -195,6 +195,34 @@ def test_ranks_and_percentiles():
     check("three-point share carries no tier",
           ranks[best]["three_share"]["tier"] is None)
     check("net rating carries a tier", ranks[best]["net_rating"]["tier"] in (1, 2, 3, 4, 5))
+    check("three-point rate is ranked", "fg3_rate" in ranks[best])
+
+    # Every column the leaderboard offers must resolve, or a whole view renders
+    # empty. This is exactly what a stale view- class used to do at runtime.
+    declared = [m for group in analysis.LEADERBOARD_GROUPS for m in group["metrics"]]
+    check("every leaderboard column is declared",
+          all(m in analysis.TEAM_METRICS for m in declared))
+    check("every leaderboard column has a value",
+          all(m in metrics_values[best] for m in declared),
+          f"(missing {[m for m in declared if m not in metrics_values[best]]})")
+
+    # A zone table looks its ranks up by the slug stamped on each zone row, so
+    # every one of those slugs has to be a declared metric on both sides.
+    zone_rows = metrics.zone_breakdown(analysis.shots(conn, U18, best))
+    slugs = [z[k] for z in zone_rows for k in ("metric_share", "metric_fg")]
+    check("every shot zone is rankable both ways",
+          all(s in analysis.TEAM_METRICS and "opp_" + s in analysis.TEAM_METRICS
+              for s in slugs),
+          f"(missing {[s for s in slugs if s not in analysis.TEAM_METRICS]})")
+    check("zone ranks are populated",
+          all(s in ranks[best] for s in slugs),
+          f"(missing {[s for s in slugs if s not in ranks[best]]})")
+
+    # The scoring breakdown ranks both a team's own line and what it allows.
+    scoring = ["pip", "fbp", "scp", "pat", "bench"]
+    check("scoring categories are ranked", all(s in ranks[best] for s in scoring))
+    check("conceded scoring categories are ranked",
+          all("opp_" + s in ranks[best] for s in scoring if s != "bench"))
 
     pcts = analysis.player_percentiles(conn, U18)
     pool = pcts["_pool"]

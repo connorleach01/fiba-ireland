@@ -24,11 +24,23 @@
 </div>
 {% endmacro %}
 
-{# Rank suffix for a stat-strip caption, blank when the metric is not ranked. #}
-{% macro rank_note(ranks, key, prefix='') -%}
+{# A stat-strip cell tinted by where the team ranks, with the rank printed
+   underneath. Unlike the tables this needs no toggle: the strip is the page's
+   headline and carries six figures, not sixty. Metrics with no better/worse
+   direction get the rank but no tint. #}
+{% macro stat_ranked(label, figure, ranks, key, fallback='', klass='',
+                     qualifier='') %}
 {%- set r = (ranks or {}).get(key) -%}
-{%- if r %}{{ prefix }}{{ r.label }}{% endif -%}
-{%- endmacro %}
+<div class="stat{% if r and r.tier %} t{{ r.tier }}{% endif %}">
+  <div class="label">{{ label }}</div>
+  <div class="figure {{ klass }}">{{ figure }}</div>
+  <div class="sub">
+    {%- if not r %}{{ fallback }}
+    {%- elif qualifier %}{{ ordinal_short(r.rank) }} {{ qualifier }} of {{ r.of }}
+    {%- else %}{{ r.label }}{% endif -%}
+  </div>
+</div>
+{% endmacro %}
 
 {# A table cell carrying a value plus its rank, shaded by tier when the reader
    turns ranks on. Metrics with no better/worse direction get a rank but no
@@ -206,9 +218,13 @@ plus-minus over two minutes as noise.</p>
 {% endif %}
 {% endmacro %}
 
-{% macro zone_table(zones, caption='Shooting by zone') %}
+{# `prefix` selects which side of the ball the ranks come from: '' for shots the
+   team took, 'opp_' for shots it allowed. The zone rows carry their own metric
+   slugs, so this does not need to know how the keys are spelled. #}
+{% macro zone_table(zones, caption='Shooting by zone', ranks=None, prefix='',
+                    klass='') %}
 <div class="scroll-x">
-<table>
+<table class="{{ klass }}">
 <caption>{{ caption }}</caption>
 <thead><tr><th class="left">Zone</th><th data-sortable>M</th><th data-sortable>A</th>
 <th data-sortable>FG%</th><th data-sortable>Share</th><th data-sortable>Pts/att</th></tr></thead>
@@ -218,8 +234,8 @@ plus-minus over two minutes as noise.</p>
     <td class="left">{{ z.zone }}</td>
     <td>{{ z.makes }}</td>
     <td>{{ z.attempts }}</td>
-    <td>{{ num(z.fg_pct) }}</td>
-    <td>{{ num(z.share_pct) }}</td>
+    {{ rk(z.fg_pct, ranks, prefix ~ z.metric_fg) }}
+    {{ rk(z.share_pct, ranks, prefix ~ z.metric_share) }}
     <td>{{ num(z.points_per_attempt, 2) }}</td>
   </tr>
 {% endfor %}
@@ -228,12 +244,13 @@ plus-minus over two minutes as noise.</p>
 </div>
 {% endmacro %}
 
-{% macro four_factor_table(team_ff, opp_ff, league, team_label, opp_label, ranks=None) %}
+{# The game-sheet version: two teams against each other, no ranks, because one
+   game is not a ranking. `four_factor_ranked` is the season-long counterpart. #}
+{% macro four_factor_table(team_ff, opp_ff, league, team_label, opp_label) %}
 <div class="scroll-x">
 <table>
 <thead><tr>
   <th class="left">Factor</th><th>{{ team_label }}</th>
-  {% if ranks %}<th>Rank</th>{% endif %}
   <th>{{ opp_label }}</th><th>Diff</th><th>Event avg</th>
 </tr></thead>
 <tbody>
@@ -243,9 +260,6 @@ plus-minus over two minutes as noise.</p>
   <tr>
     <td class="left">{{ label }} <span class="unit">{{ 'high' if higher else 'low' }} is better</span></td>
     <td>{{ num(a) }}</td>
-    {% if ranks %}
-      <td class="muted">{{ (ranks.get(key) or {}).get('label', '') }}</td>
-    {% endif %}
     <td>{{ num(b) }}</td>
     <td class="{{ tone(d if higher else (-d if d is not none else none)) }}">{{ signed(d) }}</td>
     <td class="muted">{{ num((league or {}).get(key)) }}</td>
@@ -305,24 +319,32 @@ plus-minus over two minutes as noise.</p>
 
 {# Scoring categories as a share of each team's points. They overlap, so they
    do not sum to 100 and the caller says so. #}
-{% macro scoring_share(rows, per_game=False, caption='Scoring breakdown') %}
+{# Each row carries `metric`, the rank key for the team's own line; the second
+   row of a scouting page is that team's opponents, so its rows prefix with
+   'opp_'. Ranks are per game, which is why they are withheld on a game sheet,
+   where `ranks` is never passed. #}
+{% macro scoring_share(rows, per_game=False, caption='Scoring breakdown',
+                       ranks=None, table_id='') %}
 {% set dp = 1 if per_game else 0 %}
+{% if ranks and table_id %}{{ rank_toggle('#' ~ table_id) }}{% endif %}
 <div class="scroll-x">
-<table>
+<table {% if table_id %}id="{{ table_id }}"{% endif %}>
 {% if caption %}<caption>{{ caption }}</caption>{% endif %}
 <thead><tr>
   <th class="left">Category</th>
   {% for r in rows %}<th>{{ r.code }}</th><th>% of pts</th>{% endfor %}
 </tr></thead>
 <tbody>
-{% for label, key in [('Points in paint','A_PIP'), ('Fast break','A_FBP'),
-                      ('Second chance','A_SCP'), ('Off turnovers','A_PAT'),
-                      ('From the bench','A_PFB')] %}
+{% for label, key, metric in [('Points in paint','A_PIP','pip'),
+                              ('Fast break','A_FBP','fbp'),
+                              ('Second chance','A_SCP','scp'),
+                              ('Off turnovers','A_PAT','pat'),
+                              ('From the bench','A_PFB','bench')] %}
   <tr>
     <td class="left">{{ label }}</td>
     {% for r in rows %}
       {% set v = r.stats[key] or 0 %}{% set n = r.games if r.games else 1 %}
-      <td>{{ num(v / n, dp) }}</td>
+      {{ rk(v / n, ranks, (r.metric_prefix or '') ~ metric, dp) }}
       <td class="muted">{{ num(100 * v / r.stats.PTS if r.stats.PTS else none) }}%</td>
     {% endfor %}
   </tr>
@@ -428,10 +450,10 @@ TOV% forced and DREB% are higher-is-better.</p>
 <div class="scroll-x">
 <table id="{{ table_id }}">
 <thead><tr>
-  <th class="left">Factor</th><th>{{ code }}</th><th>Event avg</th><th class="left">Rank</th>
+  <th class="left">Factor</th><th>{{ code }}</th><th>Event avg</th>
 </tr></thead>
 <tbody>
-  <tr class="subhead"><td class="left" colspan="4">Offence</td></tr>
+  <tr class="subhead"><td class="left" colspan="3">Offence</td></tr>
   {% for key, label, hint, src in [
       ('efg_pct','eFG%','high is better', own),
       ('tov_pct','TOV%','low is better', own),
@@ -441,10 +463,9 @@ TOV% forced and DREB% are higher-is-better.</p>
     <td class="left">{{ label }} <span class="unit">{{ hint }}</span></td>
     {{ rk(src.get(key), ranks, key) }}
     <td class="muted">{{ num((league or {}).get(key)) }}</td>
-    <td class="left muted">{{ (ranks.get(key) or {}).get('label', '') }}</td>
   </tr>
   {% endfor %}
-  <tr class="subhead"><td class="left" colspan="4">Defence, what they allow</td></tr>
+  <tr class="subhead"><td class="left" colspan="3">Defence, what they allow</td></tr>
   {% for key, label, hint, value, avg in [
       ('opp_efg_pct','Opp eFG%','low is better', opp.get('efg_pct'), (league or {}).get('efg_pct')),
       ('tov_forced_pct','TOV% forced','high is better', opp.get('tov_pct'), (league or {}).get('tov_pct')),
@@ -454,7 +475,6 @@ TOV% forced and DREB% are higher-is-better.</p>
     <td class="left">{{ label }} <span class="unit">{{ hint }}</span></td>
     {{ rk(value, ranks, key) }}
     <td class="muted">{{ num(avg) }}</td>
-    <td class="left muted">{{ (ranks.get(key) or {}).get('label', '') }}</td>
   </tr>
   {% endfor %}
 </tbody>

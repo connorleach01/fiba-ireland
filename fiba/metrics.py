@@ -239,6 +239,11 @@ def zone_breakdown(events: list[dict], org_id: int | None = None) -> list[dict]:
         bucket = buckets[zone]
         bucket["fg_pct"] = _pct(bucket["makes"], bucket["attempts"])
         bucket["share_pct"] = _pct(bucket["attempts"], total_attempts)
+        # The rank keys this zone answers to, so a template can shade a zone
+        # table without knowing how metric names are built.
+        slug = zone.lower().replace(" ", "_").replace("-", "_")
+        bucket["metric_share"] = f"{slug}_share"
+        bucket["metric_fg"] = f"{slug}_fg"
         # Points per attempt is the honest way to compare a three to a layup.
         bucket["points_per_attempt"] = _safe_div(bucket["points"], bucket["attempts"])
         out.append(bucket)

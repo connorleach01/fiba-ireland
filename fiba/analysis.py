@@ -202,15 +202,18 @@ TEAM_METRICS: dict[str, dict] = {
     "opp_pts": {"group": "box", "better": False, "label": "Opp PTS"},
     "opp_fg_pct": {"group": "box", "better": False, "label": "Opp FG%"},
     "opp_fg3_pct": {"group": "box", "better": False, "label": "Opp 3P%"},
-    # Shooting by zone, own then allowed
+    # Shot profile. 3PT rate is FG3A/FGA off the box score, so it is ranked but
+    # never shaded and never reaches the leaderboard, where the zone-derived
+    # three-point share already covers the same ground.
+    "fg3_rate": {"group": "advanced", "better": None, "label": "3PT rate"},
+    # Shooting by zone, own then allowed. Rim and three-point volume allowed do
+    # carry a direction, because conceding shots at the rim is a defensive
+    # failure rather than a style; the rest of the shares are style.
     "rim_share": {"group": "shot", "better": None, "label": "Rim %sh"},
-    "rim_fg": {"group": "shot", "better": True, "label": "Rim FG%"},
-    "paint_share": {"group": "shot", "better": None, "label": "Paint %sh"},
-    "mid_share": {"group": "shot", "better": None, "label": "Mid %sh"},
+    "mid_range_share": {"group": "shot", "better": None, "label": "Mid %sh"},
     "three_share": {"group": "shot", "better": None, "label": "3PT %sh"},
     "three_fg": {"group": "shot", "better": True, "label": "3PT FG%"},
     "opp_rim_share": {"group": "shot", "better": False, "label": "Opp rim %sh"},
-    "opp_rim_fg": {"group": "shot", "better": False, "label": "Opp rim FG%"},
     "opp_three_share": {"group": "shot", "better": None, "label": "Opp 3PT %sh"},
     "opp_three_fg": {"group": "shot", "better": False, "label": "Opp 3PT FG%"},
     # Scoring breakdown, per game
@@ -226,6 +229,33 @@ TEAM_METRICS: dict[str, dict] = {
 }
 
 
+def zone_metric(zone: str, stat: str, prefix: str = "") -> str:
+    """Metric key for one zone of the shot chart, e.g. ``opp_corner_3_fg``.
+
+    `metrics.zone_breakdown` stamps the same slugs onto every row it emits, so a
+    zone table can look its own ranks up without the template knowing the naming
+    rule.
+    """
+    return f"{prefix}{zone.lower().replace(' ', '_').replace('-', '_')}_{stat}"
+
+
+# Every zone is rankable on both volume and accuracy, on both sides of the ball,
+# so the shot-zone tables can shade every cell. The leaderboard shows only the
+# curated handful declared above; these fill in the rest. setdefault, so a
+# hand-written entry above always wins over the generated default.
+for _zone in metrics.ZONE_ORDER:
+    _label = "Mid" if _zone == "Mid-range" else _zone
+    TEAM_METRICS.setdefault(zone_metric(_zone, "share"), {
+        "group": "shot", "better": None, "label": f"{_label} %sh"})
+    TEAM_METRICS.setdefault(zone_metric(_zone, "fg"), {
+        "group": "shot", "better": True, "label": f"{_label} FG%"})
+    TEAM_METRICS.setdefault(zone_metric(_zone, "share", "opp_"), {
+        "group": "shot", "better": None, "label": f"Opp {_label} %sh"})
+    TEAM_METRICS.setdefault(zone_metric(_zone, "fg", "opp_"), {
+        "group": "shot", "better": False, "label": f"Opp {_label} FG%"})
+del _zone, _label
+
+
 # How the leaderboard groups its columns. Each view is a readable width on its
 # own; showing all forty-odd at once would not be.
 LEADERBOARD_GROUPS = [
@@ -237,7 +267,7 @@ LEADERBOARD_GROUPS = [
         "pts", "fg_pct", "fg3_pct", "ft_pct", "oreb", "dreb", "ast", "tov",
         "stl", "blk", "pf", "opp_pts", "opp_fg_pct", "opp_fg3_pct"]},
     {"key": "shot", "label": "Shooting", "metrics": [
-        "rim_share", "rim_fg", "paint_share", "mid_share", "three_share",
+        "rim_share", "rim_fg", "paint_share", "mid_range_share", "three_share",
         "three_fg", "opp_rim_share", "opp_rim_fg", "opp_three_share",
         "opp_three_fg"]},
     {"key": "scoring", "label": "Scoring", "metrics": [
@@ -252,19 +282,25 @@ def ordinal(n: int) -> str:
     return f"{n}{ {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th') }"
 
 
+_THREE_ZONES = ("Corner 3", "Wing 3", "Top 3")
+
+
 def _zone_summary(zones: list[dict], prefix: str = "") -> dict:
+    """Share and accuracy for every zone, plus the three-point aggregate."""
     by_name = {z["zone"]: z for z in zones}
-    three_attempts = sum(by_name[z]["attempts"] for z in ("Corner 3", "Wing 3", "Top 3"))
-    three_makes = sum(by_name[z]["makes"] for z in ("Corner 3", "Wing 3", "Top 3"))
     total = sum(z["attempts"] for z in zones)
-    return {
-        f"{prefix}rim_share": metrics._pct(by_name["Rim"]["attempts"], total),
-        f"{prefix}rim_fg": by_name["Rim"]["fg_pct"],
-        f"{prefix}paint_share": metrics._pct(by_name["Paint"]["attempts"], total),
-        f"{prefix}mid_share": metrics._pct(by_name["Mid-range"]["attempts"], total),
-        f"{prefix}three_share": metrics._pct(three_attempts, total),
-        f"{prefix}three_fg": metrics._pct(three_makes, three_attempts),
-    }
+
+    out = {}
+    for zone in metrics.ZONE_ORDER:
+        bucket = by_name[zone]
+        out[zone_metric(zone, "share", prefix)] = metrics._pct(bucket["attempts"], total)
+        out[zone_metric(zone, "fg", prefix)] = bucket["fg_pct"]
+
+    three_attempts = sum(by_name[z]["attempts"] for z in _THREE_ZONES)
+    three_makes = sum(by_name[z]["makes"] for z in _THREE_ZONES)
+    out[f"{prefix}three_share"] = metrics._pct(three_attempts, total)
+    out[f"{prefix}three_fg"] = metrics._pct(three_makes, three_attempts)
+    return out
 
 
 def team_metrics(conn, event_slug: str) -> dict:
@@ -292,6 +328,7 @@ def team_metrics(conn, event_slug: str) -> dict:
             "tov_forced_pct": opp.get("tov_pct"),
             "dreb_pct": own.get("dreb_pct"),
             "opp_ft_rate": opp.get("ft_rate"),
+            "fg3_rate": own.get("fg3_rate"),
             "pts": t["PTS"] / games,
             "fg_pct": metrics._pct(t["FGM"], t["FGA"]),
             "fg3_pct": metrics._pct(t["FG3M"], t["FG3A"]),

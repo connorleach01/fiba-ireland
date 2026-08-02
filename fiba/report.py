@@ -82,17 +82,24 @@ def _played_in(conn, event_slug: str, game_id: int, org_id: int) -> bool:
         (event_slug, game_id, org_id)).fetchone() is not None
 
 
-def _box_rows(entries) -> list[dict]:
-    """Rows for the raw team box score.
+def _box_rows(entries, ranked: bool = False) -> list[dict]:
+    """Rows for the raw team box score and the scoring breakdown.
 
     `entries` is a list of (identity, stats, games, highlight); percentages are
-    always recomputed from the totals rather than averaged.
+    always recomputed from the totals rather than averaged. `ranked` marks the
+    first row as the team's own line and the second as what it allowed, which is
+    what tells the scoring table whether to look up `pip` or `opp_pip`. A game
+    sheet's two rows are two different teams, so it leaves this off.
     """
-    return [
+    rows = [
         {"code": identity["code"], "name": identity["name"], "stats": stats,
-         "games": games, "highlight": highlight}
+         "games": games, "highlight": highlight, "metric_prefix": None}
         for identity, stats, games, highlight in entries
     ]
+    if ranked:
+        for row, prefix in zip(rows, ("", "opp_")):
+            row["metric_prefix"] = prefix
+    return rows
 
 
 def _player_details(conn, event_slug: str, org_id: int, players: list[dict],
@@ -204,7 +211,7 @@ def build_scout(conn, event_slug: str, org_id: int,
         box_rows=_box_rows([
             (profile["identity"], profile["totals"], profile["games_played"], True),
             ({"code": "OPP", "name": "Their opponents"}, profile["opp_totals"],
-             profile["games_played"], False)]),
+             profile["games_played"], False)], ranked=True),
         lineups=lineups[:8],
         lineups_available=lineups_available,
         bench=bench,
@@ -373,7 +380,7 @@ def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
         box_rows=_box_rows([
             (profile["identity"], profile["totals"], profile["games_played"], True),
             ({"code": "OPP", "name": "Opponents"}, profile["opp_totals"],
-             profile["games_played"], False)]),
+             profile["games_played"], False)], ranked=True),
         lineups=lineups[:10], lineups_available=lineups_available,
         nav=nav, page="tournament", reference=reference,
         **_inks(profile["identity"]["code"], None),

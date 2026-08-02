@@ -334,6 +334,19 @@ table.show-ranks td.t1 { background: var(--rk-1); }
 table.show-ranks td.t2 { background: var(--rk-2); }
 table.show-ranks td.t4 { background: var(--rk-4); }
 table.show-ranks td.t5 { background: var(--rk-5); }
+
+/* The profile strip is the page's headline, so its shading is always on and
+   needs no toggle: the rank is already printed under every figure. The tint
+   sits behind the card rather than a cell, so it carries a hairline to stop
+   two shaded cards reading as one block. */
+.statline .stat.t1 { background: var(--rk-1); }
+.statline .stat.t2 { background: var(--rk-2); }
+.statline .stat.t4 { background: var(--rk-4); }
+.statline .stat.t5 { background: var(--rk-5); }
+.statline .stat.t1 + .stat, .statline .stat.t2 + .stat,
+.statline .stat.t4 + .stat, .statline .stat.t5 + .stat {
+  border-left-color: var(--rule-mid);
+}
 tr.subhead td {
   font-size: 8.2px; letter-spacing: .14em; text-transform: uppercase;
   color: var(--ink-2); font-weight: 700; background: var(--band);
@@ -622,14 +635,20 @@ td .flag, li .flag { margin-right: 5px; }
   document.addEventListener('click', function (e) {
     var button = e.target.closest('button.ranktoggle');
     if (!button) return;
-    var table = document.querySelector(button.dataset.target);
-    if (!table) return;
-    var on = table.classList.toggle('show-ranks');
+    // A selector, not an id: the two shot-zone tables sit side by side under a
+    // single heading, so one button has to drive both.
+    var tables = document.querySelectorAll(button.dataset.target);
+    if (!tables.length) return;
+    var on = !tables[0].classList.contains('show-ranks');
+    tables.forEach(function (t) { t.classList.toggle('show-ranks', on); });
     button.setAttribute('aria-pressed', on ? 'true' : 'false');
     button.textContent = on ? button.dataset.on : button.dataset.off;
   });
 
-  // Offence / defence / combined toggle.
+  // Column-group toggle: offence/defence on a game log, and the four views on
+  // the leaderboard. Every view- class must come off first, whatever it is:
+  // leaving a stale one on means two mutually exclusive rules both apply and
+  // the table hides every column it has.
   document.addEventListener('click', function (e) {
     var button = e.target.closest('.viewtoggle button[data-view]');
     if (!button) return;
@@ -639,7 +658,9 @@ td .flag, li .flag { margin-right: 5px; }
     group.querySelectorAll('button').forEach(function (b) {
       b.setAttribute('aria-pressed', b === button ? 'true' : 'false');
     });
-    table.classList.remove('view-off', 'view-def', 'view-all');
+    Array.prototype.slice.call(table.classList).forEach(function (name) {
+      if (name.indexOf('view-') === 0) table.classList.remove(name);
+    });
     table.classList.add('view-' + button.dataset.view);
   });
 })();
