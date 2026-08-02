@@ -49,6 +49,8 @@ cd ~/code/fiba-ireland
 ```
 
 Add `--no-publish` to any build to skip the git push. Use it while iterating.
+`--event SLUG` and `--org ID` retarget a run at another event or team,
+`--interval N` changes the poll gap, `--verbose` turns on debug logging.
 
 Preview locally: `python3 -m http.server 8899 --directory docs` then open
 `http://localhost:8899/example/` (the reference set is the only populated site
@@ -130,6 +132,21 @@ turnovers, bench) and do not sum to total points: a fast-break layup is also
 points in the paint, and bench points cut across all of them. Any table showing
 them must say so.
 
+**A failing template does not look like a failure.** `report._safe()` logs the
+exception and moves on, so the page keeps whatever content it had from the last
+build and the run reports success. If a change does not appear to take effect,
+that is the first thing to suspect. Call the builder directly to see the real
+traceback:
+
+```bash
+.venv/bin/python -c "
+import logging, pathlib; logging.basicConfig(level=logging.INFO)
+from fiba import db, report, analysis
+report.REPORTS_DIR = pathlib.Path('docs/example')
+conn = db.connect()
+report.build_teams(conn, 'fiba-u18-eurobasket-2026-division-b', 81)"
+```
+
 **Never name a template variable `values`, `items` or `keys`.** Jinja resolves
 dot access to attributes before dict keys, so `row.values` silently returns
 `dict.values` and the render fails deep inside Jinja with a confusing message.
@@ -154,9 +171,21 @@ A game review is about 3 A4 pages.
 
 All CSS and JS live inline in `templates/_base.html.j2`. Every page is a
 self-contained file with **no external requests**, works offline, and must remain
-fully readable with JavaScript disabled. The interactive parts (sortable tables,
-the leaderboard Offence/Defence/Combined toggle, expandable player rows, nav
-dropdowns) are a few dozen lines of plain DOM code. Keep it that way.
+fully readable with JavaScript disabled. The interactive parts are a few dozen
+lines of plain DOM code and should stay that way:
+
+- **Sortable tables** on any `th[data-sortable]`. Aggregate rows stay pinned,
+  blanks sort last, `data-value` overrides what a cell sorts on (that is how
+  "3-4" sorts by win percentage), and `data-rank-column` renumbers a rank column.
+- **View toggles** (`.viewtoggle`) showing one column group at a time: four on
+  the leaderboard (Advanced / Box score / Shooting / Scoring), three on a game
+  log (Offence / Defence / Combined).
+- **Rank toggles** (`.ranktoggle`) adding `show-ranks` to a table.
+- **Expandable player rows**, keyboard accessible, one open at a time.
+- **Nav dropdowns.**
+
+Print hides all of it and shows every column group, so a printed page is never a
+partial view of what is on screen.
 
 **Team colours come from national flags but are computed, not assumed.**
 `theming.pick_pair()` checks contrast on paper and separation under protanopia,
@@ -208,8 +237,9 @@ should generate it. `build_review`'s `org_id` argument only decides which team i
 listed first, so Ireland leads on its own games. Sheets are built for every
 finished game in the event, which is what makes the scouting game logs clickable.
 
-That is roughly 81 sheets at about 190 KB, so `docs/` runs to the high teens of
-megabytes. Fine for Pages and for git, but do not casually add per-page weight.
+For a full event that is about 80 sheets at roughly 190 KB each. The U18
+reference set is 102 pages and `docs/` runs to about 19 MB. Fine for Pages and
+for git, but per-page weight now matters: shot charts are the bulk of it.
 
 ## Ranks and percentiles
 
@@ -236,6 +266,23 @@ all: a single game is not a ranking.
 `LEADERBOARD_GROUPS` drives the leaderboard's four views, so adding a column is a
 one-line change there plus an entry in `TEAM_METRICS`.
 
+## Deliberately not shown
+
+Things that were built and then taken out. Do not reinstate them without a
+reason, and if you do, say why in the commit.
+
+- **On/off in game sheets.** A single game is far too few possessions for on/off
+  to describe anything but noise.
+- **Net rating in lineup tables.** Coaches found it confusing next to a raw
+  plus-minus, and there is no possession-exact stint accounting behind it.
+  Lineup tables show minutes, points for, points against and plus-minus.
+- **TS% in page header strips and player tables.** It survives in the expanded
+  player panel. eFG% left the player table too, because Pts/att is the same
+  number (see above).
+- **Player position column**, dropped for width once shooting splits went in.
+- **A Games nav menu**, see the navigation model above.
+- **Ranks on game sheets.** One game is not a ranking.
+
 ## Conventions
 
 - **No em dashes in prose.** Use commas, colons, periods. Applies to generated
@@ -248,10 +295,11 @@ one-line change there plus an entry in `TEAM_METRICS`.
 
 ## Verification
 
-`tests/test_pipeline.py` runs fully offline against the cached pages and covers
-the clock, both payload encodings, metrics against FIBA's published percentages,
-four-factor arithmetic, shot zones, lineup validation, small-sample guards, the
-empty-event shape, and the theming rules. Run it after any change.
+`tests/test_pipeline.py` runs fully offline against the cached pages, about 45
+assertions covering the clock, both payload encodings, metrics against FIBA's
+published percentages, four-factor arithmetic, shot zones, lineup validation,
+small-sample guards, the empty-event shape, the theming rules, and rank and
+percentile direction. Run it after any change.
 
 Built and validated against **159 completed games** across two past events, both
 already in `data/fiba.db`:
@@ -272,7 +320,20 @@ the tests check data, not layout:
 ```
 
 A quick internal-link check over `docs/example/` is worth running after any
-navigation change; there are about 810 internal links across 31 pages.
+navigation change; there are roughly 2,700 internal links across 102 pages:
+
+```python
+import pathlib, re
+root = pathlib.Path("docs/example")
+files = {p.name for p in root.glob("*.html")}
+broken = [(p.name, h) for p in root.glob("*.html")
+          for h in re.findall(r'href="([^"#?]+)"', p.read_text())
+          if h.endswith(".html") and h not in files]
+```
+
+Layout regressions do not show up in the tests. After a template or CSS change,
+open a page and measure rather than trusting it: chart widths and column
+alignment have both silently broken before.
 
 ## Known limits
 
