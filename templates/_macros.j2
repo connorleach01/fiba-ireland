@@ -248,7 +248,7 @@ plus-minus over two minutes as noise.</p>
     <td>{{ z.attempts }}</td>
     {{ rk(z.fg_pct, ranks, prefix ~ z.metric_fg) }}
     {{ rk(z.share_pct, ranks, prefix ~ z.metric_share) }}
-    <td>{{ num(z.points_per_attempt, 2) }}</td>
+    {{ rk(z.points_per_attempt, ranks, prefix ~ z.metric_ppa, 2) }}
   </tr>
 {% endfor %}
 </tbody>

@@ -209,7 +209,8 @@ def test_ranks_and_percentiles():
     # A zone table looks its ranks up by the slug stamped on each zone row, so
     # every one of those slugs has to be a declared metric on both sides.
     zone_rows = metrics.zone_breakdown(analysis.shots(conn, U18, best))
-    slugs = [z[k] for z in zone_rows for k in ("metric_share", "metric_fg")]
+    slugs = [z[k] for z in zone_rows
+             for k in ("metric_share", "metric_fg", "metric_ppa")]
     check("every shot zone is rankable both ways",
           all(s in analysis.TEAM_METRICS and "opp_" + s in analysis.TEAM_METRICS
               for s in slugs),
@@ -217,6 +218,26 @@ def test_ranks_and_percentiles():
     check("zone ranks are populated",
           all(s in ranks[best] for s in slugs),
           f"(missing {[s for s in slugs if s not in ranks[best]]})")
+
+    # Points per attempt has an unambiguous direction everywhere, so every zone
+    # row must end in a shaded cell whichever side of the ball it describes.
+    ppa = [z["metric_ppa"] for z in zone_rows]
+    check("every zone shades its points per attempt",
+          all(ranks[best][s]["tier"] is not None for s in ppa)
+          and all(ranks[best]["opp_" + s]["tier"] is not None for s in ppa))
+    check("scoring more per attempt ranks better",
+          analysis.TEAM_METRICS["rim_ppa"]["better"] is True
+          and analysis.TEAM_METRICS["opp_rim_ppa"]["better"] is False)
+
+    # Shot volume is shaded only where this event's efficiency justifies it.
+    check("rim and mid-range volume carry a direction",
+          analysis.TEAM_METRICS["rim_share"]["better"] is True
+          and analysis.TEAM_METRICS["mid_range_share"]["better"] is False
+          and analysis.TEAM_METRICS["opp_rim_share"]["better"] is False
+          and analysis.TEAM_METRICS["opp_mid_range_share"]["better"] is True)
+    check("the clustered zones stay unshaded",
+          all(analysis.TEAM_METRICS[z + "_share"]["better"] is None
+              for z in ("paint", "corner_3", "wing_3", "top_3")))
 
     # The scoring breakdown ranks both a team's own line and what it allows.
     scoring = ["pip", "fbp", "scp", "pat", "bench"]

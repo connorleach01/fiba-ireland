@@ -244,6 +244,7 @@ def zone_breakdown(events: list[dict], org_id: int | None = None) -> list[dict]:
         slug = zone.lower().replace(" ", "_").replace("-", "_")
         bucket["metric_share"] = f"{slug}_share"
         bucket["metric_fg"] = f"{slug}_fg"
+        bucket["metric_ppa"] = f"{slug}_ppa"
         # Points per attempt is the honest way to compare a three to a layup.
         bucket["points_per_attempt"] = _safe_div(bucket["points"], bucket["attempts"])
         out.append(bucket)

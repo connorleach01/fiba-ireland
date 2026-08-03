@@ -206,14 +206,20 @@ TEAM_METRICS: dict[str, dict] = {
     # never shaded and never reaches the leaderboard, where the zone-derived
     # three-point share already covers the same ground.
     "fg3_rate": {"group": "advanced", "better": None, "label": "3PT rate"},
-    # Shooting by zone, own then allowed. Rim and three-point volume allowed do
-    # carry a direction, because conceding shots at the rim is a defensive
-    # failure rather than a style; the rest of the shares are style.
-    "rim_share": {"group": "shot", "better": None, "label": "Rim %sh"},
-    "mid_range_share": {"group": "shot", "better": None, "label": "Mid %sh"},
+    # Shooting by zone, own then allowed. Which shot volumes carry a direction is
+    # a question about this competition, not a matter of taste, so it was
+    # measured: across the whole U18 event the rim returns 1.14 points per
+    # attempt against an all-shots average of 0.89, mid-range returns 0.61, and
+    # paint, corner, wing and top threes all land between 0.73 and 0.81. Rim and
+    # mid-range are therefore shaded, in both directions. The rest are ranked but
+    # left unshaded, because separating 0.81 from 0.77 with colour would be
+    # inventing a distinction the data does not support.
+    "rim_share": {"group": "shot", "better": True, "label": "Rim %sh"},
+    "mid_range_share": {"group": "shot", "better": False, "label": "Mid %sh"},
     "three_share": {"group": "shot", "better": None, "label": "3PT %sh"},
     "three_fg": {"group": "shot", "better": True, "label": "3PT FG%"},
     "opp_rim_share": {"group": "shot", "better": False, "label": "Opp rim %sh"},
+    "opp_mid_range_share": {"group": "shot", "better": True, "label": "Opp mid %sh"},
     "opp_three_share": {"group": "shot", "better": None, "label": "Opp 3PT %sh"},
     "opp_three_fg": {"group": "shot", "better": False, "label": "Opp 3PT FG%"},
     # Scoring breakdown, per game
@@ -249,10 +255,16 @@ for _zone in metrics.ZONE_ORDER:
         "group": "shot", "better": None, "label": f"{_label} %sh"})
     TEAM_METRICS.setdefault(zone_metric(_zone, "fg"), {
         "group": "shot", "better": True, "label": f"{_label} FG%"})
+    # Points per attempt needs no judgement call: scoring more per shot from a
+    # spot is good wherever the spot is, and conceding more is bad.
+    TEAM_METRICS.setdefault(zone_metric(_zone, "ppa"), {
+        "group": "shot", "better": True, "label": f"{_label} pts/att", "dp": 2})
     TEAM_METRICS.setdefault(zone_metric(_zone, "share", "opp_"), {
         "group": "shot", "better": None, "label": f"Opp {_label} %sh"})
     TEAM_METRICS.setdefault(zone_metric(_zone, "fg", "opp_"), {
         "group": "shot", "better": False, "label": f"Opp {_label} FG%"})
+    TEAM_METRICS.setdefault(zone_metric(_zone, "ppa", "opp_"), {
+        "group": "shot", "better": False, "label": f"Opp {_label} pts/att", "dp": 2})
 del _zone, _label
 
 
@@ -295,6 +307,7 @@ def _zone_summary(zones: list[dict], prefix: str = "") -> dict:
         bucket = by_name[zone]
         out[zone_metric(zone, "share", prefix)] = metrics._pct(bucket["attempts"], total)
         out[zone_metric(zone, "fg", prefix)] = bucket["fg_pct"]
+        out[zone_metric(zone, "ppa", prefix)] = bucket["points_per_attempt"]
 
     three_attempts = sum(by_name[z]["attempts"] for z in _THREE_ZONES)
     three_makes = sum(by_name[z]["makes"] for z in _THREE_ZONES)

@@ -117,8 +117,10 @@ fails to parse has its cache entry deleted so the next poll starts clean.
 **Cache writes are atomic** (temp file + rename). The poller and a manual command
 can run at once; a half-written gzip caused a real failure during development.
 
-**Pts/att is exactly twice eFG%.** Do not show both. Player tables show Pts/att
-because it reads directly (1.00 means a shot is worth a point).
+**Pts/att is exactly twice eFG%.** Never show both in the same table. Player
+tables show eFG%, because that is what the staff already read; the zone tables
+show points per attempt, because comparing a corner three to a rim finish is
+exactly what it is for.
 
 **DREB% is the exact complement of the opponent's OREB%**, so they always sum to
 100. That is arithmetic, not a bug.
@@ -272,13 +274,25 @@ they still get a rank but never a shading tier, because taking a lot of threes o
 playing fast is a style, not an achievement. The denominator counts only teams
 that have played.
 
+**Which shot volumes carry a direction was measured, not assumed.** Across the
+U18 event the rim returns **1.14** points per attempt against an all-shots
+average of **0.89**, mid-range returns **0.61**, and paint, corner, wing and top
+all land between **0.73 and 0.81**. So `rim_share` and `mid_range_share` are
+shaded, in both directions and on both sides of the ball, and the other four
+shares are ranked but left `better: None`. Do not "finish the job" by shading
+them: separating 0.81 from 0.77 with colour invents a distinction the numbers do
+not support. Points per attempt needs no such call and is shaded everywhere,
+which is what gives every zone row a coloured cell. If a future event's
+efficiency profile differs, rerun the query in this paragraph before changing
+any direction.
+
 **`TEAM_METRICS` holds more than the leaderboard shows.** Every shot zone is
-declared on both sides of the ball, share and accuracy, so the zone tables on a
-scouting page can shade every cell; the leaderboard's Shooting view picks a
-readable handful of them. The zone entries are generated in a loop from
+declared on both sides of the ball, share, accuracy and points per attempt, so
+the zone tables on a scouting page can shade every cell; the leaderboard's
+Shooting view picks a readable handful of them. The zone entries are generated in a loop from
 `metrics.ZONE_ORDER` with `setdefault`, so a hand-written entry above always wins
-over the generated default, which is how `opp_rim_share` keeps its direction
-while the other conceded shares stay unshaded. `zone_metric()` builds the key and
+over the generated default, which is how the measured share directions above
+survive while the other conceded shares stay unshaded. `zone_metric()` builds the key and
 `zone_breakdown()` stamps the same slugs onto every row it emits, so a template
 never spells a metric name itself. If you add a zone, both sides follow for free.
 
