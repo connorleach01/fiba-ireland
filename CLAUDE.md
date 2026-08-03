@@ -347,10 +347,18 @@ as a no-op. The button exists to turn ranks off for a plain table or a cleaner
 print, not to turn them on. The profile strip has no toggle at all; `stat_ranked`
 always prints the rank and tints the card.
 
-Because of that default, the **four-factor table pins its numeric columns**
-(`table.ff th:not(.left)`, 96px). It has one value column and one average column,
-so at full width they stretch and a shaded cell becomes a heavy slab of colour.
-Any other table that ends up with two or three columns will need the same.
+Because of that default, the **four-factor table is sized to its content**
+(`table.ff`, `width: auto` with a 300px floor and 78px numeric columns) rather
+than stretched across the page. Eight short rows of two numbers spread over 794px
+puts a hand's width of empty paper between a factor and its value, which is the
+hardest way to read a table, and a shaded cell becomes a slab of colour. Any
+other two or three column table will need the same treatment.
+
+It leaves whitespace to the right, and that is the accepted trade. The bars below
+it stay full width **on purpose**: `four_factor_bars` draws into a 640px viewBox
+with 8.6px labels, so squeezing it into the leftover ~470px beside the table
+scales its text down to about 6.4px, and worse in print, where this report is
+meant to be read. A narrow table above a full-width chart is the right shape.
 
 **`rank_toggle` takes a CSS selector, not an id.** The two shot-zone tables sit
 side by side under one heading and share one button (`table.zones`), so the

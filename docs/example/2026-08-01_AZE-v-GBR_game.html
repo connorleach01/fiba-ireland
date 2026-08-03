@@ -338,10 +338,13 @@ table.show-ranks td.t2 { background: var(--rk-2); }
 table.show-ranks td.t4 { background: var(--rk-4); }
 table.show-ranks td.t5 { background: var(--rk-5); }
 
-/* The four-factor table has one value column and one average column, so at full
-   width they stretch and a shaded cell becomes a heavy block of colour. Pin the
-   numeric columns and let the factor name absorb the slack. */
-table.ff th:not(.left), table.ff td:not(.left) { width: 96px; }
+/* The four-factor table is eight short rows of two numbers. Stretched to the
+   full page it puts a hand's width of empty paper between the factor name and
+   its value, which is the hardest thing to read a table across. Sized to its
+   content instead, so the eye travels a couple of centimetres. */
+table.ff { width: auto; min-width: 300px; max-width: 100%; }
+table.ff th:not(.left), table.ff td:not(.left) { width: 78px; }
+table.ff td.left { padding-right: 22px; }
 
 /* The profile strip is the page's headline, so its shading is always on and
    needs no toggle: the rank is already printed under every figure. The tint
@@ -2252,7 +2255,7 @@ plus-minus over two minutes as noise.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Mon 03 Aug 2026, 20:20 (Irish time)</span>
+  <span>Generated Mon 03 Aug 2026, 20:31 (Irish time)</span>
 </div>
 
 <div class="running-foot">
