@@ -68,9 +68,13 @@
 {%- elif n % 10 == 3 %}{{ n }}rd{% else %}{{ n }}th{% endif -%}
 {%- endmacro %}
 
+{# Ranks are on by default. The button is there to turn them off, for a reader
+   who wants the plain table or a cleaner print. Every table it drives must ship
+   with `show-ranks` already on it or the button's first click will read as a
+   no-op. #}
 {% macro rank_toggle(target, off='Show ranks', on='Hide ranks') %}
 <button type="button" class="ranktoggle no-print" data-target="{{ target }}"
-        data-off="{{ off }}" data-on="{{ on }}" aria-pressed="false">{{ off }}</button>
+        data-off="{{ off }}" data-on="{{ on }}" aria-pressed="true">{{ on }}</button>
 {% endmacro %}
 
 {% macro sample_banner(games_played, thing='These figures') %}
@@ -88,7 +92,7 @@ Rate stats are still noisy at this stage of the tournament.</p>
                       pcts=None, table_id='players') %}
 {% if pcts %}{{ rank_toggle('#' ~ table_id, 'Show percentiles', 'Hide percentiles') }}{% endif %}
 <div class="scroll-x">
-<table id="{{ table_id }}" class="{{ 'expandable' if details else '' }}">
+<table id="{{ table_id }}" class="{{ 'expandable ' if details }}{{ 'show-ranks' if pcts }}">
 {% if caption %}<caption>{{ caption }}</caption>{% endif %}
 <thead>
   <tr>
@@ -236,7 +240,7 @@ plus-minus over two minutes as noise.</p>
 {% macro zone_table(zones, caption='Shooting by zone', ranks=None, prefix='',
                     klass='') %}
 <div class="scroll-x">
-<table class="{{ klass }}">
+<table class="{{ klass }}{{ ' show-ranks' if ranks }}">
 <caption>{{ caption }}</caption>
 <thead><tr><th class="left">Zone</th><th data-sortable>M</th><th data-sortable>A</th>
 <th data-sortable>FG%</th><th data-sortable>Share</th><th data-sortable>Pts/att</th></tr></thead>
@@ -340,7 +344,7 @@ plus-minus over two minutes as noise.</p>
 {% set dp = 1 if per_game else 0 %}
 {% if ranks and table_id %}{{ rank_toggle('#' ~ table_id) }}{% endif %}
 <div class="scroll-x">
-<table {% if table_id %}id="{{ table_id }}"{% endif %}>
+<table {% if table_id %}id="{{ table_id }}"{% endif %} class="{{ 'show-ranks' if ranks }}">
 {% if caption %}<caption>{{ caption }}</caption>{% endif %}
 <thead><tr>
   <th class="left">Category</th>
@@ -460,7 +464,7 @@ TOV% forced and DREB% are higher-is-better.</p>
 {% macro four_factor_ranked(own, opp, league, ranks, code, table_id='ff') %}
 {{ rank_toggle('#' ~ table_id) }}
 <div class="scroll-x">
-<table id="{{ table_id }}">
+<table id="{{ table_id }}" class="ff show-ranks">
 <thead><tr>
   <th class="left">Factor</th><th>{{ code }}</th><th>Event avg</th>
 </tr></thead>

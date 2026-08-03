@@ -338,6 +338,11 @@ table.show-ranks td.t2 { background: var(--rk-2); }
 table.show-ranks td.t4 { background: var(--rk-4); }
 table.show-ranks td.t5 { background: var(--rk-5); }
 
+/* The four-factor table has one value column and one average column, so at full
+   width they stretch and a shaded cell becomes a heavy block of colour. Pin the
+   numeric columns and let the factor name absorb the slack. */
+table.ff th:not(.left), table.ff td:not(.left) { width: 96px; }
+
 /* The profile strip is the page's headline, so its shading is always on and
    needs no toggle: the rank is already printed under every figure. The tint
    sits behind the card rather than a cell, so it carries a hairline to stop
@@ -546,7 +551,7 @@ POL net -13.7 per 100
   </div>
   <div>
     <div class="scroll-x">
-<table >
+<table  class="">
 <caption>Scoring breakdown</caption><thead><tr>
   <th class="left">Category</th>
 <th>POL</th><th>% of pts</th><th>CZE</th><th>% of pts</th></tr></thead>
@@ -846,7 +851,7 @@ against what they allowed. The vertical rule marks the competition average.</p>
 <section>
 <h2>Box score &mdash; Poland</h2>
 <div class="scroll-x">
-<table id="box-POL" class="expandable">
+<table id="box-POL" class="expandable ">
 <thead>
   <tr>
     <th class="left">#</th><th class="left" data-sortable>Player</th>
@@ -1551,7 +1556,7 @@ FD/40 is fouls drawn per 40 minutes.</p>
 <section>
 <h2>Box score &mdash; Czechia</h2>
 <div class="scroll-x">
-<table id="box-CZE" class="expandable">
+<table id="box-CZE" class="expandable ">
 <thead>
   <tr>
     <th class="left">#</th><th class="left" data-sortable>Player</th>
@@ -2399,7 +2404,7 @@ plus-minus over two minutes as noise.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Mon 03 Aug 2026, 01:21 (Irish time)</span>
+  <span>Generated Mon 03 Aug 2026, 01:41 (Irish time)</span>
 </div>
 
 <div class="running-foot">

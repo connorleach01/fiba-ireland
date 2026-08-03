@@ -324,14 +324,21 @@ pool, because the volume gate excludes players before ranking rather than after.
 Both are event-wide, so `build_all` computes them **once** and threads them
 through as `context`; do not call them per page.
 
-Shading is a five-step diverging tint (blue good, red bad, unshaded middle) that
-is off by default in tables and turned on by a `rank_toggle`. The rank number
-always prints alongside the tint, so colour is never the only cue. Game sheets
-get no ranks at all: a single game is not a ranking.
+Shading is a five-step diverging tint (blue good, red bad, unshaded middle). The
+rank number always prints alongside the tint, so colour is never the only cue.
+Game sheets get no ranks at all: a single game is not a ranking.
 
-The **profile strip is the exception: its shading is always on**, no toggle. It
-carries six figures rather than sixty and it is the headline of the page, so
-`stat_ranked` prints the rank under every figure and tints the card.
+**Ranks are on by default.** `rank_toggle` renders pressed, reading "Hide ranks",
+and every table it drives ships with `show-ranks` already in its class list. The
+two have to move together: leave the class off and the button's first click reads
+as a no-op. The button exists to turn ranks off for a plain table or a cleaner
+print, not to turn them on. The profile strip has no toggle at all; `stat_ranked`
+always prints the rank and tints the card.
+
+Because of that default, the **four-factor table pins its numeric columns**
+(`table.ff th:not(.left)`, 96px). It has one value column and one average column,
+so at full width they stretch and a shaded cell becomes a heavy slab of colour.
+Any other table that ends up with two or three columns will need the same.
 
 **`rank_toggle` takes a CSS selector, not an id.** The two shot-zone tables sit
 side by side under one heading and share one button (`table.zones`), so the

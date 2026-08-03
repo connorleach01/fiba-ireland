@@ -338,6 +338,11 @@ table.show-ranks td.t2 { background: var(--rk-2); }
 table.show-ranks td.t4 { background: var(--rk-4); }
 table.show-ranks td.t5 { background: var(--rk-5); }
 
+/* The four-factor table has one value column and one average column, so at full
+   width they stretch and a shaded cell becomes a heavy block of colour. Pin the
+   numeric columns and let the factor name absorb the slack. */
+table.ff th:not(.left), table.ff td:not(.left) { width: 96px; }
+
 /* The profile strip is the page's headline, so its shading is always on and
    needs no toggle: the rank is already printed under every figure. The tint
    sits behind the card rather than a cell, so it carries a hairline to stop
