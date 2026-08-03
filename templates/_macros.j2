@@ -42,14 +42,23 @@
 </div>
 {% endmacro %}
 
-{# A table cell carrying a value plus its rank, shaded by tier when the reader
-   turns ranks on. Metrics with no better/worse direction get a rank but no
-   tier, so style is never coloured as if it were quality. #}
-{% macro rk(value, ranks, key, digits=1, plus=False) -%}
+{# A table cell carrying a value plus its standing, shaded by tier when the
+   reader turns ranks on. Metrics with no better/worse direction get a standing
+   but no tier, so style is never coloured as if it were quality.
+
+   `pct` picks how the chip reads. Twenty-two teams rank naturally, so a team
+   table shows "3rd". Two hundred and sixty-four players do not: "254th" is hard
+   to place and reads as a mistake next to a button offering percentiles, so a
+   player table shows the percentile, 100 being the top of the field. The rank
+   is still there on hover. #}
+{% macro rk(value, ranks, key, digits=1, plus=False, pct=False) -%}
 {%- set r = (ranks or {}).get(key) -%}
 <td class="{% if r and r.tier %}t{{ r.tier }}{% endif %}">
 {%- if plus %}{{ signed(value, digits) }}{% else %}{{ num(value, digits) }}{% endif -%}
-{%- if r %}<span class="rk-chip">{{ ordinal_short(r.rank) }}</span>{% endif -%}
+{%- if r %}
+  {%- if pct %}<span class="rk-chip" title="{{ ordinal_short(r.rank) }} of {{ r.of }}">{{ '%.0f'|format(r.percentile) }}</span>
+  {%- else %}<span class="rk-chip">{{ ordinal_short(r.rank) }}</span>{% endif -%}
+{%- endif -%}
 </td>
 {%- endmacro %}
 
@@ -110,10 +119,10 @@ Rate stats are still noisy at this stage of the tournament.</p>
     <td class="left name">{% if d %}<span class="twisty" aria-hidden="true">&#9656;</span>{% endif %}{{ p.full_name }}</td>
     {% if per_game %}
       <td>{{ p.games }}</td>
-      {{ rk(p.minutes_pg, (pcts or {}).get(p.person_id), 'minutes_pg') }}
-      {{ rk(p.pts_pg, (pcts or {}).get(p.person_id), 'pts_pg') }}
-      {{ rk(p.reb_pg, (pcts or {}).get(p.person_id), 'reb_pg') }}
-      {{ rk(p.ast_pg, (pcts or {}).get(p.person_id), 'ast_pg') }}
+      {{ rk(p.minutes_pg, (pcts or {}).get(p.person_id), 'minutes_pg', pct=True) }}
+      {{ rk(p.pts_pg, (pcts or {}).get(p.person_id), 'pts_pg', pct=True) }}
+      {{ rk(p.reb_pg, (pcts or {}).get(p.person_id), 'reb_pg', pct=True) }}
+      {{ rk(p.ast_pg, (pcts or {}).get(p.person_id), 'ast_pg', pct=True) }}
     {% else %}
       <td>{{ num(p.minutes) }}</td>
       <td>{{ p.PTS }}</td>
@@ -122,28 +131,31 @@ Rate stats are still noisy at this stage of the tournament.</p>
       <td class="{{ tone(p.PM) }}">{{ '%+d'|format(p.PM or 0) }}</td>
     {% endif %}
     <td>{{ p.FGM }}/{{ p.FGA }}</td>
-    {{ rk(p.fg_pct, (pcts or {}).get(p.person_id), 'fg_pct') }}
+    {{ rk(p.fg_pct, (pcts or {}).get(p.person_id), 'fg_pct', pct=True) }}
     <td>{{ p.FG3M }}/{{ p.FG3A }}</td>
-    {{ rk(p.fg3_pct, (pcts or {}).get(p.person_id), 'fg3_pct') }}
+    {{ rk(p.fg3_pct, (pcts or {}).get(p.person_id), 'fg3_pct', pct=True) }}
     <td>{{ p.FTM }}/{{ p.FTA }}</td>
-    {{ rk(p.ft_pct, (pcts or {}).get(p.person_id), 'ft_pct') }}
-    {{ rk(p.efg_pct, (pcts or {}).get(p.person_id), 'efg_pct') }}
-    {{ rk(p.usage_pct, (pcts or {}).get(p.person_id), 'usage_pct') }}
-    {{ rk(p.treb_pct, (pcts or {}).get(p.person_id), 'treb_pct') }}
-    {{ rk(p.ast_pct, (pcts or {}).get(p.person_id), 'ast_pct') }}
-    {{ rk(p.tov_pct, (pcts or {}).get(p.person_id), 'tov_pct') }}
-    {{ rk(p.fouls_drawn_per40, (pcts or {}).get(p.person_id), 'fouls_drawn_per40') }}
+    {{ rk(p.ft_pct, (pcts or {}).get(p.person_id), 'ft_pct', pct=True) }}
+    {{ rk(p.efg_pct, (pcts or {}).get(p.person_id), 'efg_pct', pct=True) }}
+    {{ rk(p.usage_pct, (pcts or {}).get(p.person_id), 'usage_pct', pct=True) }}
+    {{ rk(p.treb_pct, (pcts or {}).get(p.person_id), 'treb_pct', pct=True) }}
+    {{ rk(p.ast_pct, (pcts or {}).get(p.person_id), 'ast_pct', pct=True) }}
+    {{ rk(p.tov_pct, (pcts or {}).get(p.person_id), 'tov_pct', pct=True) }}
+    {{ rk(p.fouls_drawn_per40, (pcts or {}).get(p.person_id), 'fouls_drawn_per40', pct=True) }}
   </tr>
 {% endfor %}
 </tbody>
 </table>
 </div>
 {% if pcts and pcts.get('_pool') %}
-<p class="note">Ranks are against all {{ pcts['_pool'].size }} players who have
-taken the floor in this event. The shooting percentages are the one exception:
-they are only ranked once a player has attempted enough shots for the number to
-carry meaning, so a percentage without a rank is a small sample rather than a
-missing figure.</p>
+<p class="note">The small figure is a percentile against all
+{{ pcts['_pool'].size }} players who have taken the floor in this event, where
+100 is the top of the field and 50 is the middle. Hover it for the plain rank.
+The shooting percentages are the one exception: they carry a percentile only
+once a player has attempted enough shots for it to mean anything, and it is
+measured against the others who cleared the same bar rather than the full field,
+which is why hovering one shows a smaller denominator. A percentage with no
+figure beside it is a thin sample rather than a gap in the data.</p>
 {% endif %}
 {% if details %}
 <p class="note">Click a player for their shot chart and shooting breakdown.</p>

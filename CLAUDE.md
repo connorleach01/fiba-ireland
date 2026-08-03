@@ -300,6 +300,15 @@ percentage without a rank is a thin sample rather than a missing figure. Around
 93% of rankable player cells carry a rank in the U18 reference set; if that drops
 sharply, suspect the gate before suspecting the data.
 
+**Teams show a rank, players show a percentile.** Twenty-two teams rank
+naturally, so a team chip reads "3rd". Two hundred and sixty-four players do not:
+"254th" is hard to place and reads as an error next to a button offering
+percentiles. The `pct=True` argument to `rk()` switches the chip to the
+percentile, 100 being the top of the field, with the plain rank on hover. Both
+come off the same `_rank_values` entry, so there is one calculation, two
+renderings. Note that a shooting percentile has a smaller denominator than the
+pool, because the volume gate excludes players before ranking rather than after.
+
 Both are event-wide, so `build_all` computes them **once** and threads them
 through as `context`; do not call them per page.
 
