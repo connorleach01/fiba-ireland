@@ -206,6 +206,17 @@ def test_ranks_and_percentiles():
           all(m in metrics_values[best] for m in declared),
           f"(missing {[m for m in declared if m not in metrics_values[best]]})")
 
+    # The Shooting view must mirror itself: anything shown for a team's own
+    # shots has to be shown for what it concedes, or a reader comparing the two
+    # halves silently compares different things.
+    shot_view = next(g["metrics"] for g in analysis.LEADERBOARD_GROUPS
+                     if g["key"] == "shot")
+    own = [m for m in shot_view if not m.startswith("opp_")]
+    conceded = [m[4:] for m in shot_view if m.startswith("opp_")]
+    check("the shooting view is symmetric", own == conceded,
+          f"(own only {sorted(set(own) - set(conceded))}, "
+          f"conceded only {sorted(set(conceded) - set(own))})")
+
     # A zone table looks its ranks up by the slug stamped on each zone row, so
     # every one of those slugs has to be a declared metric on both sides.
     zone_rows = metrics.zone_breakdown(analysis.shots(conn, U18, best))

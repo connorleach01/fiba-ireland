@@ -339,7 +339,11 @@ handler uses `querySelectorAll` and drives every match. Passing `#some-id` still
 works and is what the single-table cases do.
 
 `LEADERBOARD_GROUPS` drives the leaderboard's four views, so adding a column is a
-one-line change there plus an entry in `TEAM_METRICS`.
+one-line change there plus an entry in `TEAM_METRICS`. **Every view must mirror
+itself**: anything shown for a team's own play has to be shown for what it
+concedes, or a reader comparing the two halves is quietly comparing different
+things. The Shooting view shipped asymmetric once, missing paint and mid-range
+accuracy on both sides, and a test now asserts the mirror holds.
 
 ## Deliberately not shown
 

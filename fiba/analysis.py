@@ -213,9 +213,12 @@ TEAM_METRICS: dict[str, dict] = {
     # these than anyone else".
     "rim_share": {"group": "shot", "better": None, "label": "Rim %sh"},
     "mid_range_share": {"group": "shot", "better": None, "label": "Mid %sh"},
+    "mid_range_fg": {"group": "shot", "better": True, "label": "Mid FG%"},
     "three_share": {"group": "shot", "better": None, "label": "3PT %sh"},
     "three_fg": {"group": "shot", "better": True, "label": "3PT FG%"},
-    "opp_rim_share": {"group": "shot", "better": None, "label": "Opp rim %sh"},
+    "opp_rim_share": {"group": "shot", "better": None, "label": "Opp Rim %sh"},
+    "opp_mid_range_share": {"group": "shot", "better": None, "label": "Opp Mid %sh"},
+    "opp_mid_range_fg": {"group": "shot", "better": False, "label": "Opp Mid FG%"},
     "opp_three_share": {"group": "shot", "better": None, "label": "Opp 3PT %sh"},
     "opp_three_fg": {"group": "shot", "better": False, "label": "Opp 3PT FG%"},
     # Scoring breakdown, per game
@@ -274,10 +277,16 @@ LEADERBOARD_GROUPS = [
     {"key": "box", "label": "Box score", "metrics": [
         "pts", "fg_pct", "fg3_pct", "ft_pct", "oreb", "dreb", "ast", "tov",
         "stl", "blk", "pf", "opp_pts", "opp_fg_pct", "opp_fg3_pct"]},
+    # Volume then accuracy for each zone, own block then conceded, so the two
+    # halves line up column for column. The three-point zones stay aggregated
+    # here: splitting corner, wing and top is what the zone tables on a scouting
+    # page are for, and six more columns would not survive the width.
     {"key": "shot", "label": "Shooting", "metrics": [
-        "rim_share", "rim_fg", "paint_share", "mid_range_share", "three_share",
-        "three_fg", "opp_rim_share", "opp_rim_fg", "opp_three_share",
-        "opp_three_fg"]},
+        "rim_share", "rim_fg", "paint_share", "paint_fg",
+        "mid_range_share", "mid_range_fg", "three_share", "three_fg",
+        "opp_rim_share", "opp_rim_fg", "opp_paint_share", "opp_paint_fg",
+        "opp_mid_range_share", "opp_mid_range_fg",
+        "opp_three_share", "opp_three_fg"]},
     {"key": "scoring", "label": "Scoring", "metrics": [
         "pip", "fbp", "scp", "pat", "bench",
         "opp_pip", "opp_fbp", "opp_scp", "opp_pat"]},
