@@ -77,7 +77,8 @@ fiba/
   report.py    Jinja2 -> HTML; build_all() is the entry point
   deploy.py    commits docs/ and pushes
   watch.py     the poller and the CLI
-templates/     _base (all CSS + JS), _macros, index/scout/review/tournament/teams
+templates/     _base (all CSS + JS), _macros,
+               index/scout/review/tournament/teams/schedule
 docs/          the published site (GitHub Pages source)
 docs/example/  U18 reference set, stamped "not live U16 data"
 raw/           gzipped scraped pages, gitignored
@@ -249,10 +250,25 @@ cost the staff the other twenty-five reports.
 
 ## Navigation model
 
-Nav is Ireland, Teams, and a Scouting dropdown, with the **IRL U16 brand as the
-home link**. **There is no Games menu**: individual games are reached from the
-team they belong to, through the game log on that team's page or the dashboard's
-recent results.
+Nav is Games, Ireland, Teams, and a Scouting dropdown, with the **IRL U16 brand
+as the home link**.
+
+**Games is a fixture list, not a menu of games.** A dropdown listing every game
+was built and removed early on, and that decision stands: games are still reached
+from the team they belong to, through the game log on that team's page. What
+`schedule.html` adds is the thing a dropdown could not, a day-by-day view of the
+whole tournament that is complete before a ball is thrown, because FIBA publishes
+all 81 fixtures when the event page opens. It fills in with scores and links to
+game sheets as the event runs.
+
+**The fixture list has to survive an unresolved bracket.** 31 of the 81 U16 games
+are knockout ties with `team_a_code` null, and two of those rounds carry a stub
+tip time: ten games at the identical minute, 22:00 UTC. Two games sharing a slot
+is normal, since two venues run in parallel, so `build_schedule` treats any slot
+holding more than four games as a placeholder and prints TBC. Both resolve
+themselves as the group stage finishes, and the finished U18 event has zero
+unassigned fixtures, which is the proof that they do. Nothing here is keyed to a
+round or a date; do not hard-code either.
 
 **There is no Dashboard tab either.** The dashboard is `index.html`, so it is
 where staff already are when they open the site; a tab pointing at it only ever
@@ -402,7 +418,9 @@ reason, and if you do, say why in the commit.
   reader wanted ranks or not. `four_factor_table`, the game-sheet version, never
   took ranks at all and its dead `ranks` argument is gone with it.
 - **Player position column**, dropped for width once shooting splits went in.
-- **A Games nav menu**, and **a Dashboard tab**, see the navigation model above.
+- **A Games nav menu listing individual games**, and **a Dashboard tab**, see the
+  navigation model above. The Games tab that exists now is a fixture list, which
+  is a different thing; it did not reinstate the dropdown.
 - **Ranks on game sheets.** One game is not a ranking.
 
 ## Conventions

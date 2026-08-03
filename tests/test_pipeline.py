@@ -7,6 +7,7 @@ from __future__ import annotations
 import sys
 
 from fiba import analysis, clock, db, fetch, lineups, metrics, parse, theming
+from fiba.config import IRELAND_ORG_ID
 
 U16 = "fiba-u16-eurobasket-2025-division-b"
 U18 = "fiba-u18-eurobasket-2026-division-b"
@@ -168,6 +169,50 @@ def test_small_sample_rates_withheld():
     rows = conn.execute(
         "SELECT s.seconds FROM stints s WHERE s.seconds > 0 LIMIT 1").fetchall()
     check("stints are stored", len(rows) > 0)
+
+
+def test_fixture_list():
+    """The schedule page has to be complete and honest before a ball is thrown."""
+    print("fixture list")
+    conn = db.connect()
+
+    upcoming = analysis.event_fixtures(conn, "fiba-u16-eurobasket-2026-division-b")
+    check("every fixture is listed before the event starts", len(upcoming) == 81)
+    check("nothing is marked played yet",
+          not any(f["played"] for f in upcoming))
+    # An unplayed game reports 0-0 in the feed, which must never reach a page.
+    check("an unplayed game shows no score",
+          all(f["home"]["score"] is None and f["away"]["score"] is None
+              for f in upcoming))
+    check("fixtures are in tip order",
+          [f["game_utc"] for f in upcoming] == sorted(f["game_utc"] for f in upcoming))
+    # Knockout ties are published before the bracket resolves, with no teams. The
+    # page must say so rather than render blank rows, and the group stage, which
+    # is what matters on day one, must be fully assigned.
+    named = [f for f in upcoming if f["home"]["code"] and f["away"]["code"]]
+    check("the group stage is fully assigned", len(named) == 50,
+          f"(got {len(named)})")
+    check("Ireland's group games all name an opponent",
+          all(f["home"]["code"] and f["away"]["code"] for f in upcoming
+              if IRELAND_ORG_ID in (f["home"]["org_id"], f["away"]["org_id"])))
+
+    played = analysis.event_fixtures(conn, U18)
+    done = [f for f in played if f["played"]]
+    check("a finished event carries its results", len(done) == 78)
+    check("a finished game has both scores",
+          all(f["home"]["score"] is not None and f["away"]["score"] is not None
+              for f in done))
+    # Scores come off the schedule feed, so they must agree with the box score
+    # the game sheet is built from.
+    mismatched = []
+    for f in done:
+        row = conn.execute(
+            "SELECT score FROM team_game_stats WHERE event_slug=? AND game_id=? "
+            "AND org_id=?", (U18, f["game_id"], f["home"]["org_id"])).fetchone()
+        if row and row["score"] != f["home"]["score"]:
+            mismatched.append(f["game_id"])
+    check("schedule scores agree with the box score", not mismatched,
+          f"(mismatched {mismatched[:5]})")
 
 
 def test_empty_event_shape():
@@ -343,7 +388,8 @@ def main() -> int:
     for test in (test_clock, test_parse_both_encodings, test_metrics_match_published,
                  test_four_factors_sanity, test_shot_zones,
                  test_rejects_unfinished_games, test_lineups_validate,
-                 test_small_sample_rates_withheld, test_empty_event_shape,
+                 test_small_sample_rates_withheld, test_fixture_list,
+                 test_empty_event_shape,
                  test_theming, test_ranks_and_percentiles):
         test()
     print()

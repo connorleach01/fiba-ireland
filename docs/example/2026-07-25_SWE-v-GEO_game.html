@@ -164,6 +164,26 @@ td.neg { color: var(--bad); }
 .unit { font-size: 8.6px; color: var(--ink-3); font-weight: 400; }
 tr { break-inside: avoid; page-break-inside: avoid; }
 
+/* --- Fixture list -------------------------------------------------------- */
+/* The fixture cell holds two teams and a separator, so it is the only cell that
+   is allowed to be wide; everything else is pinned so the days line up with each
+   other down the page. */
+table.fixtures td.left.name { white-space: nowrap; }
+table.fixtures .side { display: inline-flex; align-items: center; }
+table.fixtures .versus {
+  color: var(--ink-4); font-weight: 400; padding: 0 6px;
+}
+table.fixtures .win { font-weight: 700; }
+table.fixtures tbody td:not(.win) { font-weight: 400; }
+table.fixtures td.score { white-space: nowrap; width: 74px; }
+table.fixtures td.score .versus { padding: 0 3px; }
+table.fixtures .live {
+  color: var(--bad); font-weight: 700; text-transform: uppercase;
+  font-size: 8.4px; letter-spacing: .1em;
+}
+/* An unplayed fixture is context, not news, so it recedes. */
+table.fixtures tbody tr:not(.highlight) td.left.muted { color: var(--ink-4); }
+
 /* --- Two column block ---------------------------------------------------- */
 .cols { display: flex; gap: 16px; align-items: flex-start; }
 .cols > * { flex: 1 1 0; min-width: 0; }
@@ -468,6 +488,7 @@ td .flag, li .flag { margin-right: 5px; }
     <a class="brand"
        href="index.html">IRL U16</a>
       <a href="irl_tournament.html" >Ireland</a>
+      <a href="schedule.html" >Games</a>
     <a href="tournament_teams.html" >Teams</a>
     <div class="drop">
       <button type="button" aria-expanded="false">Scouting &#9662;</button>
@@ -2235,7 +2256,7 @@ plus-minus over two minutes as noise.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Mon 03 Aug 2026, 20:31 (Irish time)</span>
+  <span>Generated Mon 03 Aug 2026, 20:41 (Irish time)</span>
 </div>
 
 <div class="running-foot">

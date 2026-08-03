@@ -1,0 +1,81 @@
+{# The fixture list. Complete from day one, because FIBA publishes all 81 games
+   the moment the event page opens, so this is useful before a ball is thrown and
+   turns into a results archive as the tournament runs. #}
+{% extends "_base.html.j2" %}
+{% import "_macros.j2" as m %}
+
+{% block title %}Schedule and results{% endblock %}
+{% block eyebrow %}{{ event_name }} &middot; Schedule{% endblock %}
+{% block heading %}Every game, day by day{% endblock %}
+{% block subtitle %}
+{{ played }} of {{ total }} games played
+&middot; {{ subject.name }} fixtures are highlighted
+&middot; Click a finished game for the full breakdown
+{% endblock %}
+{% block footid %}Schedule and results{% endblock %}
+
+{% block content %}
+
+{% for day in days %}
+<section class="keep">
+<h2>{{ day.label }}</h2>
+<div class="scroll-x">
+<table class="fixtures">
+<thead><tr>
+  <th class="left">Time</th>
+  <th class="left">Fixture</th>
+  <th>Score</th>
+  <th class="left">Venue</th>
+  <th class="left">Report</th>
+</tr></thead>
+<tbody>
+{% for g in day.games %}
+  <tr{% if g.subject %} class="highlight"{% endif %}>
+    <td class="left muted">{{ g.time or 'TBC' }}</td>
+    <td class="left name">
+      {% if g.confirmed %}
+      <span class="side{{ ' win' if g.winner == 'home' }}">{{ flag(g.home.code) }}{{ g.home.name }}</span>
+      <span class="versus">v</span>
+      <span class="side{{ ' win' if g.winner == 'away' }}">{{ flag(g.away.code) }}{{ g.away.name }}</span>
+      {% else %}
+      <span class="muted">Teams to be confirmed</span>
+      {% endif %}
+    </td>
+    <td class="score">
+      {% if g.played %}
+        <span class="{{ 'win' if g.winner == 'home' }}">{{ g.home.score }}</span><span
+          class="versus">&ndash;</span><span class="{{ 'win' if g.winner == 'away' }}">{{ g.away.score }}</span>
+      {% elif g.is_live %}
+        <span class="live">live</span>
+      {% else %}
+        <span class="muted">&ndash;</span>
+      {% endif %}
+    </td>
+    <td class="left muted">{{ g.city }}</td>
+    <td class="left">
+      {% if g.href %}<a href="{{ g.href }}">Game sheet</a>
+      {% elif g.is_live %}<span class="muted">in progress</span>
+      {% else %}<span class="muted">not played</span>{% endif %}
+    </td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</section>
+{% else %}
+<p class="note">No fixtures have been published for this event yet.</p>
+{% endfor %}
+
+<p class="note">Times are Irish. A game appears here as soon as FIBA publishes
+the fixture list, and its score and full breakdown appear within a few minutes of
+the final buzzer. A game sheet covers both teams: four factors, the box score,
+shot charts, lineups and how the lead moved.
+{% if unconfirmed %}
+{{ unconfirmed }} of the {{ total }} games are knockout ties whose teams depend on
+how the group stage finishes. FIBA lists them with no teams and, for some rounds,
+a placeholder tip time, so both are shown as to be confirmed here rather than
+guessed at. They fill in on their own as the bracket resolves.
+{% endif %}</p>
+
+{% endblock %}

@@ -73,7 +73,8 @@ def build_nav(conn, event_slug: str, org_id: int) -> dict:
                   else None)
 
     return {"subject": subject, "scouts": scouts, "reviews": reviews,
-            "tournament": tournament, "teams": "tournament_teams.html"}
+            "tournament": tournament, "teams": "tournament_teams.html",
+            "schedule": "schedule.html"}
 
 
 def _played_in(conn, event_slug: str, game_id: int, org_id: int) -> bool:
@@ -398,6 +399,74 @@ def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
     return _write(f"{profile['identity']['code'].lower()}_tournament.html", html)
 
 
+def build_schedule(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
+                   nav: dict | None = None, reference: str | None = None) -> str:
+    """The fixture list, day by day, results filled in as they land.
+
+    Grouping happens here rather than in `analysis` because the day a game
+    belongs to is the day it is in Irish time, and the timezone is a presentation
+    concern. Tip times sit between 09:00 and 19:00 UTC, so nothing straddles
+    midnight either way, but the conversion belongs on this side regardless.
+    """
+    fixtures = analysis.event_fixtures(conn, event_slug)
+
+    # FIBA publishes the knockout rounds before the bracket resolves: no teams,
+    # and a stub tip time shared by the whole round. Two games at the same minute
+    # is normal, because two venues run in parallel; ten is a placeholder. Those
+    # times are suppressed rather than shown, since "23:00" is worse than
+    # admitting the slot is not set. Both resolve themselves as the group stage
+    # finishes, which is why nothing here is hard-coded to a round or a date.
+    from collections import Counter
+    per_slot = Counter(f["game_utc"] for f in fixtures if f["game_utc"])
+    stub_slots = {slot for slot, n in per_slot.items() if n > 4}
+
+    days: list[dict] = []
+    for fixture in fixtures:
+        moment = None
+        if fixture["game_utc"]:
+            try:
+                moment = dt.datetime.fromisoformat(
+                    fixture["game_utc"]).astimezone(IRISH_TZ)
+            except ValueError:
+                moment = None
+
+        fixture["confirmed"] = bool(fixture["home"]["code"]
+                                    and fixture["away"]["code"])
+        timed = moment is not None and fixture["game_utc"] not in stub_slots
+        fixture["time"] = moment.strftime("%H:%M") if timed else ""
+        fixture["href"] = (game_filename(conn, event_slug, fixture["game_id"])
+                           if fixture["played"] else None)
+        fixture["subject"] = org_id in (fixture["home"]["org_id"],
+                                        fixture["away"]["org_id"])
+        # Whose score to embolden. Left None on a draw or an unplayed game.
+        home, away = fixture["home"]["score"], fixture["away"]["score"]
+        fixture["winner"] = None
+        if home is not None and away is not None and home != away:
+            fixture["winner"] = "home" if home > away else "away"
+
+        key = moment.date().isoformat() if moment else "tbc"
+        if not days or days[-1]["key"] != key:
+            days.append({
+                "key": key,
+                "label": moment.strftime("%A %d %B") if moment else "Date to be confirmed",
+                "games": [],
+            })
+        days[-1]["games"].append(fixture)
+
+    played = sum(1 for d in days for g in d["games"] if g["played"])
+    total = sum(len(d["games"]) for d in days)
+    unconfirmed = sum(1 for d in days for g in d["games"] if not g["confirmed"])
+
+    html = _env.get_template("schedule.html.j2").render(
+        event_name=_event_name(conn, event_slug),
+        generated_at=_now_text(),
+        subject=analysis.team_identity(conn, event_slug, org_id),
+        days=days, played=played, total=total, unconfirmed=unconfirmed,
+        nav=nav, page="schedule", reference=reference,
+    )
+    return _write("schedule.html", html)
+
+
 def build_teams(conn, event_slug: str,
                 highlight_org_id: int = IRELAND_ORG_ID,
                 nav: dict | None = None, reference: str | None = None,
@@ -560,6 +629,12 @@ def build_all(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
         written["standing"].append(
             {"href": tournament, "title": "Ireland: tournament to date",
              "when": "updated now"})
+    schedule_page = _safe("schedule", build_schedule, conn, event_slug, org_id,
+                          nav=nav, reference=reference)
+    if schedule_page:
+        written["standing"].append(
+            {"href": schedule_page, "title": "Schedule and results",
+             "when": "every game, day by day"})
     teams_page = _safe("teams", build_teams, conn, event_slug, org_id, nav=nav,
                        reference=reference, context=context)
     if teams_page:

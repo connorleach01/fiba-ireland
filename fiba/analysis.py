@@ -805,6 +805,39 @@ def starters_vs_bench(conn, event_slug: str, org_id: int,
     return result
 
 
+def event_fixtures(conn, event_slug: str) -> list[dict]:
+    """Every fixture in the event, played or not, in tip order.
+
+    The schedule feed carries all 81 games from the day the event page opens, so
+    this is complete before a ball is thrown. Scores come from the schedule
+    rather than the box score because `validate_game` already asserts the two
+    agree, and an unplayed game reports 0-0, which is why they are only read once
+    the game has actually been ingested.
+    """
+    out = []
+    for row in conn.execute(
+        "SELECT * FROM games WHERE event_slug=? ORDER BY game_utc, game_id",
+        (event_slug,),
+    ):
+        played = row["parsed_at"] is not None
+        out.append({
+            "game_id": row["game_id"],
+            "game_utc": row["game_utc"],
+            "game_datetime": row["game_datetime"],
+            "played": played,
+            "is_live": bool(row["is_live"]),
+            "venue": row["venue_name"],
+            "city": row["host_city"],
+            "home": {"org_id": row["team_a_org_id"], "code": row["team_a_code"],
+                     "name": row["team_a_name"],
+                     "score": row["team_a_score"] if played else None},
+            "away": {"org_id": row["team_b_org_id"], "code": row["team_b_code"],
+                     "name": row["team_b_name"],
+                     "score": row["team_b_score"] if played else None},
+        })
+    return out
+
+
 def next_opponent(conn, event_slug: str, org_id: int) -> dict | None:
     """The team's next unplayed fixture, which is what a scout report targets."""
     row = conn.execute(
