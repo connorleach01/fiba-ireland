@@ -206,16 +206,27 @@ def test_ranks_and_percentiles():
           all(m in metrics_values[best] for m in declared),
           f"(missing {[m for m in declared if m not in metrics_values[best]]})")
 
-    # The Shooting view must mirror itself: anything shown for a team's own
-    # shots has to be shown for what it concedes, or a reader comparing the two
-    # halves silently compares different things.
-    shot_view = next(g["metrics"] for g in analysis.LEADERBOARD_GROUPS
-                     if g["key"] == "shot")
-    own = [m for m in shot_view if not m.startswith("opp_")]
-    conceded = [m[4:] for m in shot_view if m.startswith("opp_")]
-    check("the shooting view is symmetric", own == conceded,
-          f"(own only {sorted(set(own) - set(conceded))}, "
-          f"conceded only {sorted(set(conceded) - set(own))})")
+    # Box score and Shooting must mirror themselves: anything shown for a team's
+    # own play has to be shown for what it concedes, or a reader comparing the
+    # two halves silently compares different things. Advanced is exempt because
+    # its defensive metrics are not opp_-prefixed (tov_forced_pct, dreb_pct),
+    # and Scoring because bench points have no conceded counterpart in the feed.
+    for key in ("box", "shot"):
+        view = next(g["metrics"] for g in analysis.LEADERBOARD_GROUPS
+                    if g["key"] == key)
+        own = [m for m in view if not m.startswith("opp_")]
+        conceded = [m[4:] for m in view if m.startswith("opp_")]
+        check(f"the {key} view is symmetric", own == conceded,
+              f"(own only {sorted(set(own) - set(conceded))}, "
+              f"conceded only {sorted(set(conceded) - set(own))})")
+
+    # Conceded counting stats are not simply the opposite of our own: forcing
+    # turnovers is good, conceding steals is not.
+    check("conceded directions follow meaning, not sign",
+          analysis.TEAM_METRICS["opp_tov"]["better"] is True
+          and analysis.TEAM_METRICS["opp_stl"]["better"] is False
+          and analysis.TEAM_METRICS["opp_pf"]["better"] is True
+          and analysis.TEAM_METRICS["opp_ft_pct"]["better"] is None)
 
     # A zone table looks its ranks up by the slug stamped on each zone row, so
     # every one of those slugs has to be a declared metric on both sides.

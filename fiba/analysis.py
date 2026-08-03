@@ -199,9 +199,23 @@ TEAM_METRICS: dict[str, dict] = {
     "stl": {"group": "box", "better": True, "label": "STL"},
     "blk": {"group": "box", "better": True, "label": "BLK"},
     "pf": {"group": "box", "better": False, "label": "PF"},
+    # The same box score from the other side: what this team allows. Directions
+    # flip with meaning rather than with the sign, so opponent turnovers are
+    # turnovers forced (good) while opponent steals are our own giveaways (bad).
+    # Opponent free throw percentage is ranked but never shaded: nobody contests
+    # a free throw, so shading it would grade a team on something it cannot
+    # affect.
     "opp_pts": {"group": "box", "better": False, "label": "Opp PTS"},
     "opp_fg_pct": {"group": "box", "better": False, "label": "Opp FG%"},
     "opp_fg3_pct": {"group": "box", "better": False, "label": "Opp 3P%"},
+    "opp_ft_pct": {"group": "box", "better": None, "label": "Opp FT%"},
+    "opp_oreb": {"group": "box", "better": False, "label": "Opp OR"},
+    "opp_dreb": {"group": "box", "better": False, "label": "Opp DR"},
+    "opp_ast": {"group": "box", "better": False, "label": "Opp AST"},
+    "opp_tov": {"group": "box", "better": True, "label": "TO forced"},
+    "opp_stl": {"group": "box", "better": False, "label": "Opp STL"},
+    "opp_blk": {"group": "box", "better": False, "label": "Opp BLK"},
+    "opp_pf": {"group": "box", "better": True, "label": "Fouls drawn"},
     # Shot profile. 3PT rate is FG3A/FGA off the box score, so it is ranked but
     # never shaded and never reaches the leaderboard, where the zone-derived
     # three-point share already covers the same ground.
@@ -276,7 +290,9 @@ LEADERBOARD_GROUPS = [
         "opp_efg_pct", "tov_forced_pct", "dreb_pct", "opp_ft_rate"]},
     {"key": "box", "label": "Box score", "metrics": [
         "pts", "fg_pct", "fg3_pct", "ft_pct", "oreb", "dreb", "ast", "tov",
-        "stl", "blk", "pf", "opp_pts", "opp_fg_pct", "opp_fg3_pct"]},
+        "stl", "blk", "pf",
+        "opp_pts", "opp_fg_pct", "opp_fg3_pct", "opp_ft_pct", "opp_oreb",
+        "opp_dreb", "opp_ast", "opp_tov", "opp_stl", "opp_blk", "opp_pf"]},
     # Volume then accuracy for each zone, own block then conceded, so the two
     # halves line up column for column. The three-point zones stay aggregated
     # here: splitting corner, wing and top is what the zone tables on a scouting
@@ -361,6 +377,14 @@ def team_metrics(conn, event_slug: str) -> dict:
             "opp_pts": o["PTS"] / games,
             "opp_fg_pct": metrics._pct(o["FGM"], o["FGA"]),
             "opp_fg3_pct": metrics._pct(o["FG3M"], o["FG3A"]),
+            "opp_ft_pct": metrics._pct(o["FTM"], o["FTA"]),
+            "opp_oreb": o["OR"] / games,
+            "opp_dreb": o["DR"] / games,
+            "opp_ast": o["AS"] / games,
+            "opp_tov": o["TO"] / games,
+            "opp_stl": o["ST"] / games,
+            "opp_blk": o["BS"] / games,
+            "opp_pf": o["PF"] / games,
             "pip": t["A_PIP"] / games,
             "fbp": t["A_FBP"] / games,
             "scp": t["A_SCP"] / games,

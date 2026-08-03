@@ -346,11 +346,20 @@ handler uses `querySelectorAll` and drives every match. Passing `#some-id` still
 works and is what the single-table cases do.
 
 `LEADERBOARD_GROUPS` drives the leaderboard's four views, so adding a column is a
-one-line change there plus an entry in `TEAM_METRICS`. **Every view must mirror
-itself**: anything shown for a team's own play has to be shown for what it
-concedes, or a reader comparing the two halves is quietly comparing different
-things. The Shooting view shipped asymmetric once, missing paint and mid-range
-accuracy on both sides, and a test now asserts the mirror holds.
+one-line change there plus an entry in `TEAM_METRICS`. **Box score and Shooting
+must mirror themselves**: anything shown for a team's own play has to be shown
+for what it concedes, or a reader comparing the two halves is quietly comparing
+different things. Both shipped asymmetric at some point and a test now asserts
+the mirror holds. Advanced is exempt because its defensive metrics are not
+`opp_`-prefixed (`tov_forced_pct`, `dreb_pct`) and Scoring because bench points
+have no conceded counterpart in the feed.
+
+**A conceded metric's direction follows meaning, not sign.** `opp_tov` is
+turnovers forced, so higher is better; `opp_stl` is our own giveaways, so higher
+is worse; `opp_pf` is fouls drawn, so higher is better. Do not flip these
+mechanically. `opp_ft_pct` carries a rank but no direction on purpose: nobody
+contests a free throw, so shading it would grade a team on something it cannot
+affect.
 
 ## Deliberately not shown
 
