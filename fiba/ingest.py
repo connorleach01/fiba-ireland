@@ -236,7 +236,13 @@ def sync_event(conn, event_slug: str, *, use_cache: bool = True,
     db.upsert_schedule(conn, event_slug, schedule)
 
     already = db.scraped_game_ids(conn, event_slug) if only_new else set()
-    finals = [g for g in schedule if parse.is_final(g["status_code"])]
+    # Two independent guards against scraping a game that is still being played.
+    # `statusCode` is the documented signal, but it has only ever been observed
+    # on events that were already over, so `isLive` is checked as well. A third
+    # guard lives in `parse.validate_game`, which refuses a game whose period
+    # scores do not add up to a finished result.
+    finals = [g for g in schedule
+              if parse.is_final(g["status_code"]) and not g.get("is_live")]
     todo = [g for g in finals if g["game_id"] not in already]
 
     # When polling live, a game we have not ingested is either new or previously

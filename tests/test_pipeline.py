@@ -96,6 +96,50 @@ def test_shot_zones():
           metrics.classify_zone({"action_code": "FT", "x": 0, "y": 0}) is None)
 
 
+def test_rejects_unfinished_games():
+    """A game caught mid-play must never be stored as final.
+
+    Every other invariant holds just as well at half time, because a live box
+    score is internally consistent; it is only incomplete. Since a stored game
+    is never revisited, the period scores are the thing that has to catch this.
+    """
+    print("unfinished games are refused")
+    import copy
+    from fiba import fetch
+
+    html = fetch.fetch_game_html(
+        "fiba-u18-eurobasket-2026-division-b", 132202, "POR", "IRL", use_cache=True)
+    game = parse.parse_game(html)
+
+    def rejected(mutate) -> bool:
+        candidate = copy.deepcopy(game)
+        mutate(candidate)
+        try:
+            parse.validate_game(candidate)
+        except parse.ParseError:
+            return True
+        return False
+
+    def truncate(n):
+        def apply(g):
+            for team in g["teams"]:
+                team["periods"] = team["periods"][:n]
+        return apply
+
+    check("a game caught at half time is refused", rejected(truncate(2)))
+    check("a game caught in the fourth is refused", rejected(truncate(3)))
+    check("a game whose last period is unscored is refused",
+          rejected(lambda g: g["teams"][0]["periods"][3].update(score=0)))
+    check("the finished game itself still passes",
+          not rejected(lambda g: None))
+
+    # The poller must also refuse anything the schedule flags as in progress,
+    # whatever its status code says.
+    check("a live game is not treated as final",
+          parse.is_final("VALID") and not parse.is_final("LIVE")
+          and not parse.is_final("INIT"))
+
+
 def test_lineups_validate():
     """Derived minutes must reconcile with the official boxscore."""
     print("lineup reconstruction")
@@ -297,7 +341,8 @@ def test_ranks_and_percentiles():
 
 def main() -> int:
     for test in (test_clock, test_parse_both_encodings, test_metrics_match_published,
-                 test_four_factors_sanity, test_shot_zones, test_lineups_validate,
+                 test_four_factors_sanity, test_shot_zones,
+                 test_rejects_unfinished_games, test_lineups_validate,
                  test_small_sample_rates_withheld, test_empty_event_shape,
                  test_theming, test_ranks_and_percentiles):
         test()

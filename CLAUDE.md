@@ -101,6 +101,18 @@ shooting line implies the points scored. A game that fails is refused, not
 half-loaded. Keep it that way: a quietly wrong box score is far worse for a
 coaching staff than a scrape that refuses to run.
 
+**A live game must never be stored as final, and three guards say so.** The
+schedule's `statusCode` must be `VALID`, the schedule's `isLive` must be false,
+and `validate_game` requires at least `REGULATION_PERIODS` scored periods per
+team summing to that team's total. The third guard is the one that matters,
+because **every other invariant passes at half time**: a live box score is
+internally consistent, just incomplete, and a stored game is never revisited, so
+a mid-game scrape would be wrong forever. Note that both events backfilled so far
+were already over, so **`INIT` and `VALID` are the only status codes ever
+observed**; what FIBA sets during a live game is still unknown, which is why the
+other two guards exist. Refusal is the right failure here: the game stays out of
+`scraped_game_ids`, so the next poll five minutes later simply tries again.
+
 **Lineups are validated per player.** Derived minutes are compared to the
 official box score; a game that fails is marked `lineups_ok=0` and reports
 suppress its lineup sections rather than show plausible-but-wrong numbers.

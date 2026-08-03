@@ -16,6 +16,8 @@ import json
 import re
 from typing import Any
 
+from .config import REGULATION_PERIODS
+
 # Matches the string literal argument of self.__next_f.push([1,"..."]).
 _CHUNK_RE = re.compile(r'self\.__next_f\.push\(\[1,\s*("(?:[^"\\]|\\.)*")\s*\]\)', re.DOTALL)
 
@@ -438,3 +440,23 @@ def validate_game(game: dict) -> None:
     org_ids = {t["org_id"] for t in teams}
     if len(org_ids) != 2:
         raise ParseError(f"both team blocks share org id {org_ids}")
+
+    # The game must actually be over. Everything above holds just as well for a
+    # game caught at half time: the box score is internally consistent, it just
+    # is not finished. `statusCode` is supposed to guard this, but a scrape
+    # triggered mid-game would be stored as final and never revisited, so the
+    # period scores are checked directly. A FIBA game is four periods plus any
+    # overtime, and they must account for every point.
+    for team in teams:
+        periods = team.get("periods") or []
+        if len(periods) < REGULATION_PERIODS:
+            raise ParseError(
+                f"team {team['org_id']}: {len(periods)} periods scored, expected at "
+                f"least {REGULATION_PERIODS}; the game is not final yet"
+            )
+        scored = sum((p.get("score") or 0) for p in periods)
+        if scored != team["PTS"]:
+            raise ParseError(
+                f"team {team['org_id']}: periods sum to {scored} but the total is "
+                f"{team['PTS']}; the game is still in progress or a period is missing"
+            )
