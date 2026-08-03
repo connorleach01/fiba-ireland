@@ -362,7 +362,10 @@ table.show-ranks td.t5 { background: var(--rk-5); }
    full page it puts a hand's width of empty paper between the factor name and
    its value, which is the hardest thing to read a table across. Sized to its
    content instead, so the eye travels a couple of centimetres. */
-table.ff { width: auto; min-width: 300px; max-width: 100%; }
+/* Centred, so the whitespace sits evenly either side rather than stranding the
+   table against the left margin with the full-width chart beneath it. */
+table.ff { width: auto; min-width: 300px; max-width: 100%; margin: 7px auto 0; }
+.ff-toggle { text-align: center; }
 table.ff th:not(.left), table.ff td:not(.left) { width: 78px; }
 table.ff td.left { padding-right: 22px; }
 
@@ -2436,7 +2439,7 @@ plus-minus over two minutes as noise.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Mon 03 Aug 2026, 21:46 (CEST)</span>
+  <span>Generated Mon 03 Aug 2026, 21:52 (CEST)</span>
 </div>
 
 <div class="running-foot">

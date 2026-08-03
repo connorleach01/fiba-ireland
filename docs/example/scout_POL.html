@@ -362,7 +362,10 @@ table.show-ranks td.t5 { background: var(--rk-5); }
    full page it puts a hand's width of empty paper between the factor name and
    its value, which is the hardest thing to read a table across. Sized to its
    content instead, so the eye travels a couple of centimetres. */
-table.ff { width: auto; min-width: 300px; max-width: 100%; }
+/* Centred, so the whitespace sits evenly either side rather than stranding the
+   table against the left margin with the full-width chart beneath it. */
+table.ff { width: auto; min-width: 300px; max-width: 100%; margin: 7px auto 0; }
+.ff-toggle { text-align: center; }
 table.ff th:not(.left), table.ff td:not(.left) { width: 78px; }
 table.ff td.left { padding-right: 22px; }
 
@@ -525,7 +528,7 @@ td .flag, li .flag { margin-right: 5px; }
 <header class="masthead">
   <div class="kicker">
     <span>FIBA U18 Eurobasket 2026 Division B &middot; Scouting report</span>
-    <span>Mon 03 Aug 2026, 21:46 (CEST)</span>
+    <span>Mon 03 Aug 2026, 21:52 (CEST)</span>
   </div>
   <h1><svg class="flag" viewBox="0 0 3 2" width="24" height="16" role="img" aria-label="POL flag"><rect y="0.0000" width="3" height="1.0000" fill="#ffffff"/><rect y="1.0000" width="3" height="1.0000" fill="#dc143c"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Poland</h1>
   <p class="sub">6&ndash;1 over 7 games
@@ -641,9 +644,9 @@ playing fast or shooting a lot of threes is a style rather than an achievement.<
 
 <section class="keep">
 <h2>Four factors</h2>
-<button type="button" class="ranktoggle no-print" data-target="#ff-table"
+<div class="ff-toggle"><button type="button" class="ranktoggle no-print" data-target="#ff-table"
         data-off="Show ranks" data-on="Hide ranks" aria-pressed="true">Hide ranks</button>
-
+</div>
 <div class="scroll-x">
 <table id="ff-table" class="ff show-ranks">
 <thead><tr>
@@ -1968,7 +1971,7 @@ TOV% forced and DREB% are higher-is-better.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Mon 03 Aug 2026, 21:46 (CEST)</span>
+  <span>Generated Mon 03 Aug 2026, 21:52 (CEST)</span>
 </div>
 
 <div class="running-foot">

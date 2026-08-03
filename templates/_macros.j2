@@ -462,7 +462,9 @@ TOV% forced and DREB% are higher-is-better.</p>
    game sheet keeps the simpler team-versus-team table above; this one is for
    pages where a team has a season to be ranked within. #}
 {% macro four_factor_ranked(own, opp, league, ranks, code, table_id='ff') %}
-{{ rank_toggle('#' ~ table_id) }}
+{# The table is centred, so its button travels with it rather than sitting
+   orphaned against the left margin. #}
+<div class="ff-toggle">{{ rank_toggle('#' ~ table_id) }}</div>
 <div class="scroll-x">
 <table id="{{ table_id }}" class="ff show-ranks">
 <thead><tr>

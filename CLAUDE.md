@@ -379,9 +379,11 @@ as a no-op. The button exists to turn ranks off for a plain table or a cleaner
 print, not to turn them on. The profile strip has no toggle at all; `stat_ranked`
 always prints the rank and tints the card.
 
-Because of that default, the **four-factor table is sized to its content**
-(`table.ff`, `width: auto` with a 300px floor and 78px numeric columns) rather
-than stretched across the page. Eight short rows of two numbers spread over 794px
+Because of that default, the **four-factor table is sized to its content and
+centred** (`table.ff`, `width: auto` with a 300px floor, 78px numeric columns,
+`margin: 7px auto 0`) rather than stretched across the page. Its rank toggle is
+wrapped in `.ff-toggle` so it centres with the table instead of sitting orphaned
+against the left margin. Eight short rows of two numbers spread over 794px
 puts a hand's width of empty paper between a factor and its value, which is the
 hardest way to read a table, and a shaded cell becomes a slab of colour. Any
 other two or three column table will need the same treatment.
