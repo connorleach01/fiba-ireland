@@ -7,7 +7,7 @@ Guidance for Claude Code working in this repo. Read this before changing anythin
 Fast-turnaround basketball analytics for the **Ireland U16 national team** at
 **FIBA U16 EuroBasket 2026, Division B** (81 games, 6-16 August 2026, Gevgelija
 and Skopje, North Macedonia). Ireland open against the Netherlands on
-**Thursday 6 August, 10:00 Irish time**.
+**Thursday 6 August, 11:00 local time** (10:00 in Ireland).
 
 The team had no analytics of any kind. They play on consecutive days, so the job
 is to turn a finished game into a usable opponent scouting report within minutes.
@@ -101,6 +101,22 @@ total, the team total matches the final score, `FG2M+FG3M == FGM`, and the
 shooting line implies the points scored. A game that fails is refused, not
 half-loaded. Keep it that way: a quietly wrong box score is far worse for a
 coaching staff than a scrape that refuses to run.
+
+**Every published time is venue-local, not Irish.** The staff reading these pages
+are standing in Gevgelija, so that is the clock they are on. `report._venue()`
+resolves the zone from the event's host country through `ingest.venue_timezone`,
+the same mapping that converted the feed's wall times to UTC on the way in, so
+pointing the tool at a different country needs no code change. Nothing renders in
+Irish time any more; `IRISH_TZ` survives in `report.py` only so an operator can
+reason about the offset.
+
+The check that matters: `gameDateTime` arrives as venue-local wall time with no
+offset and is stored as UTC, so rendering that UTC back in the venue zone must
+return the exact string FIBA published. A test asserts this across all 162
+fixtures in both events, which catches an offset applied twice, not at all, or
+backwards. Croatia and North Macedonia are both UTC+2 in August, so the U18
+reference set and the live U16 event agree; do not read that as proof the
+mapping is right for a third country.
 
 **A live game must never be stored as final, and three guards say so.** The
 schedule's `statusCode` must be `VALID`, the schedule's `isLive` must be false,

@@ -67,7 +67,7 @@
 <p class="note">No fixtures have been published for this event yet.</p>
 {% endfor %}
 
-<p class="note">Times are Irish. A game appears here as soon as FIBA publishes
+<p class="note">Times are local to the tournament{% if venue_country %}, {{ venue_country }}{% endif %}{% if venue_zone %} ({{ venue_zone }}){% endif %}. A game appears here as soon as FIBA publishes
 the fixture list, and its score and full breakdown appear within a few minutes of
 the final buzzer. A game sheet covers both teams: four factors, the box score,
 shot charts, lineups and how the lead moved.

@@ -229,7 +229,7 @@ def sync_event(conn, event_slug: str, *, use_cache: bool = True,
     the poller uses to decide which reports to rebuild.
     """
     schedule = parse.parse_schedule(fetch.fetch_schedule_html(event_slug))
-    # Resolve tip times up front so upcoming fixtures render in Irish time too,
+    # Resolve tip times up front so upcoming fixtures carry a real timestamp too,
     # not just games we have already scraped.
     for row in schedule:
         row["game_utc"] = to_utc(row.get("game_datetime"), _country_code(row))

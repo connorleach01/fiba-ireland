@@ -215,6 +215,46 @@ def test_fixture_list():
           f"(mismatched {mismatched[:5]})")
 
 
+def test_times_are_venue_local():
+    """Every published time must be the wall time at the venue.
+
+    `gameDateTime` arrives as venue-local wall time with no offset and is stored
+    as UTC. Rendering that UTC back in the venue's zone has to return the exact
+    string FIBA published, which catches an offset applied twice, not at all, or
+    in the wrong direction.
+    """
+    print("times are venue local")
+    import datetime as dt
+    from fiba import report
+
+    conn = db.connect()
+    for slug, expected_zone in (("fiba-u16-eurobasket-2026-division-b", "Europe/Skopje"),
+                                (U18, "Europe/Zagreb")):
+        zone, country = report._venue(conn, slug)
+        check(f"{slug.split('-')[1]} resolves to {expected_zone}",
+              str(zone) == expected_zone, f"(got {zone}, host {country})")
+
+        mismatched = 0
+        total = 0
+        for row in conn.execute(
+            "SELECT game_utc, game_datetime FROM games WHERE event_slug=? "
+            "AND game_utc IS NOT NULL AND game_datetime IS NOT NULL", (slug,)
+        ):
+            total += 1
+            rendered = dt.datetime.fromisoformat(row["game_utc"]).astimezone(zone)
+            if rendered.replace(tzinfo=None) != dt.datetime.fromisoformat(
+                    row["game_datetime"]):
+                mismatched += 1
+        check(f"all {total} tip times round-trip to the feed's wall time",
+              total > 0 and mismatched == 0, f"({mismatched} wrong)")
+
+    # Nothing may render in Irish time any more, which was the old behaviour.
+    zone, _ = report._venue(conn, "fiba-u16-eurobasket-2026-division-b")
+    tip = report._local(zone, "2026-08-06T09:00:00+00:00")
+    check("Ireland's opener reads 11:00 at the venue", tip.endswith("11:00"),
+          f"(got {tip})")
+
+
 def test_empty_event_shape():
     """Reports must render before a single game is played."""
     print("pre-tournament shape")
@@ -389,7 +429,7 @@ def main() -> int:
                  test_four_factors_sanity, test_shot_zones,
                  test_rejects_unfinished_games, test_lineups_validate,
                  test_small_sample_rates_withheld, test_fixture_list,
-                 test_empty_event_shape,
+                 test_times_are_venue_local, test_empty_event_shape,
                  test_theming, test_ranks_and_percentiles):
         test()
     print()

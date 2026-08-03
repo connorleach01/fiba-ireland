@@ -7,10 +7,11 @@ from zoneinfo import ZoneInfo
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from . import analysis, charts, metrics, theming
+from . import analysis, charts, ingest, metrics, theming
 from .config import IRELAND_ORG_ID, REPORTS_DIR, TEMPLATES_DIR
 
 log = logging.getLogger(__name__)
+# Kept only so an operator can reason about the offset; nothing renders in it.
 IRISH_TZ = ZoneInfo("Europe/Dublin")
 
 _env = Environment(
@@ -140,16 +141,40 @@ def _inks(subject_code: str | None, other_code: str | None) -> dict:
     return {"ink_a": ink_a, "ink_b": ink_b, "ink_substituted": substituted}
 
 
-def _now_text() -> str:
-    return dt.datetime.now(IRISH_TZ).strftime("%a %d %b %Y, %H:%M") + " (Irish time)"
+_TZ_CACHE: dict[str, tuple] = {}
 
 
-def _local(iso_utc: str | None, fallback: str | None = None) -> str:
-    """Render a stored UTC timestamp in Irish time for the staff reading it."""
+def _venue(conn, event_slug: str) -> tuple:
+    """The tournament's own timezone and the country to label it with.
+
+    Times are shown where the games are played, because that is where the staff
+    reading them are standing. The zone is derived from the event's host country
+    rather than hard-coded, using the same mapping that converted the feed's
+    venue-local wall times to UTC on the way in.
+    """
+    if event_slug not in _TZ_CACHE:
+        row = conn.execute(
+            "SELECT host_country, COUNT(*) n FROM games WHERE event_slug=? "
+            "AND host_country IS NOT NULL GROUP BY host_country ORDER BY n DESC "
+            "LIMIT 1", (event_slug,)).fetchone()
+        country = row["host_country"] if row else None
+        zone = ingest.venue_timezone(
+            ingest._country_code({"host_country": country}))
+        _TZ_CACHE[event_slug] = (zone, country)
+    return _TZ_CACHE[event_slug]
+
+
+def _now_text(zone, country: str | None = None) -> str:
+    moment = dt.datetime.now(zone)
+    return moment.strftime("%a %d %b %Y, %H:%M") + f" ({moment.strftime('%Z')})"
+
+
+def _local(zone, iso_utc: str | None, fallback: str | None = None) -> str:
+    """Render a stored UTC timestamp in the tournament's local time."""
     if not iso_utc:
         return fallback or ""
     try:
-        moment = dt.datetime.fromisoformat(iso_utc).astimezone(IRISH_TZ)
+        moment = dt.datetime.fromisoformat(iso_utc).astimezone(zone)
     except ValueError:
         return fallback or ""
     return moment.strftime("%a %d %b, %H:%M")
@@ -204,7 +229,7 @@ def build_scout(conn, event_slug: str, org_id: int,
 
     html = _env.get_template("scout.html.j2").render(
         event_name=_event_name(conn, event_slug),
-        generated_at=_now_text(),
+        generated_at=_now_text(_venue(conn, event_slug)[0]),
         profile=profile,
         league=league,
         players=players,
@@ -304,6 +329,7 @@ def build_review(conn, event_slug: str, game_id: int,
     if org_id == b_id:
         a_id, b_id = b_id, a_id
 
+    zone, _ = _venue(conn, event_slug)
     home = _side(conn, event_slug, game_id, a_id, b_id)
     away = _side(conn, event_slug, game_id, b_id, a_id)
     league = analysis.event_averages(conn, event_slug)
@@ -318,13 +344,13 @@ def build_review(conn, event_slug: str, game_id: int,
 
     html = _env.get_template("review.html.j2").render(
         event_name=_event_name(conn, event_slug),
-        generated_at=_now_text(),
+        generated_at=_now_text(_venue(conn, event_slug)[0]),
         home=home, away=away,
         us=home["identity"], them=away["identity"],
         score=home["score"], opp_score=home["opp_score"], won=home["won"],
         ff=home["ff"], off=home["off"],
         totals=home["totals"], opp_totals=home["opp_totals"],
-        played_at=_local(game["game_utc"], game["game_datetime"]),
+        played_at=_local(zone, game["game_utc"], game["game_datetime"]),
         venue=game["venue_name"],
         league=league, box_rows=box_rows,
         periods=period_labels,
@@ -372,7 +398,7 @@ def build_tournament(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
 
     html = _env.get_template("tournament.html.j2").render(
         event_name=_event_name(conn, event_slug),
-        generated_at=_now_text(),
+        generated_at=_now_text(_venue(conn, event_slug)[0]),
         profile=profile, league=league, players=players, zones=zones,
         faced_zones=faced_zones,
         ranks=(context or {}).get("ranks", {}).get(org_id, {}),
@@ -404,10 +430,11 @@ def build_schedule(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
     """The fixture list, day by day, results filled in as they land.
 
     Grouping happens here rather than in `analysis` because the day a game
-    belongs to is the day it is in Irish time, and the timezone is a presentation
+    belongs to is the day it is at the venue, and the timezone is a presentation
     concern. Tip times sit between 09:00 and 19:00 UTC, so nothing straddles
     midnight either way, but the conversion belongs on this side regardless.
     """
+    zone, country = _venue(conn, event_slug)
     fixtures = analysis.event_fixtures(conn, event_slug)
 
     # FIBA publishes the knockout rounds before the bracket resolves: no teams,
@@ -426,7 +453,7 @@ def build_schedule(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
         if fixture["game_utc"]:
             try:
                 moment = dt.datetime.fromisoformat(
-                    fixture["game_utc"]).astimezone(IRISH_TZ)
+                    fixture["game_utc"]).astimezone(zone)
             except ValueError:
                 moment = None
 
@@ -459,9 +486,10 @@ def build_schedule(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
 
     html = _env.get_template("schedule.html.j2").render(
         event_name=_event_name(conn, event_slug),
-        generated_at=_now_text(),
+        generated_at=_now_text(_venue(conn, event_slug)[0]),
         subject=analysis.team_identity(conn, event_slug, org_id),
         days=days, played=played, total=total, unconfirmed=unconfirmed,
+        venue_country=country, venue_zone=dt.datetime.now(zone).strftime("%Z"),
         nav=nav, page="schedule", reference=reference,
     )
     return _write("schedule.html", html)
@@ -519,7 +547,7 @@ def build_teams(conn, event_slug: str,
 
     html = _env.get_template("teams.html.j2").render(
         event_name=_event_name(conn, event_slug),
-        generated_at=_now_text(),
+        generated_at=_now_text(_venue(conn, event_slug)[0]),
         rows=rows, groups=groups,
         league=analysis.event_averages(conn, event_slug),
         games_played=games_played,
@@ -546,6 +574,7 @@ def build_index(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
         "SELECT COUNT(*) AS n FROM games WHERE event_slug=? AND parsed_at IS NOT NULL",
         (event_slug,)).fetchone()["n"]
 
+    zone, _ = _venue(conn, event_slug)
     profile = analysis.team_profile(conn, event_slug, org_id)
     league = analysis.event_averages(conn, event_slug)
 
@@ -558,7 +587,7 @@ def build_index(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
                                               upcoming["opponent_org_id"])
         next_up = {
             "identity": other,
-            "when": _local(upcoming["game_utc"], upcoming["game_datetime"]),
+            "when": _local(zone, upcoming["game_utc"], upcoming["game_datetime"]),
             "venue": upcoming.get("venue_name") or upcoming.get("host_city"),
             "record": f"{other_profile['wins']}-{other_profile['losses']}",
             "games_played": other_profile["games_played"],
@@ -577,13 +606,13 @@ def build_index(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
             "score": game["score"],
             "opp_score": game["opp_score"],
             "net_rating": game["four_factors"].get("net_rating"),
-            "when": _local(game["game_utc"], game["game_datetime"]),
+            "when": _local(zone, game["game_utc"], game["game_datetime"]),
             "href": game_filename(conn, event_slug, game["game_id"]),
         })
 
     html = _env.get_template("index.html.j2").render(
         event_name=_event_name(conn, event_slug),
-        generated_at=_now_text(),
+        generated_at=_now_text(_venue(conn, event_slug)[0]),
         games_total=total, games_done=done,
         profile=profile, league=league,
         next_up=next_up, recent=recent[:5],
@@ -617,6 +646,7 @@ def build_all(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
               reference: str | None = None) -> dict:
     """Regenerate the full report set. Cheap enough to just always do."""
     written = {"standing": [], "scouts": [], "reviews": []}
+    zone, _ = _venue(conn, event_slug)
     nav = build_nav(conn, event_slug, org_id)
     # Event-wide, so computed once and threaded through rather than recomputed
     # on each of the twenty-odd scouting pages.
@@ -651,7 +681,7 @@ def build_all(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
             continue
         fixture = None
         if team["org_id"] == next_opp_id and upcoming:
-            fixture = _local(upcoming["game_utc"], upcoming["game_datetime"])
+            fixture = _local(zone, upcoming["game_utc"], upcoming["game_datetime"])
         name = _safe(f"scout {team['org_id']}", build_scout, conn, event_slug,
                      team["org_id"], org_id, fixture, nav=nav,
                      reference=reference, context=context)
@@ -699,7 +729,7 @@ def build_all(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
             identity = analysis.team_identity(conn, event_slug, opponent)
             written["reviews"].append(
                 {"href": name, "title": f"Ireland v {identity['name']}",
-                 "when": _local(row["game_utc"], row["game_datetime"])})
+                 "when": _local(zone, row["game_utc"], row["game_datetime"])})
 
     _safe("index", build_index, conn, event_slug, org_id, written, nav=nav,
           reference=reference)
