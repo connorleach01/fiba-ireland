@@ -206,20 +206,16 @@ TEAM_METRICS: dict[str, dict] = {
     # never shaded and never reaches the leaderboard, where the zone-derived
     # three-point share already covers the same ground.
     "fg3_rate": {"group": "advanced", "better": None, "label": "3PT rate"},
-    # Shooting by zone, own then allowed. Which shot volumes carry a direction is
-    # a question about this competition, not a matter of taste, so it was
-    # measured: across the whole U18 event the rim returns 1.14 points per
-    # attempt against an all-shots average of 0.89, mid-range returns 0.61, and
-    # paint, corner, wing and top threes all land between 0.73 and 0.81. Rim and
-    # mid-range are therefore shaded, in both directions. The rest are ranked but
-    # left unshaded, because separating 0.81 from 0.77 with colour would be
-    # inventing a distinction the data does not support.
-    "rim_share": {"group": "shot", "better": True, "label": "Rim %sh"},
-    "mid_range_share": {"group": "shot", "better": False, "label": "Mid %sh"},
+    # Shooting by zone, own then allowed. No shot volume is shaded: where a team
+    # chooses to shoot from is a style, and the accuracy and points-per-attempt
+    # columns sitting beside it already say whether the choice is working. Shares
+    # still carry a rank, which is the part that answers "do they take more of
+    # these than anyone else".
+    "rim_share": {"group": "shot", "better": None, "label": "Rim %sh"},
+    "mid_range_share": {"group": "shot", "better": None, "label": "Mid %sh"},
     "three_share": {"group": "shot", "better": None, "label": "3PT %sh"},
     "three_fg": {"group": "shot", "better": True, "label": "3PT FG%"},
-    "opp_rim_share": {"group": "shot", "better": False, "label": "Opp rim %sh"},
-    "opp_mid_range_share": {"group": "shot", "better": True, "label": "Opp mid %sh"},
+    "opp_rim_share": {"group": "shot", "better": None, "label": "Opp rim %sh"},
     "opp_three_share": {"group": "shot", "better": None, "label": "Opp 3PT %sh"},
     "opp_three_fg": {"group": "shot", "better": False, "label": "Opp 3PT FG%"},
     # Scoring breakdown, per game

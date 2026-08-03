@@ -229,15 +229,16 @@ def test_ranks_and_percentiles():
           analysis.TEAM_METRICS["rim_ppa"]["better"] is True
           and analysis.TEAM_METRICS["opp_rim_ppa"]["better"] is False)
 
-    # Shot volume is shaded only where this event's efficiency justifies it.
-    check("rim and mid-range volume carry a direction",
-          analysis.TEAM_METRICS["rim_share"]["better"] is True
-          and analysis.TEAM_METRICS["mid_range_share"]["better"] is False
-          and analysis.TEAM_METRICS["opp_rim_share"]["better"] is False
-          and analysis.TEAM_METRICS["opp_mid_range_share"]["better"] is True)
-    check("the clustered zones stay unshaded",
-          all(analysis.TEAM_METRICS[z + "_share"]["better"] is None
-              for z in ("paint", "corner_3", "wing_3", "top_3")))
+    # No shot volume is shaded, on either side of the ball. Where a team shoots
+    # from is a style; the accuracy columns beside it carry the judgement.
+    shares = [z["metric_share"] for z in zone_rows] + ["three_share"]
+    check("no shot share is shaded",
+          all(analysis.TEAM_METRICS[s]["better"] is None for s in shares)
+          and all(analysis.TEAM_METRICS["opp_" + s]["better"] is None
+                  for s in shares),
+          f"(shaded {[s for s in shares if analysis.TEAM_METRICS[s]['better'] is not None]})")
+    check("shot shares still carry a rank",
+          all(ranks[best][s]["rank"] >= 1 for s in shares))
 
     # The scoring breakdown ranks both a team's own line and what it allows.
     scoring = ["pip", "fbp", "scp", "pat", "bench"]

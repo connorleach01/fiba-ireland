@@ -274,25 +274,23 @@ they still get a rank but never a shading tier, because taking a lot of threes o
 playing fast is a style, not an achievement. The denominator counts only teams
 that have played.
 
-**Which shot volumes carry a direction was measured, not assumed.** Across the
-U18 event the rim returns **1.14** points per attempt against an all-shots
-average of **0.89**, mid-range returns **0.61**, and paint, corner, wing and top
-all land between **0.73 and 0.81**. So `rim_share` and `mid_range_share` are
-shaded, in both directions and on both sides of the ball, and the other four
-shares are ranked but left `better: None`. Do not "finish the job" by shading
-them: separating 0.81 from 0.77 with colour invents a distinction the numbers do
-not support. Points per attempt needs no such call and is shaded everywhere,
-which is what gives every zone row a coloured cell. If a future event's
-efficiency profile differs, rerun the query in this paragraph before changing
-any direction.
+**No shot share is shaded**, on either side of the ball. Where a team chooses to
+shoot from is a style, and the FG% and points-per-attempt columns sitting beside
+it already say whether the choice is working. Shares still carry a rank, which is
+the part that answers "do they take more of these than anyone else". This was
+briefly done the other way, shading rim and mid-range volume because the event's
+own efficiency supported it (rim 1.14 points per attempt against an all-shots
+average of 0.89, mid-range 0.61, everything else between 0.73 and 0.81), and it
+was reverted on Connor's call. Do not reinstate it. Points per attempt is the
+column that carries the judgement, and it is shaded everywhere, which is what
+gives every zone row a coloured cell.
 
 **`TEAM_METRICS` holds more than the leaderboard shows.** Every shot zone is
 declared on both sides of the ball, share, accuracy and points per attempt, so
 the zone tables on a scouting page can shade every cell; the leaderboard's
 Shooting view picks a readable handful of them. The zone entries are generated in a loop from
 `metrics.ZONE_ORDER` with `setdefault`, so a hand-written entry above always wins
-over the generated default, which is how the measured share directions above
-survive while the other conceded shares stay unshaded. `zone_metric()` builds the key and
+over the generated default. `zone_metric()` builds the key and
 `zone_breakdown()` stamps the same slugs onto every row it emits, so a template
 never spells a metric name itself. If you add a zone, both sides follow for free.
 
