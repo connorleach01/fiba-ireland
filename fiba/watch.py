@@ -45,6 +45,14 @@ IDLE_INTERVAL_S = 900
 FINISH_WINDOW_START_S = 75 * 60
 FINISH_WINDOW_END_S = 3 * 3600
 
+# Consecutive result windows on a match day are only about 45 minutes apart, and
+# the machine is woken by a single daily `pmset repeat`. Releasing the sleep hold
+# in one of those gaps would let the Mac sleep at, say, 6am with nothing to wake
+# it for the 6:45am window, so the hold bridges any gap shorter than this. The
+# overnight gap is twelve hours and is far past it, which is the one we do want
+# to sleep through.
+SLEEP_HOLD_BRIDGE_S = 100 * 60
+
 
 def notify(title: str, message: str) -> None:
     """Best-effort macOS notification. Never let this break the run."""
@@ -99,6 +107,36 @@ def next_interval(conn, event_slug: str, override: int | None = None) -> tuple[i
         except ValueError:
             pass
     return IDLE_INTERVAL_S, "no game due"
+
+
+def sleep_hold_needed(conn, event_slug: str) -> bool:
+    """Should the Mac be kept awake right now?
+
+    True inside a result window, and also in the short gaps between the windows
+    of a match day, because only one wake is scheduled per day and a machine that
+    sleeps in a 45-minute gap has nothing to wake it for the next game. False for
+    the long overnight and rest-day gaps, which is the whole point.
+    """
+    now = dt.datetime.now(dt.timezone.utc)
+    earliest = (now - dt.timedelta(seconds=FINISH_WINDOW_END_S)).isoformat()
+    latest = (now - dt.timedelta(seconds=FINISH_WINDOW_START_S)).isoformat()
+    if conn.execute(
+        "SELECT 1 FROM games WHERE event_slug=? AND game_utc IS NOT NULL "
+        "AND game_utc BETWEEN ? AND ? AND parsed_at IS NULL LIMIT 1",
+        (event_slug, earliest, latest)).fetchone():
+        return True
+
+    row = conn.execute(
+        "SELECT MIN(game_utc) t FROM games WHERE event_slug=? AND game_utc > ? "
+        "AND parsed_at IS NULL", (event_slug, latest)).fetchone()
+    if not row or not row["t"]:
+        return False
+    try:
+        opens = dt.datetime.fromisoformat(row["t"]) + dt.timedelta(
+            seconds=FINISH_WINDOW_START_S)
+    except ValueError:
+        return False
+    return 0 <= (opens - now).total_seconds() <= SLEEP_HOLD_BRIDGE_S
 
 
 class SleepBlocker:
@@ -302,8 +340,13 @@ def main(argv=None) -> int:
                 wait, why = next_interval(conn, args.event, pinned)
             except Exception:  # noqa: BLE001 - scheduling must never end the watch
                 wait, why = FAST_INTERVAL_S, "interval lookup failed"
-            # Only worth keeping the Mac awake when a score could land.
-            blocker.hold(wait <= FAST_INTERVAL_S)
+            # Keep the Mac awake through the day's games, but let it sleep
+            # through the long gaps. Decided separately from the poll interval:
+            # the poller can idle at 15 minutes and still need the machine up.
+            try:
+                blocker.hold(pinned is None and sleep_hold_needed(conn, args.event))
+            except Exception as exc:  # noqa: BLE001 - never end the watch over this
+                log.warning("sleep hold check failed: %s", exc)
             log.info("next poll in %ds (%s)", wait, why)
             try:
                 sleep_until(wait)

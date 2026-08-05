@@ -76,15 +76,24 @@ launchctl load   ~/Library/LaunchAgents/com.fiba.ireland.watch.plist   # start
 **The Mac only needs to be awake while a result is due.** In Mountain time,
 where Connor is, a match day looks like this:
 
-| | Mountain time |
-|---|---|
-| tips | 03:00, 05:30, 08:00, 10:30, 13:00 |
-| result windows | 04:15-06:00, 06:45-08:30, 09:15-11:00, 11:45-13:30, 14:15-16:00 |
-| **nothing can land** | **16:00 to 04:15 next day, 12.2 hours** |
+| day | Mac on (Mountain) | hrs | then off |
+|---|---|---|---|
+| Thu 6 Aug | 4:15 am to 4:00 pm | 11.8 | 12 hrs |
+| Fri 7 Aug | 4:15 am to 4:00 pm | 11.8 | 12 hrs |
+| Sat 8 Aug | 4:15 am to 4:00 pm | 11.8 | 36 hrs |
+| Mon 10 Aug | 4:15 am to 4:00 pm | 11.8 | 12 hrs |
+| Tue 11 Aug | 4:15 am to 4:00 pm | 11.8 | 25 hrs |
+| Wed 12 Aug | 5:15 pm to 7:00 pm | 1.8 | 22 hrs |
+| Thu 13 Aug | 5:15 pm to 7:00 pm | 1.8 | 34 hrs |
+| Sat 15 Aug | 4:45 am to 4:00 pm | 11.2 | done |
 
-Rest days (9 and 14 August) stretch that gap to 22 and 36 hours. So `watch.py`
-holds the sleep assertion through a `SleepBlocker` that asserts **only inside a
-result window** and releases outside one, rather than wrapping the whole agent in
+73.5 hours on out of 228, so **32% of the tournament**. The 12 and 13 August rows
+come from FIBA's stub 22:00 UTC knockout times and will move once the bracket
+resolves; the code reads them from the schedule each poll, so nothing needs
+editing when they do. So `watch.py`
+holds the sleep assertion through a `SleepBlocker` driven by
+`sleep_hold_needed()`, which asserts inside a result window **and across the
+45-minute gaps between them**, releasing only for the long ones, rather than wrapping the whole agent in
 `caffeinate` and pinning the machine awake around the clock to buy nothing. The
 plist therefore has no `caffeinate` wrapper; do not add one back.
 
@@ -95,6 +104,12 @@ Two things follow, and both are easy to get wrong:
   `time.sleep(900)` started before a suspend still has most of its 900s left on
   wake, delaying the first poll of the morning. Sleeping in 30s steps and
   re-checking `datetime.now()` means a suspend-and-resume falls straight through.
+- **The hold has to bridge the intra-day gaps.** Windows on a match day sit
+  about 45 minutes apart and only one wake is scheduled per day, so releasing in
+  one of those gaps would let the Mac sleep at 6am with nothing to wake it for
+  the 6:45am window. `SLEEP_HOLD_BRIDGE_S` (100 min) covers the gap; the
+  overnight 12 hours is far past it. Do not lower it below the longest intra-day
+  gap.
 - **Something has to wake the Mac.** A launchd agent does not wake a sleeping
   system, so this needs a one-off, run by hand because it wants sudo:
 
