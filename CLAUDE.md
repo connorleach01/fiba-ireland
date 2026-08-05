@@ -73,6 +73,24 @@ launchctl unload ~/Library/LaunchAgents/com.fiba.ireland.watch.plist   # stop
 launchctl load   ~/Library/LaunchAgents/com.fiba.ireland.watch.plist   # start
 ```
 
+**A sleeping Mac polls nothing, so the agent runs under `caffeinate -s`.** This
+machine is set to sleep after one minute idle, on battery and on AC, and a user
+launchd agent does not run while the system is asleep. Power Nap does not help;
+it covers Apple's own services, not third-party agents. `-s` holds off system
+sleep **only while on AC power**, so unplugged the Mac still sleeps normally and
+the battery is safe, and the assertion lives and dies with the agent. Verify it
+with `pmset -g assertions | grep -A2 caffeinate`, which names the python process
+it is asserting for. The summary line reads `PreventSystemSleep 0` on battery;
+that is `-s` behaving as documented, not a failure.
+
+The practical consequence: **plug the laptop in and leave the lid open**
+overnight. Closing the lid sleeps the machine whatever any assertion says.
+
+**Sleeping delays games, it does not lose them.** The trigger is "VALID and not
+in `scraped_game_ids`", not "finished since the last poll", so the first poll
+after waking ingests everything that finished in the gap and rebuilds once.
+Reports arrive late but complete and correct.
+
 **Editing `fiba/` does not affect the running agent.** It holds the code it was
 started with, so unload and load again after any change you want live. That is
 the easiest thing to forget mid-tournament.
