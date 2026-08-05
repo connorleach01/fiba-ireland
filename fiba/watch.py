@@ -26,7 +26,6 @@ from .config import EVENT_SLUG, IRELAND_ORG_ID, REPORTS_DIR
 log = logging.getLogger("fiba.watch")
 IRISH_TZ = ZoneInfo("Europe/Dublin")
 
-DEFAULT_INTERVAL_S = 300
 # Polling is adaptive, because a flat interval is either slow when it matters or
 # wasteful when it does not. The schedule gives every tip time, so we know when a
 # result can physically land: a 40-minute FIBA game with breaks runs about 100

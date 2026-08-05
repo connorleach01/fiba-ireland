@@ -1,4 +1,4 @@
-# Ireland U16 analytics — FIBA U16 EuroBasket 2026, Division B
+# Ireland U16 analytics: FIBA U16 EuroBasket 2026, Division B
 
 **Live site: https://connorleach01.github.io/fiba-ireland/**
 
@@ -8,7 +8,8 @@ the same opponent the next day. The poller publishes the site itself, so there i
 nothing to send around: coaches bookmark one URL.
 
 **Event:** 81 games, 6-16 August 2026, Gevgelija & Skopje (MKD).
-Ireland open against the Netherlands, Thursday 6 August, 10:00 Irish time.
+Ireland open against the Netherlands, Thursday 6 August, 11:00 local time
+(10:00 in Ireland, 3:00 am Mountain).
 
 ---
 
@@ -18,21 +19,34 @@ Ireland open against the Netherlands, Thursday 6 August, 10:00 Irish time.
 cd ~/code/fiba-ireland
 
 .venv/bin/python -m fiba.watch --once     # one poll now, rebuild and publish
-.venv/bin/python -m fiba.watch            # poll every 5 minutes until stopped
+.venv/bin/python -m fiba.watch            # poll until stopped
 open docs/index.html                      # the local copy of the site
 ```
 
-Every poll that finds a new result rebuilds the site and pushes it, so
-https://connorleach01.github.io/fiba-ireland/ is live within about a minute of a
-game going final. Add `--no-publish` to build without pushing.
+Every poll that finds a new result rebuilds the site and pushes it, so the live
+URL updates **about a minute after the final buzzer**. Add `--no-publish` to
+build without pushing.
 
 Run it unattended (survives reboots):
 
 ```bash
 cp com.fiba.ireland.watch.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/com.fiba.ireland.watch.plist
-tail -f data/watch.log
+sudo pmset repeat wakeorpoweron MTWRFSU 04:00:00   # once; wakes the Mac each morning
+tail -f data/watch.log                             # one `poll ok` line per cycle
 ```
+
+The poller works its own cadence out from the schedule: every 45 seconds while a
+game could be publishing a result, every 15 minutes otherwise. It holds off
+system sleep during those windows and releases outside them, so on a match day
+the Mac is needed roughly 4:00 am to 4:00 pm Mountain and can sleep the other
+twelve hours. That is 32% of the tournament rather than all of it. Leave the lid
+open and the machine plugged in; closing the lid sleeps it regardless.
+
+Sleeping never loses a game, it only delays one: the trigger is "final and not
+yet scraped", so the first poll after waking catches up on everything.
+
+Stop it with `launchctl unload ...` and `sudo pmset repeat cancel`.
 
 Other commands:
 
@@ -47,12 +61,17 @@ Other commands:
 ## The site
 
 `docs/` is the published site, served by GitHub Pages straight off the main
-branch. Every page carries a navigation bar (Dashboard, Ireland, Teams, and
-a dropdown of every scouting report), so any page reaches any other. Individual
-games are reached from the team they belong to: Ireland's game log links each
-opponent to that game's full review, and the dashboard lists recent results the
-same way. Tables sort by clicking a column header, and the team leaderboard toggles
-between Offence, Defence and Combined. All of that is a few dozen lines of plain
+branch. Every page carries a navigation bar (Games, Ireland, Teams, and a
+dropdown of every scouting report), so any page reaches any other. The Ireland
+tab and the Scouting dropdown appear as soon as those teams have played; before
+the first game the bar is just Games and Teams.
+
+Games is a fixture list, day by day, complete before a ball is thrown because
+FIBA publishes all 81 fixtures when the event page opens. Scores fill in as games
+finish and each finished row links to that game's full sheet. Tables sort by
+clicking a column header, the leaderboard switches between Advanced, Box score,
+Shooting and Scoring views, and ranks are shown by default with a button to turn
+them off. All of that is a few dozen lines of plain
 DOM code inlined in the page: no framework, no build step, and every page is
 fully readable with JavaScript off.
 
@@ -68,11 +87,12 @@ the foot of every page. A typical game review is 3 A4 pages, a scout report 2.
 
 | File | What it is |
 |---|---|
-| `index.html` | Dashboard: next fixture, links to everything |
+| `index.html` | Dashboard: next fixture, recent results, links to everything |
+| `schedule.html` | Every game day by day, scores as they land |
 | `scout_<CODE>.html` | Opponent profile: four factors, shot profile, personnel, lineups |
-| `<date>_IRL-v-<CODE>_review.html` | Ireland self-scout for one game |
-| `irl_tournament.html` | Ireland cumulative, updates after every result |
-| `tournament_teams.html` | All 22 teams, offensive **and** defensive four factors, sortable |
+| `<date>_<A>-v-<B>_game.html` | One sheet per game, covering both teams |
+| `irl_tournament.html` | Ireland cumulative, same shape as a scouting report |
+| `tournament_teams.html` | All 22 teams ranked, four views, both sides of the ball |
 | `example/` | A worked example built from Ireland's U18 EuroBasket, linked from the dashboard until the first game is played |
 
 ## How it works
@@ -106,17 +126,24 @@ game page (1 GET) ──> parse ──> SQLite ──> metrics + lineups ──>
 
 ## What was verified before the tournament
 
-Built and validated against two completed events, 159 games in total.
+Built and validated against two completed events, 162 games in total.
 
-- **Parser:** all 81 games of U16 Div B 2025 and all 78 played games of U18 Div B
-  2026 parse with the same code, including both payload encodings FIBA emits
-  (inline objects, and React back-references).
+- **Parser:** all 81 games of U16 Div B 2025 and all 81 of U18 Div B 2026 parse
+  with the same code, including both payload encodings FIBA emits (inline
+  objects, and React back-references).
 - **Accuracy:** computed FG/3PT/FT percentages match FIBA's published figures to
-  within 0.055 percentage points across 318 team-games — pure rounding.
-- **Lineups:** across 1,928 player-games, 85.8% of derived minutes matched the
-  official box score exactly, 100% within 5 seconds, worst case 2 seconds.
+  within 0.055 percentage points across 324 team-games, which is pure rounding.
+- **Lineups:** across 3,513 player-games, 81.4% of derived minutes matched the
+  official box score exactly, 100% within 5 seconds, worst case 2 seconds, and
+  162 of 162 games inside tolerance.
+- **Times:** every stored tip time, rendered back in the venue's timezone,
+  reproduces the exact wall time FIBA published, across all 162 fixtures.
+- **End to end:** a finished game was marked unplayed and the poller then
+  discovered it, fetched it live, parsed it and rebuilt all 106 pages with no
+  failures. In the same run it picked up three games that had genuinely gone
+  final since the previous scrape.
 - **Dress rehearsal:** the full report set was generated for Ireland's 7 games at
-  U18 EuroBasket 2026 Division B.
+  U18 EuroBasket 2026 Division B, and is published at `example/`.
 
 ## Design decisions worth knowing
 
@@ -157,10 +184,10 @@ whatever is open.
 
 **Charts do not repeat what the table already says.** Every figure has one home.
 The four factors table carries the numbers and the bars beside it carry the shape;
-the bars are unlabelled on purpose. Player rows show Pts/att rather than eFG%
-because the two are the same number (Pts/att is exactly twice eFG%) and Pts/att
-reads directly: 1.00 means a shot is worth a point. Shot markers shrink as a chart gets denser so
-a tournament-wide chart stays readable.
+the bars are unlabelled on purpose. Player rows show eFG% and the shot-zone
+tables show points per attempt, which is the same number doubled but the right
+one for comparing a corner three to a rim finish. Shot markers shrink as a chart
+gets denser so a tournament-wide chart stays readable.
 
 **Small samples are labelled, and thin ones are withheld.** Rate stats carry a
 banner naming the number of games behind them. Per-100 figures are not published
@@ -171,6 +198,39 @@ minutes and plus-minus still appear, because those are facts.
 twenty-five. A game that fails to parse has its cache entry discarded so the next
 poll starts clean, which matters if a page is scraped while the box score is still
 being published.
+
+**Times are local to the tournament.** Everything renders in the venue's own
+timezone, resolved from the event's host country, because the staff reading these
+pages are standing in Gevgelija. Every page says which zone it is showing.
+
+**Ranks are shown by default, and they mean different things by scale.** Twenty
+two teams rank naturally, so a team cell reads "3rd of 22". Two hundred and
+sixty four players do not, so a player cell shows a percentile with 100 at the
+top of the field, and the plain rank on hover. Shading is a five-step tint, blue
+good, red bad, unshaded middle, with the number always printed alongside so
+colour is never the only cue.
+
+Which numbers carry a direction was decided from the data, not by taste. Across
+the U18 event the rim returns 1.14 points per attempt against an all-shots
+average of 0.89 and mid-range returns 0.61, while paint, corner, wing and top all
+land between 0.73 and 0.81. Accuracy and points per attempt are therefore shaded
+everywhere; **shot volume is ranked but never shaded**, because where a team
+chooses to shoot from is a style and the columns beside it already say whether it
+is working. Game sheets carry no ranks at all: one game is not a ranking.
+
+**A live game is never stored as final**, and three separate guards say so: the
+schedule's status must be final, its live flag must be false, and the parsed game
+must have four scored periods that sum to each team's total. The third is the one
+that matters, because every other invariant passes at half time. A live box score
+is internally consistent, just incomplete, and a stored game is never revisited,
+so a mid-game scrape would be wrong permanently. Refusing costs nothing: the game
+is simply retried on the next poll.
+
+**A degraded schedule page cannot erase good data.** FIBA occasionally serves a
+`/games` page where some fixtures parse to all nulls. Seen once during the
+pre-tournament soak, on the ten opening-day games. Schedule writes COALESCE
+against what is already stored, so a null incoming value is a no-op rather than a
+deletion, and the run logs a warning naming the affected games.
 
 ## Reading the leaderboard
 

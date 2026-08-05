@@ -142,7 +142,8 @@ the easiest thing to forget mid-tournament.
 
 **Polling is adaptive, and `--interval` disables it.** `next_interval()` works
 the cadence out from the tip times in the schedule: a game can only produce a
-result between 75 minutes and 3 hours after tipping, so inside that window the
+result between `FINISH_WINDOW_START_S` (75 min) and `FINISH_WINDOW_END_S` (3 h)
+after tipping, so inside that window the
 poller runs every `FAST_INTERVAL_S` (45s) and outside it every
 `IDLE_INTERVAL_S` (15 min), waking early when the next window is about to open.
 The plist deliberately passes no `--interval`, because that flag pins the gap and
@@ -192,8 +193,9 @@ carried on, which is the designed behaviour: a failed poll must never end the
 watch, and the next one is only five minutes away. Warnings in the log are not
 by themselves a problem; `poll ok` no longer appearing is.
 
-New results also fire a macOS notification through `osascript`, and a game that
-fails to parse fires a separate one, so a silent failure still surfaces.
+New results fire a macOS notification through `watch.notify` (`osascript`), and a
+game that fails to parse fires a separate one, so a silent failure still
+surfaces. Both are best effort and can never break a run.
 
 ## Layout
 
@@ -601,12 +603,13 @@ reason, and if you do, say why in the commit.
 
 ## Verification
 
-`tests/test_pipeline.py` runs fully offline against the cached pages, about 74
+`tests/test_pipeline.py` runs fully offline against the cached pages, about 87
 assertions covering the clock, both payload encodings, metrics against FIBA's
 published percentages, four-factor arithmetic, shot zones, refusing an unfinished
 game, lineup validation, small-sample guards, the fixture list, venue-local
-times, the empty-event shape, the theming rules, and rank and percentile
-direction. Run it after any change.
+times, a degraded schedule page not blanking stored data, adaptive polling, the
+empty-event shape, the theming rules, and rank and percentile direction. Run it
+after any change.
 
 Built and validated against **162 completed games** across two past events, both
 already in `data/fiba.db`:

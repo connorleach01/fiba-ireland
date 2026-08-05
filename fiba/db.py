@@ -220,13 +220,6 @@ def upsert_schedule(conn, event_slug: str, games: list[dict]) -> None:
     conn.commit()
 
 
-def stored_status(conn, event_slug: str) -> dict[int, str]:
-    cur = conn.execute(
-        "SELECT game_id, status_code FROM games WHERE event_slug=?", (event_slug,)
-    )
-    return {row["game_id"]: row["status_code"] for row in cur}
-
-
 def scraped_game_ids(conn, event_slug: str) -> set[int]:
     cur = conn.execute(
         "SELECT game_id FROM games WHERE event_slug=? AND parsed_at IS NOT NULL",
