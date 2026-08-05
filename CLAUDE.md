@@ -119,9 +119,18 @@ Two things follow, and both are easy to get wrong:
   pmset -g sched                                      # check what is scheduled
   ```
 
-  Without it the Mac sleeps at 16:00 and stays asleep, and the overnight games
-  are not scraped until someone opens the lid. Nothing is lost, since the trigger
-  is "VALID and not yet scraped", but the reports arrive hours late.
+  It is a standing rule: it persists across lid close, sleep, reboot and
+  shutdown, and needs running once, not nightly. Without it the Mac sleeps at
+  16:00 and stays asleep, and the overnight games are not scraped until someone
+  opens the lid. Nothing is lost, since the trigger is "VALID and not yet
+  scraped", but the reports arrive hours late.
+- **A lid-closed wake is a DarkWake and is not trusted here.** The schedule still
+  fires, but the machine comes up with the display off and returns to sleep
+  quickly unless something takes a power assertion, and the poller only takes one
+  after its next poll. `sleep_until` uses a 10s step to keep that race short, but
+  this has not been tested on this hardware and clamshell behaviour varies with
+  power and displays. **Lid open is the supported configuration**; treat
+  lid-closed operation as unverified rather than broken.
 
 **`caffeinate -s` is inert on battery by design**, so all of the above is a no-op
 unless the laptop is plugged in, and closing the lid sleeps the machine whatever

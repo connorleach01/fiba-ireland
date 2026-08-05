@@ -177,7 +177,7 @@ class SleepBlocker:
         self.hold(False)
 
 
-def sleep_until(seconds: float, step: float = 30.0) -> None:
+def sleep_until(seconds: float, step: float = 10.0) -> None:
     """Sleep `seconds` measured on the wall clock, not the monotonic one.
 
     macOS does not advance the monotonic clock while the system is asleep, so a
@@ -185,6 +185,12 @@ def sleep_until(seconds: float, step: float = 30.0) -> None:
     left on wake, delaying the first poll of the morning by up to fifteen
     minutes. Waking in short steps and re-checking the wall clock means a
     suspend-and-resume falls straight through and polls immediately.
+
+    `step` is deliberately short. A scheduled wake with the lid closed is a
+    DarkWake: the machine comes up with the display off and returns to sleep
+    quickly unless something takes a power assertion. The poller only takes one
+    after its next poll, so a long step risks losing that race and sleeping again
+    before any work happens. Ten seconds costs nothing and leaves margin.
     """
     deadline = dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=seconds)
     while True:
