@@ -59,6 +59,49 @@ until the tournament starts).
 Deps are `requests` and `jinja2` in `.venv`. Nothing else. Do not add a
 framework, a bundler, or a CSS library.
 
+## Automation
+
+The poller runs as a launchd agent, `com.fiba.ireland.watch`, installed from the
+plist in the repo root. It polls every 300s, and `RunAtLoad` plus `KeepAlive`
+mean it starts on login and restarts if it dies, with a 60s throttle so a
+persistent failure cannot spin.
+
+```bash
+launchctl list | grep fiba            # PID and last exit status
+tail -f data/watch.log                # what it is doing
+launchctl unload ~/Library/LaunchAgents/com.fiba.ireland.watch.plist   # stop
+launchctl load   ~/Library/LaunchAgents/com.fiba.ireland.watch.plist   # start
+```
+
+**Editing `fiba/` does not affect the running agent.** It holds the code it was
+started with, so unload and load again after any change you want live. That is
+the easiest thing to forget mid-tournament.
+
+**Every cycle logs one line**, whether or not anything happened:
+
+```
+poll ok: 81 scheduled, 81 final, 4 new
+```
+
+That heartbeat exists because a healthy poll used to log nothing at all, which
+made silence ambiguous: an operator could not tell "polling fine, nothing new"
+from "wedged two hours ago". During the event, `final` counting up is the signal
+that the trigger works, and **a timestamp that has stopped moving is the alarm**.
+Do not remove it to quieten the log.
+
+**The agent commits and pushes `docs/` itself.** Always `git pull --rebase`
+before committing by hand or the push is rejected.
+
+**Transient connection resets from FIBA are normal.** Over a two-day soak the
+agent logged 19 first-attempt `ConnectionResetError`s that all recovered on
+retry, and one cycle that exhausted all four attempts. The loop caught it and
+carried on, which is the designed behaviour: a failed poll must never end the
+watch, and the next one is only five minutes away. Warnings in the log are not
+by themselves a problem; `poll ok` no longer appearing is.
+
+New results also fire a macOS notification through `osascript`, and a game that
+fails to parse fires a separate one, so a silent failure still surfaces.
+
 ## Layout
 
 ```
@@ -86,7 +129,7 @@ data/fiba.db   SQLite, gitignored
 ```
 
 `raw/` and `data/` are gitignored but **do not delete them casually**: `raw/`
-lets any parser change be replayed offline against 159 real games without
+lets any parser change be replayed offline against 162 real games without
 refetching, which is the main safety net.
 
 ## Non-obvious things that will bite you
@@ -133,7 +176,8 @@ other two guards exist. Refusal is the right failure here: the game stays out of
 **Lineups are validated per player.** Derived minutes are compared to the
 official box score; a game that fails is marked `lineups_ok=0` and reports
 suppress its lineup sections rather than show plausible-but-wrong numbers.
-Measured across 1,928 player-games: 85.8% exact, 100% within 5s, worst 2s.
+Measured across 3,513 player-games in two complete events: 81.4% exact, 100%
+within 5s, worst 2s, and 162/162 games inside tolerance.
 `TOLERANCE_SECONDS = 10` is deliberately just above that noise floor so it trips
 immediately if FIBA changes how it reports substitutions.
 
@@ -305,7 +349,7 @@ listed first, so Ireland leads on its own games. Sheets are built for every
 finished game in the event, which is what makes the scouting game logs clickable.
 
 For a full event that is about 80 sheets at roughly 190 KB each. The U18
-reference set is 102 pages and `docs/` runs to about 19 MB. Fine for Pages and
+reference set is 109 pages and `docs/` runs to about 20 MB. Fine for Pages and
 for git, but per-page weight now matters: shot charts are the bulk of it.
 
 ## Ranks and percentiles
@@ -453,19 +497,20 @@ reason, and if you do, say why in the commit.
 
 ## Verification
 
-`tests/test_pipeline.py` runs fully offline against the cached pages, about 45
+`tests/test_pipeline.py` runs fully offline against the cached pages, about 74
 assertions covering the clock, both payload encodings, metrics against FIBA's
-published percentages, four-factor arithmetic, shot zones, lineup validation,
-small-sample guards, the empty-event shape, the theming rules, and rank and
-percentile direction. Run it after any change.
+published percentages, four-factor arithmetic, shot zones, refusing an unfinished
+game, lineup validation, small-sample guards, the fixture list, venue-local
+times, the empty-event shape, the theming rules, and rank and percentile
+direction. Run it after any change.
 
-Built and validated against **159 completed games** across two past events, both
+Built and validated against **162 completed games** across two past events, both
 already in `data/fiba.db`:
 
 - `fiba-u16-eurobasket-2025-division-b` (81 games), same age group
-- `fiba-u18-eurobasket-2026-division-b` (78 played), Ireland played 7
+- `fiba-u18-eurobasket-2026-division-b` (81 games), Ireland played 7
 
-Percentages match FIBA's published figures to within 0.055pp across 318
+Percentages match FIBA's published figures to within 0.055pp across 324
 team-games. Derived per-game scoring and efficiency averages match FIBA's own
 published Ireland leaders exactly.
 
@@ -478,7 +523,7 @@ the tests check data, not layout:
 ```
 
 A quick internal-link check over `docs/example/` is worth running after any
-navigation change; there are roughly 2,700 internal links across 102 pages:
+navigation change; there are roughly 2,930 internal links across 109 pages:
 
 ```python
 import pathlib, re
@@ -505,9 +550,23 @@ alignment have both silently broken before.
   (140, 28), about 17.9 units per metre. `metrics.zone_text_agreement()`
   cross-checks the geometry against FIBA's own shot descriptions and reports drift.
 
-## State as of 2 August 2026
+## State as of 5 August 2026, the day before tip-off
 
-The U16 event has not started, so `docs/` holds only the dashboard and an empty
-leaderboard, with a banner pointing at `docs/example/`. Everything is built,
-validated and deployed; the poller is not yet running as a launchd agent
-(`com.fiba.ireland.watch.plist` is ready to install).
+The U16 event has not started, so `docs/` holds the dashboard, the full fixture
+list and an empty leaderboard, with a banner pointing at `docs/example/`. The
+launchd agent is **installed and running**, has been up continuously for two days,
+and publishes on its own.
+
+The whole chain has been rehearsed end to end against a copy of the database: a
+finished game was marked unplayed, and `watch.cycle()` then discovered it,
+fetched it live from FIBA, parsed it, stored it and rebuilt all 106 reports with
+no failures. In the same run it picked up three U18 games that had genuinely gone
+final since the last scrape, so the `INIT` to `VALID` trigger has now fired on
+newly-finished games rather than only on replayed ones. That is the closest thing
+to a live rehearsal available before the U16 event starts.
+
+**What is still unproven:** what FIBA sets as `statusCode` while a game is
+actually in progress. Every event scraped so far was already over. The three
+guards described above mean the worst case is a game being skipped and retried
+five minutes later rather than a wrong report being published, but the first
+genuine live trigger is Thursday 6 August. Watch `data/watch.log` around then.

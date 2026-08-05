@@ -196,9 +196,13 @@ def test_fixture_list():
           all(f["home"]["code"] and f["away"]["code"] for f in upcoming
               if IRELAND_ORG_ID in (f["home"]["org_id"], f["away"]["org_id"])))
 
+    # The U18 event has finished, so every one of its fixtures carries a result.
+    # Asserted as "all of them" rather than a count, because the count moved from
+    # 78 to 81 when the last three games went final and FIBA published them.
     played = analysis.event_fixtures(conn, U18)
     done = [f for f in played if f["played"]]
-    check("a finished event carries its results", len(done) == 78)
+    check("a finished event carries every result",
+          done and len(done) == len(played), f"({len(done)}/{len(played)})")
     check("a finished game has both scores",
           all(f["home"]["score"] is not None and f["away"]["score"] is not None
               for f in done))

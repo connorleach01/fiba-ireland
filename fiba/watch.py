@@ -52,6 +52,14 @@ def cycle(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
     summary = ingest.sync_event(conn, event_slug)
     new_games = summary["ingested"]
 
+    # One line every cycle, whether or not anything happened. A healthy poll used
+    # to log nothing at all, which meant an operator glancing at the log could not
+    # tell "polling fine, no new results" from "process wedged two hours ago".
+    # During the tournament this is the line you watch: `final` counts up as games
+    # end, and a timestamp that has stopped moving is the alarm.
+    log.info("poll ok: %d scheduled, %d final, %d new",
+             summary["scheduled"], summary["final"], len(new_games))
+
     if new_games or rebuild_always:
         report.build_all(conn, event_slug, org_id)
         log.info("rebuilt reports into %s", REPORTS_DIR)
