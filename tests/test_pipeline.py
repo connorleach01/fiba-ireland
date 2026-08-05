@@ -259,6 +259,59 @@ def test_times_are_venue_local():
           f"(got {tip})")
 
 
+def test_adaptive_polling():
+    """The poller must speed up exactly when a result can land, and not otherwise."""
+    print("adaptive polling")
+    import datetime as dt
+    from unittest import mock
+    from fiba import watch
+
+    conn = db.connect()
+    SLUG = "fiba-u16-eurobasket-2026-division-b"
+    tip = conn.execute("SELECT MIN(game_utc) t FROM games WHERE event_slug=?",
+                       (SLUG,)).fetchone()["t"]
+    tip = dt.datetime.fromisoformat(tip)
+
+    real = dt.datetime
+
+    class Frozen(real):
+        at = None
+        @classmethod
+        def now(cls, tz=None):
+            return cls.at if tz is None else cls.at.astimezone(tz)
+
+    def interval_at(moment):
+        Frozen.at = moment
+        with mock.patch.object(watch.dt, "datetime", Frozen):
+            return watch.next_interval(conn, SLUG)[0]
+
+    check("idles well before the first tip",
+          interval_at(tip - dt.timedelta(hours=12)) == watch.IDLE_INTERVAL_S)
+    check("still idle just after tip, no result possible yet",
+          interval_at(tip + dt.timedelta(minutes=10)) > watch.FAST_INTERVAL_S)
+    check("fast once a final could land",
+          interval_at(tip + dt.timedelta(minutes=95)) == watch.FAST_INTERVAL_S)
+    check("still fast late enough to cover overtime",
+          interval_at(tip + dt.timedelta(minutes=170)) == watch.FAST_INTERVAL_S)
+    # Not `tip + 4h`: the next slot of the same day tips 2.5h after the first, so
+    # that moment sits inside the second window and is correctly still fast. Use
+    # the last fixture of the whole event, which has nothing following it.
+    last = dt.datetime.fromisoformat(
+        conn.execute("SELECT MAX(game_utc) t FROM games WHERE event_slug=?",
+                     (SLUG,)).fetchone()["t"])
+    check("idles again once the last window closes",
+          interval_at(last + dt.timedelta(hours=4)) == watch.IDLE_INTERVAL_S)
+    check("--interval pins the gap and disables adaptation",
+          watch.next_interval(conn, SLUG, override=42) == (42, "fixed"))
+    # A game already ingested must not hold the poller at the fast rate.
+    check("the window only counts games not yet scraped",
+          interval_at(dt.datetime.fromisoformat(
+              conn.execute("SELECT MAX(game_utc) t FROM games WHERE event_slug=? "
+                           "AND parsed_at IS NOT NULL",
+                           (U18,)).fetchone()["t"]) + dt.timedelta(minutes=95))
+          > watch.FAST_INTERVAL_S)
+
+
 def test_empty_event_shape():
     """Reports must render before a single game is played."""
     print("pre-tournament shape")
@@ -433,7 +486,8 @@ def main() -> int:
                  test_four_factors_sanity, test_shot_zones,
                  test_rejects_unfinished_games, test_lineups_validate,
                  test_small_sample_rates_withheld, test_fixture_list,
-                 test_times_are_venue_local, test_empty_event_shape,
+                 test_times_are_venue_local, test_adaptive_polling,
+                 test_empty_event_shape,
                  test_theming, test_ranks_and_percentiles):
         test()
     print()

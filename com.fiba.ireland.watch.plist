@@ -38,9 +38,14 @@
     <string>/Users/connorleach/code/fiba-ireland/.venv/bin/python</string>
     <string>-m</string>
     <string>fiba.watch</string>
-    <string>--interval</string>
-    <string>300</string>
   </array>
+  <!--
+    No --interval on purpose: that flag pins the gap and disables adaptive
+    polling, which is the thing that gets a report out seconds after the buzzer
+    rather than minutes. The poller works its own cadence out from the tip times
+    in the schedule.
+  -->
+
 
   <key>WorkingDirectory</key>
   <string>/Users/connorleach/code/fiba-ireland</string>

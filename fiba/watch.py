@@ -27,6 +27,23 @@ log = logging.getLogger("fiba.watch")
 IRISH_TZ = ZoneInfo("Europe/Dublin")
 
 DEFAULT_INTERVAL_S = 300
+# Polling is adaptive, because a flat interval is either slow when it matters or
+# wasteful when it does not. The schedule gives every tip time, so we know when a
+# result can physically land: a 40-minute FIBA game with breaks runs about 100
+# minutes, and overtime or a long stoppage stretches that. Inside a window that
+# could produce a final we poll every FAST_INTERVAL_S; outside one, every
+# IDLE_INTERVAL_S.
+#
+# Measured over match day one this is about 770 requests against 288 for a flat
+# 5 minutes, so it is more traffic, not less, but all of it lands in the five
+# 105-minute windows where a result can actually appear, and the overnight and
+# rest-day hours drop to a quarter of the old rate. One lightweight schedule page
+# every 45s while a game is finishing is a fair trade for cutting the average
+# detection delay from 2.5 minutes to about 22 seconds.
+FAST_INTERVAL_S = 45
+IDLE_INTERVAL_S = 900
+FINISH_WINDOW_START_S = 75 * 60
+FINISH_WINDOW_END_S = 3 * 3600
 
 
 def notify(title: str, message: str) -> None:
@@ -44,6 +61,44 @@ def notify(title: str, message: str) -> None:
 
 def _as_applescript(text: str) -> str:
     return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def next_interval(conn, event_slug: str, override: int | None = None) -> tuple[int, str]:
+    """How long to wait before the next poll, and why.
+
+    Returns the fast interval whenever a game that has already tipped could still
+    be publishing its result, so the gap between the final buzzer and the report
+    is seconds rather than minutes. Falls back to the idle interval the rest of
+    the time. `override` is the `--interval` flag, which pins both.
+    """
+    if override is not None:
+        return override, "fixed"
+
+    now = dt.datetime.now(dt.timezone.utc)
+    earliest = (now - dt.timedelta(seconds=FINISH_WINDOW_END_S)).isoformat()
+    latest = (now - dt.timedelta(seconds=FINISH_WINDOW_START_S)).isoformat()
+    row = conn.execute(
+        "SELECT COUNT(*) n FROM games WHERE event_slug=? AND game_utc IS NOT NULL "
+        "AND game_utc BETWEEN ? AND ? AND parsed_at IS NULL",
+        (event_slug, earliest, latest)).fetchone()
+    if row and row["n"]:
+        return FAST_INTERVAL_S, f"{row['n']} game(s) due to finish"
+
+    # Nothing due right now. Sleep until shortly before the next window opens
+    # rather than idling blindly past it, capped so a stalled clock cannot park
+    # the poller for hours.
+    upcoming = conn.execute(
+        "SELECT MIN(game_utc) t FROM games WHERE event_slug=? AND game_utc > ? "
+        "AND parsed_at IS NULL", (event_slug, latest)).fetchone()
+    if upcoming and upcoming["t"]:
+        try:
+            tip = dt.datetime.fromisoformat(upcoming["t"])
+            wait = (tip - now).total_seconds() + FINISH_WINDOW_START_S
+            if 0 < wait < IDLE_INTERVAL_S:
+                return max(FAST_INTERVAL_S, int(wait)), "next result window opening"
+        except ValueError:
+            pass
+    return IDLE_INTERVAL_S, "no game due"
 
 
 def cycle(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
@@ -102,8 +157,8 @@ def main(argv=None) -> int:
     parser.add_argument("--org", type=int, default=IRELAND_ORG_ID,
                         help="subject team organisation id")
     parser.add_argument("--once", action="store_true", help="run a single cycle")
-    parser.add_argument("--interval", type=int, default=DEFAULT_INTERVAL_S,
-                        help="seconds between polls")
+    parser.add_argument("--interval", type=int, default=None,
+                        help="pin the poll gap in seconds, disabling adaptive polling")
     parser.add_argument("--backfill", metavar="SLUG",
                         help="ingest every finished game of an event, then exit")
     parser.add_argument("--rebuild", action="store_true",
@@ -170,8 +225,11 @@ def main(argv=None) -> int:
               publish=not args.no_publish)
         return 0
 
-    log.info("watching %s every %ds; reports in %s",
-             args.event, args.interval, REPORTS_DIR)
+    pinned = args.interval if args.interval is not None else None
+    log.info("watching %s; %s; reports in %s", args.event,
+             f"every {pinned}s" if pinned else
+             f"{FAST_INTERVAL_S}s while a result is due, else {IDLE_INTERVAL_S}s",
+             REPORTS_DIR)
     first = True
     while True:
         try:
@@ -184,7 +242,12 @@ def main(argv=None) -> int:
         except Exception as exc:  # noqa: BLE001 - a poll failure must not end the watch
             log.exception("poll failed, continuing: %s", exc)
         try:
-            time.sleep(args.interval)
+            wait, why = next_interval(conn, args.event, pinned)
+        except Exception:  # noqa: BLE001 - scheduling must never end the watch
+            wait, why = FAST_INTERVAL_S, "interval lookup failed"
+        log.info("next poll in %ds (%s)", wait, why)
+        try:
+            time.sleep(wait)
         except KeyboardInterrupt:
             log.info("stopped")
             return 0
