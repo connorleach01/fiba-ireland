@@ -20,21 +20,17 @@
   <string>com.fiba.ireland.watch</string>
 
   <!--
-    Wrapped in `caffeinate -s` because this Mac sleeps after a minute idle, and a
-    sleeping Mac polls nothing. `-s` holds off system sleep only while on AC
-    power, so unplugged the machine still sleeps normally and the battery is
-    safe. The assertion lives and dies with the agent: unload it and the Mac
-    sleeps as before.
+    No `caffeinate` wrapper here on purpose. The poller holds the sleep assertion
+    itself, and only inside a result window, so the Mac is free to sleep through
+    the 12 hours overnight and the 22 to 36 hours of a rest day. Wrapping the
+    whole agent would pin the machine awake around the clock to buy nothing.
 
-    Sleeping does not lose games, it only delays them. On wake the next poll
-    ingests every game that went final in the meantime, because the trigger is
-    "VALID and not yet scraped", not "finished since the last poll". Closing the
-    lid still sleeps the machine whatever this says.
+    Sleeping does not lose games, it only delays them: the trigger is "VALID and
+    not yet scraped", not "finished since the last poll", so the first poll after
+    waking ingests everything that landed in the gap.
   -->
   <key>ProgramArguments</key>
   <array>
-    <string>/usr/bin/caffeinate</string>
-    <string>-s</string>
     <string>/Users/connorleach/code/fiba-ireland/.venv/bin/python</string>
     <string>-m</string>
     <string>fiba.watch</string>

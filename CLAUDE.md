@@ -73,23 +73,44 @@ launchctl unload ~/Library/LaunchAgents/com.fiba.ireland.watch.plist   # stop
 launchctl load   ~/Library/LaunchAgents/com.fiba.ireland.watch.plist   # start
 ```
 
-**A sleeping Mac polls nothing, so the agent runs under `caffeinate -s`.** This
-machine is set to sleep after one minute idle, on battery and on AC, and a user
-launchd agent does not run while the system is asleep. Power Nap does not help;
-it covers Apple's own services, not third-party agents. `-s` holds off system
-sleep **only while on AC power**, so unplugged the Mac still sleeps normally and
-the battery is safe, and the assertion lives and dies with the agent. Verify it
-with `pmset -g assertions | grep -A2 caffeinate`, which names the python process
-it is asserting for. The summary line reads `PreventSystemSleep 0` on battery;
-that is `-s` behaving as documented, not a failure.
+**The Mac only needs to be awake while a result is due.** In Mountain time,
+where Connor is, a match day looks like this:
 
-The practical consequence: **plug the laptop in and leave the lid open**
-overnight. Closing the lid sleeps the machine whatever any assertion says.
+| | Mountain time |
+|---|---|
+| tips | 03:00, 05:30, 08:00, 10:30, 13:00 |
+| result windows | 04:15-06:00, 06:45-08:30, 09:15-11:00, 11:45-13:30, 14:15-16:00 |
+| **nothing can land** | **16:00 to 04:15 next day, 12.2 hours** |
 
-**Sleeping delays games, it does not lose them.** The trigger is "VALID and not
-in `scraped_game_ids`", not "finished since the last poll", so the first poll
-after waking ingests everything that finished in the gap and rebuilds once.
-Reports arrive late but complete and correct.
+Rest days (9 and 14 August) stretch that gap to 22 and 36 hours. So `watch.py`
+holds the sleep assertion through a `SleepBlocker` that asserts **only inside a
+result window** and releases outside one, rather than wrapping the whole agent in
+`caffeinate` and pinning the machine awake around the clock to buy nothing. The
+plist therefore has no `caffeinate` wrapper; do not add one back.
+
+Two things follow, and both are easy to get wrong:
+
+- **`sleep_until` measures the wall clock, not the monotonic one.** macOS does
+  not advance the monotonic clock during system sleep, so a plain
+  `time.sleep(900)` started before a suspend still has most of its 900s left on
+  wake, delaying the first poll of the morning. Sleeping in 30s steps and
+  re-checking `datetime.now()` means a suspend-and-resume falls straight through.
+- **Something has to wake the Mac.** A launchd agent does not wake a sleeping
+  system, so this needs a one-off, run by hand because it wants sudo:
+
+  ```bash
+  sudo pmset repeat wakeorpoweron MTWRFSU 04:00:00   # 15 min before the first window
+  sudo pmset repeat cancel                            # after the tournament
+  pmset -g sched                                      # check what is scheduled
+  ```
+
+  Without it the Mac sleeps at 16:00 and stays asleep, and the overnight games
+  are not scraped until someone opens the lid. Nothing is lost, since the trigger
+  is "VALID and not yet scraped", but the reports arrive hours late.
+
+**`caffeinate -s` is inert on battery by design**, so all of the above is a no-op
+unless the laptop is plugged in, and closing the lid sleeps the machine whatever
+any assertion says. Plug in, lid open.
 
 **Editing `fiba/` does not affect the running agent.** It holds the code it was
 started with, so unload and load again after any change you want live. That is

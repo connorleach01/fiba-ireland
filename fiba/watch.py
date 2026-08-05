@@ -101,6 +101,61 @@ def next_interval(conn, event_slug: str, override: int | None = None) -> tuple[i
     return IDLE_INTERVAL_S, "no game due"
 
 
+class SleepBlocker:
+    """Holds off system sleep only while a result is actually due.
+
+    Wrapping the whole poller in `caffeinate` kept the Mac awake around the
+    clock, including the 12 hours overnight and the 22 to 36 hours of a rest day,
+    which is a lot of machine time to buy nothing. This asserts inside a result
+    window and releases outside one, so the Mac is free to sleep whenever no game
+    can produce a score.
+
+    `caffeinate -s` is inert on battery by design, so this is a no-op unless the
+    laptop is plugged in.
+    """
+
+    def __init__(self) -> None:
+        self._proc: subprocess.Popen | None = None
+
+    def hold(self, wanted: bool) -> None:
+        if wanted and self._proc is None:
+            try:
+                self._proc = subprocess.Popen(
+                    ["/usr/bin/caffeinate", "-s"],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                log.info("holding off system sleep while results are due")
+            except Exception as exc:  # noqa: BLE001 - never let this end the watch
+                log.warning("could not hold off sleep: %s", exc)
+        elif not wanted and self._proc is not None:
+            self._proc.terminate()
+            try:
+                self._proc.wait(timeout=5)
+            except Exception:  # noqa: BLE001
+                self._proc.kill()
+            self._proc = None
+            log.info("released sleep hold; the Mac may sleep until the next window")
+
+    def release(self) -> None:
+        self.hold(False)
+
+
+def sleep_until(seconds: float, step: float = 30.0) -> None:
+    """Sleep `seconds` measured on the wall clock, not the monotonic one.
+
+    macOS does not advance the monotonic clock while the system is asleep, so a
+    plain `time.sleep(900)` started before a suspend still has most of its 900s
+    left on wake, delaying the first poll of the morning by up to fifteen
+    minutes. Waking in short steps and re-checking the wall clock means a
+    suspend-and-resume falls straight through and polls immediately.
+    """
+    deadline = dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=seconds)
+    while True:
+        remaining = (deadline - dt.datetime.now(dt.timezone.utc)).total_seconds()
+        if remaining <= 0:
+            return
+        time.sleep(min(step, remaining))
+
+
 def cycle(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
           rebuild_always: bool = False, publish: bool = True) -> dict:
     """One poll: refresh schedule, ingest new finals, rebuild if anything landed."""
@@ -231,26 +286,32 @@ def main(argv=None) -> int:
              f"{FAST_INTERVAL_S}s while a result is due, else {IDLE_INTERVAL_S}s",
              REPORTS_DIR)
     first = True
-    while True:
-        try:
-            cycle(conn, args.event, args.org, rebuild_always=first,
-                  publish=not args.no_publish)
-            first = False
-        except KeyboardInterrupt:
-            log.info("stopped")
-            return 0
-        except Exception as exc:  # noqa: BLE001 - a poll failure must not end the watch
-            log.exception("poll failed, continuing: %s", exc)
-        try:
-            wait, why = next_interval(conn, args.event, pinned)
-        except Exception:  # noqa: BLE001 - scheduling must never end the watch
-            wait, why = FAST_INTERVAL_S, "interval lookup failed"
-        log.info("next poll in %ds (%s)", wait, why)
-        try:
-            time.sleep(wait)
-        except KeyboardInterrupt:
-            log.info("stopped")
-            return 0
+    blocker = SleepBlocker()
+    try:
+        while True:
+            try:
+                cycle(conn, args.event, args.org, rebuild_always=first,
+                      publish=not args.no_publish)
+                first = False
+            except KeyboardInterrupt:
+                log.info("stopped")
+                return 0
+            except Exception as exc:  # noqa: BLE001 - a poll failure must not end the watch
+                log.exception("poll failed, continuing: %s", exc)
+            try:
+                wait, why = next_interval(conn, args.event, pinned)
+            except Exception:  # noqa: BLE001 - scheduling must never end the watch
+                wait, why = FAST_INTERVAL_S, "interval lookup failed"
+            # Only worth keeping the Mac awake when a score could land.
+            blocker.hold(wait <= FAST_INTERVAL_S)
+            log.info("next poll in %ds (%s)", wait, why)
+            try:
+                sleep_until(wait)
+            except KeyboardInterrupt:
+                log.info("stopped")
+                return 0
+    finally:
+        blocker.release()
 
 
 if __name__ == "__main__":
