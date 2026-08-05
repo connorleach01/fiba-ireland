@@ -95,10 +95,40 @@ Reports arrive late but complete and correct.
 started with, so unload and load again after any change you want live. That is
 the easiest thing to forget mid-tournament.
 
+**Polling is adaptive, and `--interval` disables it.** `next_interval()` works
+the cadence out from the tip times in the schedule: a game can only produce a
+result between 75 minutes and 3 hours after tipping, so inside that window the
+poller runs every `FAST_INTERVAL_S` (45s) and outside it every
+`IDLE_INTERVAL_S` (15 min), waking early when the next window is about to open.
+The plist deliberately passes no `--interval`, because that flag pins the gap and
+turns all of this off.
+
+Measured over match day one that is about 770 requests against 288 for a flat
+5 minutes: more traffic overall, but concentrated in the five windows where a
+result can appear, and a quarter of the old rate overnight and on rest days.
+
+**Where the time actually goes**, measured rather than assumed:
+
+| step | time |
+|---|---|
+| detect the flip (average, 45s poll) | ~22s |
+| schedule GET | 0.4s |
+| game GET | 4.7s |
+| parse, validate, store | under 0.1s |
+| rebuild all 106 pages | 2.3s |
+| commit and push | ~2s |
+| GitHub Pages build (median of 33) | 26s, worst 42s |
+
+So **roughly a minute from final buzzer to live report**, of which half is
+GitHub's build queue and is not ours to optimise. Do not chase the code path for
+speed; it is already a tenth of the total. The only lever left is the poll
+interval, and 45s is already inside the noise of when FIBA publishes.
+
 **Every cycle logs one line**, whether or not anything happened:
 
 ```
 poll ok: 81 scheduled, 81 final, 4 new
+next poll in 45s (2 game(s) due to finish)
 ```
 
 That heartbeat exists because a healthy poll used to log nothing at all, which
