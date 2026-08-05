@@ -259,6 +259,56 @@ def test_times_are_venue_local():
           f"(got {tip})")
 
 
+def test_degraded_schedule_cannot_blank_data():
+    """A schedule page that parses to nulls must not erase what we already hold.
+
+    Seen for real: FIBA served a page where the ten opening-day games came back
+    with no teams, no tip time and no status, and the plain upsert wrote those
+    nulls over good rows. A game with no `game_utc` drops out of the fixture list
+    and out of the window that decides when to poll fast and when to let the Mac
+    sleep, so a blip at the wrong moment could sleep through a match day.
+    """
+    print("degraded schedule pages")
+    import sqlite3
+    conn = sqlite3.connect(":memory:")
+    conn.row_factory = sqlite3.Row
+    db.init(conn)
+
+    good = {"game_id": 1, "game_number": "1", "game_name": "G1",
+            "status_code": "INIT", "is_live": 0,
+            "team_a_org_id": 81, "team_a_code": "IRL", "team_a_name": "Ireland",
+            "team_b_org_id": 5, "team_b_code": "NED", "team_b_name": "Netherlands",
+            "team_a_score": 0, "team_b_score": 0,
+            "game_datetime": "2026-08-06T11:00:00",
+            "game_utc": "2026-08-06T09:00:00+00:00",
+            "host_city": "Gevgelija", "host_country": "North Macedonia",
+            "venue_name": "Hall"}
+    db.upsert_schedule(conn, "evt", [good])
+
+    stub = {k: (v if k == "game_id" else None) for k, v in good.items()}
+    db.upsert_schedule(conn, "evt", [stub])
+
+    row = conn.execute("SELECT * FROM games WHERE event_slug='evt'").fetchone()
+    check("tip time survives a blank page", row["game_utc"] == good["game_utc"])
+    check("teams survive a blank page",
+          (row["team_a_code"], row["team_b_code"]) == ("IRL", "NED"))
+    check("status survives a blank page", row["status_code"] == "INIT")
+
+    # A real update must still get through.
+    db.upsert_schedule(conn, "evt", [dict(good, status_code="VALID",
+                                          team_a_score=71, team_b_score=68)])
+    row = conn.execute("SELECT * FROM games WHERE event_slug='evt'").fetchone()
+    check("a genuine status change still lands", row["status_code"] == "VALID")
+    check("a genuine score still lands", row["team_a_score"] == 71)
+
+    # And a knockout tie gaining its teams must still fill in.
+    db.upsert_schedule(conn, "evt", [{k: (v if k in ("game_id",) else None)
+                                      for k, v in good.items()} | {"game_id": 2}])
+    db.upsert_schedule(conn, "evt", [dict(good, game_id=2, team_a_code="POR")])
+    row = conn.execute("SELECT * FROM games WHERE event_slug='evt' AND game_id=2").fetchone()
+    check("a null row later gaining teams fills in", row["team_a_code"] == "POR")
+
+
 def test_adaptive_polling():
     """The poller must speed up exactly when a result can land, and not otherwise."""
     print("adaptive polling")
@@ -486,7 +536,8 @@ def main() -> int:
                  test_four_factors_sanity, test_shot_zones,
                  test_rejects_unfinished_games, test_lineups_validate,
                  test_small_sample_rates_withheld, test_fixture_list,
-                 test_times_are_venue_local, test_adaptive_polling,
+                 test_times_are_venue_local, test_degraded_schedule_cannot_blank_data,
+                 test_adaptive_polling,
                  test_empty_event_shape,
                  test_theming, test_ranks_and_percentiles):
         test()

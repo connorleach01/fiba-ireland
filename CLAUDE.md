@@ -274,6 +274,17 @@ within 5s, worst 2s, and 162/162 games inside tolerance.
 `TOLERANCE_SECONDS = 10` is deliberately just above that noise floor so it trips
 immediately if FIBA changes how it reports substitutions.
 
+**A degraded schedule page must never blank good data.** Seen for real during
+the pre-tournament soak: FIBA served a `/games` page where the ten opening-day
+games parsed to all nulls, no teams, no tip time, no status, and the plain upsert
+wrote those nulls straight over good rows. The next poll repaired it, but a game
+with no `game_utc` drops out of the fixture list **and** out of the window that
+decides when to poll fast and when to let the Mac sleep, so a blip at the wrong
+moment could have slept through a match day. `db.upsert_schedule` now COALESCEs
+every column against what is stored, so a null incoming value is a no-op, and it
+logs a warning naming the affected games. Every column here only ever goes null
+to value in real life, so nothing legitimate is lost.
+
 **Live polling never reads the cache.** A game we have not ingested is either new
 or previously failed, so `sync_event` fetches fresh when `only_new=True`.
 Reusing the cache there could pin us to a page captured while the box score was

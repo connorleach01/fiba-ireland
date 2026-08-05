@@ -6,10 +6,13 @@ before the live one starts.
 """
 from __future__ import annotations
 
+import logging
 import sqlite3
 from typing import Iterable
 
 from .config import DB_PATH
+
+log = logging.getLogger(__name__)
 from .parse import _PLAYER_STAT_KEYS, _TEAM_STAT_KEYS
 
 # Only these hold percentages. Everything else is a count, and must keep INTEGER
@@ -176,9 +179,44 @@ def _upsert(conn, table: str, rows: Iterable[dict], keys: list[str]) -> None:
 
 
 def upsert_schedule(conn, event_slug: str, games: list[dict]) -> None:
-    """Write schedule rows without clobbering scrape bookkeeping columns."""
+    """Write schedule rows, never blanking a value we already hold.
+
+    FIBA occasionally serves a schedule page where some games parse to all
+    nulls: no teams, no tip time, no status. Observed once in a two-day soak,
+    on the ten games of the opening day. A plain upsert wrote those nulls
+    straight over good data, and a game with no `game_utc` drops out of both the
+    fixture list and the window the poller uses to decide when to poll fast and
+    when to let the Mac sleep, so a badly timed blip could have slept through a
+    match day.
+
+    COALESCE keeps the stored value whenever the incoming one is null, so a
+    degraded page is a no-op instead of a regression. Every column here only ever
+    goes from null to a value in real life: knockout ties gain teams as the
+    bracket resolves, `statusCode` moves INIT to VALID, scores fill in. Nothing
+    legitimately reverts to null.
+    """
     rows = [dict(g, event_slug=event_slug) for g in games]
-    _upsert(conn, "games", rows, ["event_slug", "game_id"])
+    if not rows:
+        return
+
+    blank = [r["game_id"] for r in rows
+             if not r.get("team_a_code") and not r.get("game_datetime")
+             and not r.get("status_code")]
+    if blank:
+        log.warning("schedule page returned %d game(s) with no data (%s...); "
+                    "keeping what we already hold", len(blank), blank[:3])
+
+    columns = list(rows[0])
+    keys = ["event_slug", "game_id"]
+    quoted = ", ".join(f'"{c}"' for c in columns)
+    placeholders = ", ".join("?" for _ in columns)
+    updates = ", ".join(f'"{c}"=COALESCE(excluded."{c}", games."{c}")'
+                        for c in columns if c not in keys)
+    conn.executemany(
+        f"INSERT INTO games ({quoted}) VALUES ({placeholders}) "
+        f'ON CONFLICT("event_slug", "game_id") DO UPDATE SET {updates}',
+        [tuple(r[c] for c in columns) for r in rows],
+    )
     conn.commit()
 
 
