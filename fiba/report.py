@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from . import analysis, charts, ingest, metrics, theming
+from . import analysis, charts, config, ingest, metrics, theming
 from .config import IRELAND_ORG_ID, REPORTS_DIR, TEMPLATES_DIR
 
 log = logging.getLogger(__name__)
@@ -34,7 +34,38 @@ def scout_filename(code: str) -> str:
     return f"scout_{code}.html"
 
 
-def build_nav(conn, event_slug: str, org_id: int) -> dict:
+def _event_switcher(reference: str | None) -> list[dict]:
+    """Links between the live U16 site and the U18 reference set.
+
+    The U18 reports are built into `docs/example/`, one directory below the live
+    site, so the two sides need different relative paths to reach each other.
+    `reference` is set only when rendering the U18 set, which is how a page knows
+    which side it is on.
+
+    U16 is always first and is the default: it is the live event, and the U18 set
+    exists to show staff what a finished event looks like. The switcher only
+    appears once the U18 set has actually been built, so a fresh checkout does
+    not advertise a directory that is not there.
+    """
+    on_reference = reference is not None
+    # `config.REPORTS_DIR`, deliberately, not the module-level `REPORTS_DIR`.
+    # Building the example set rebinds `report.REPORTS_DIR` to `docs/example`,
+    # so checking the module global looked for `docs/example/example/index.html`
+    # and silently dropped the switcher from every U18 page.
+    #
+    # No existence check is needed when rendering the U18 set: the live site is
+    # what the example is built alongside, so it is always there.
+    if not on_reference and not (config.REPORTS_DIR / "example" / "index.html").exists():
+        return []
+    return [
+        {"label": "U16 2026", "href": "../index.html" if on_reference else "index.html",
+         "current": not on_reference, "note": "live"},
+        {"label": "U18 2026", "href": "index.html" if on_reference else "example/index.html",
+         "current": on_reference, "note": "reference"},
+    ]
+
+
+def build_nav(conn, event_slug: str, org_id: int, reference: str | None = None) -> dict:
     """The site's navigation model.
 
     Filenames are derived the same way the builders derive them, so the nav can
@@ -75,7 +106,11 @@ def build_nav(conn, event_slug: str, org_id: int) -> dict:
 
     return {"subject": subject, "scouts": scouts, "reviews": reviews,
             "tournament": tournament, "teams": "tournament_teams.html",
-            "schedule": "schedule.html"}
+            "schedule": "schedule.html",
+            "events": _event_switcher(reference),
+            # The brand names the event being viewed, so a page is never
+            # ambiguous about which of the two sets it belongs to.
+            "brand": f"IRL {'U18' if reference else 'U16'}"}
 
 
 def _played_in(conn, event_slug: str, game_id: int, org_id: int) -> bool:
@@ -647,7 +682,7 @@ def build_all(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
     """Regenerate the full report set. Cheap enough to just always do."""
     written = {"standing": [], "scouts": [], "reviews": []}
     zone, _ = _venue(conn, event_slug)
-    nav = build_nav(conn, event_slug, org_id)
+    nav = build_nav(conn, event_slug, org_id, reference)
     # Event-wide, so computed once and threaded through rather than recomputed
     # on each of the twenty-odd scouting pages.
     context = {"ranks": analysis.event_ranks(conn, event_slug),

@@ -544,6 +544,40 @@ def test_ranks_and_percentiles():
           all("fg_pct" in pcts[p["person_id"]] for p in heavy))
 
 
+def test_event_switcher():
+    """Both report sets must be able to reach each other, from either level."""
+    print("event switcher")
+    from fiba import report
+
+    live = report._event_switcher(None)
+    ref = report._event_switcher("FIBA U18 EuroBasket 2026 Division B")
+
+    check("U16 is listed first on both sides",
+          live[0]["label"] == "U16 2026" and ref[0]["label"] == "U16 2026")
+    check("U16 is the default on the live site", live[0]["current"])
+    check("U18 is current only on the reference set",
+          ref[1]["current"] and not live[1]["current"])
+
+    # The reference set is written into docs/example/, one level down, so the
+    # two sides need different relative paths to reach each other. Getting this
+    # wrong is silent: the link renders and simply 404s.
+    check("the live site reaches the reference set",
+          live[1]["href"] == "example/index.html")
+    check("the reference set climbs back out",
+          ref[0]["href"] == "../index.html")
+    check("each side links to itself without a path",
+          live[0]["href"] == "index.html" and ref[1]["href"] == "index.html")
+
+    # Building the example rebinds report.REPORTS_DIR to docs/example. A check
+    # against that global looked for docs/example/example/index.html and dropped
+    # the switcher from every U18 page, which is exactly how this shipped broken.
+    from unittest import mock
+    with mock.patch.object(report, "REPORTS_DIR",
+                           report.REPORTS_DIR / "example"):
+        check("a rebound REPORTS_DIR does not hide the switcher",
+              len(report._event_switcher("ref")) == 2)
+
+
 def test_deploy_is_verified():
     """A push is not a deploy. This is the check that was missing on day one.
 
@@ -659,7 +693,7 @@ def main() -> int:
                  test_rejects_unfinished_games, test_lineups_validate,
                  test_small_sample_rates_withheld, test_fixture_list,
                  test_times_are_venue_local, test_degraded_schedule_cannot_blank_data,
-                 test_adaptive_polling, test_deploy_is_verified,
+                 test_adaptive_polling, test_event_switcher, test_deploy_is_verified,
                  test_pending_games_poll_tightly,
                  test_empty_event_shape,
                  test_theming, test_ranks_and_percentiles):

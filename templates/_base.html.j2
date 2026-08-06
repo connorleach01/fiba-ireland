@@ -323,6 +323,18 @@ a { color: var(--ink); text-underline-offset: 2px; }
    has to read as one when you are on it. */
 .sitebar .brand.current { opacity: 1; }
 .sitebar .spacer { flex: 1; }
+/* The event switcher sits beside the brand rather than among the page tabs: it
+   changes which site you are on, not which page, and grouping it with Games or
+   Teams would read as a fourth section. */
+.drop.events > button {
+  border: 1px solid rgba(255,255,255,.34); border-radius: 2px;
+  margin: 5px 8px 5px 2px; padding: 3px 7px;
+}
+.drop.events > button:hover { background: rgba(255,255,255,.2); }
+.drop.events .note {
+  text-transform: none; letter-spacing: .02em; font-weight: 500;
+  opacity: .55; font-size: 9px; margin-left: 4px;
+}
 .drop { position: relative; display: inline-flex; }
 .drop-panel {
   display: none; position: absolute; top: 100%; left: 0; min-width: 224px;
@@ -497,7 +509,23 @@ td .flag, li .flag { margin-right: 5px; }
        the landing page, so it is where staff already are when they open the
        site, and a tab pointing at it only ever mattered on the way back. #}
     <a class="brand{% if page == 'index' %} current{% endif %}"
-       href="index.html">IRL U16</a>
+       href="index.html">{{ nav.brand or 'IRL U16' }}</a>
+    {# Event switcher. U16 is the live event and always the default; the U18 set
+       is a finished event kept alongside it as a worked reference. #}
+    {% if nav.events %}
+    <div class="drop events">
+      <button type="button" aria-expanded="false">
+        {% for e in nav.events %}{% if e.current %}{{ e.label }}{% endif %}{% endfor %} &#9662;
+      </button>
+      <div class="drop-panel">
+        {% for e in nav.events %}
+          <a href="{{ e.href }}"{% if e.current %} class="current"{% endif %}>
+            {{ e.label }} <span class="note">{{ e.note }}</span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
     {% if nav.tournament %}
       <a href="{{ nav.tournament }}" {% if page == 'tournament' %}class="current"{% endif %}>Ireland</a>
     {% endif %}
