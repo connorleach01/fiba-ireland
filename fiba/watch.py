@@ -221,6 +221,13 @@ def cycle(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
                      else "Refresh reports")
             deploy.publish(label)
 
+    # Checked every cycle, not just after a publish. A push that GitHub never
+    # deployed leaves the site stale indefinitely, because nothing else would
+    # look again until the next game happened to finish. One cheap GET here
+    # closes that gap and costs nothing when everything is healthy.
+    if publish:
+        deploy.ensure_live(time.time())
+
     if new_games:
         described = []
         for game_id in new_games:
