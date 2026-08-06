@@ -294,9 +294,12 @@ def sync_event(conn, event_slug: str, *, use_cache: bool = True,
               if parse.is_final(g["status_code"]) and not g.get("is_live")]
     todo = [g for g in finals if g["game_id"] not in already]
 
+    probed_ids: set[int] = set()
     if only_new:
-        todo += _due_by_clock(conn, event_slug, already,
+        extra = _due_by_clock(conn, event_slug, already,
                               {g["game_id"] for g in todo})
+        probed_ids = {g["game_id"] for g in extra}
+        todo += extra
 
     # When polling live, a game we have not ingested is either new or previously
     # failed, so always pull a fresh copy. Reusing the cache there could pin us to
@@ -304,7 +307,7 @@ def sync_event(conn, event_slug: str, *, use_cache: bool = True,
     # retrying would ever get past it. Backfills read the cache as normal.
     fetch_from_cache = use_cache and not only_new
 
-    ingested, failed = [], []
+    ingested, failed, probing = [], [], []
     for row in todo:
         try:
             html = fetch.fetch_game_html(
@@ -322,7 +325,16 @@ def sync_event(conn, event_slug: str, *, use_cache: bool = True,
             # Drop the cache entry so a truncated or half-published page cannot
             # wedge this game permanently. The next poll starts clean.
             fetch.discard_cached_game(event_slug, row["game_id"])
-            failed.append((row["game_id"], str(exc)))
+            # A clock-probed game that will not parse is the ordinary state of
+            # affairs: the probe window opens 75 minutes after tip, well before
+            # the final buzzer, so it covers the last quarter of a game still
+            # being played. Escalating on those produced "still unparsed after
+            # 2274s" warnings and a notification for a game that was simply not
+            # over. Only a game the schedule itself calls final is a real fault.
+            if row["game_id"] in probed_ids:
+                probing.append((row["game_id"], str(exc)))
+            else:
+                failed.append((row["game_id"], str(exc)))
             # Debug, not error. A failure here is usually just FIBA not having
             # published the box score yet, and the poller retries every few
             # seconds until it appears. The caller decides when a repeated
@@ -337,4 +349,7 @@ def sync_event(conn, event_slug: str, *, use_cache: bool = True,
         "final": len(finals),
         "ingested": ingested,
         "failed": failed,
+        # Separate from `failed` so the poller can poll fast for these without
+        # shouting about them.
+        "probing": probing,
     }

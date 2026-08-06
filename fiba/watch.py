@@ -398,7 +398,9 @@ def main(argv=None) -> int:
             try:
                 summary = cycle(conn, args.event, args.org, rebuild_always=first,
                                 publish=not args.no_publish)
-                pending = len(summary["failed"])
+                # Both kinds mean "a result is imminent", so both justify the
+                # tight poll; only `failed` is worth reporting.
+                pending = len(summary["failed"]) + len(summary.get("probing", []))
                 first = False
             except KeyboardInterrupt:
                 log.info("stopped")
