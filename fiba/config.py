@@ -1,4 +1,5 @@
 """Shared paths and event configuration."""
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -9,6 +10,17 @@ TEMPLATES_DIR = ROOT / "templates"
 DB_PATH = DATA_DIR / "fiba.db"
 
 BASE_URL = "https://www.fiba.basketball"
+
+# Where the built site is actually served. Left as None it is derived from the
+# git remote, which is right for GitHub Pages. Set it when the site is hosted
+# somewhere else, so `deploy.ensure_live` confirms deploys against the host
+# people really read rather than the one the repo happens to live on.
+#
+# GitHub Pages deployments degraded badly on day one of the 2026 U16 event: four
+# ten-minute timeouts in ninety minutes with no incident published, leaving the
+# site three hours stale. The env var makes the host switchable without a code
+# change if it happens again.
+SITE_URL = os.environ.get("FIBA_SITE_URL") or None
 
 # The event we are actually covering.
 EVENT_SLUG = "fiba-u16-eurobasket-2026-division-b"

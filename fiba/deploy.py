@@ -1,8 +1,10 @@
-"""Publish the built site to GitHub Pages.
+"""Publish the built site.
 
-The site is the `docs/` directory on the main branch, which GitHub Pages serves
-directly. Publishing is therefore just a commit and a push, with no build step
-and nothing to configure per deploy.
+The site is the `docs/` directory on the main branch. Publishing is a commit and
+a push, with no build step and nothing to configure per deploy; whatever host is
+watching the branch picks it up. Confirmation is deliberately host-agnostic
+(fetch a known file, compare a build id), so moving hosts is a config change
+rather than a rewrite.
 
 Deploy failures never abort a poll: a coach losing the newest page for five
 minutes is a nuisance, but losing the scrape that produced it is not recoverable
@@ -33,7 +35,7 @@ import time
 
 import requests
 
-from .config import DATA_DIR, REPORTS_DIR, ROOT
+from .config import DATA_DIR, REPORTS_DIR, ROOT, SITE_URL
 
 log = logging.getLogger(__name__)
 
@@ -94,11 +96,15 @@ def has_remote() -> bool:
 
 
 def site_url() -> str | None:
-    """Public Pages URL, derived from the origin remote rather than configured.
+    """Where the built site is served, for confirming a deploy landed.
 
-    Keeping it derived means a fork or a renamed repo cannot end up confirming
-    its deploys against somebody else's live site.
+    An explicit SITE_URL wins, so the site can be hosted anywhere. Otherwise it
+    is derived from the origin remote, which is right for GitHub Pages; keeping
+    that derived means a fork or a renamed repo cannot end up confirming its
+    deploys against somebody else's live site.
     """
+    if SITE_URL:
+        return SITE_URL.rstrip("/")
     try:
         remote = _git("remote", "get-url", "origin").stdout.strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
