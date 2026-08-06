@@ -1,6 +1,7 @@
 # Ireland U16 analytics: FIBA U16 EuroBasket 2026, Division B
 
-**Live site: https://connorleach01.github.io/fiba-ireland/**
+**Live site: https://fiba-ireland.vercel.app/**
+(GitHub Pages mirror, slower: https://connorleach01.github.io/fiba-ireland/)
 
 Turns FIBA's published game pages into scouting and self-scout reports within
 minutes of a game going final, so staff have something usable before they play
@@ -60,8 +61,10 @@ Other commands:
 
 ## The site
 
-`docs/` is the published site, served by GitHub Pages straight off the main
-branch. Every page carries a navigation bar (Games, Ireland, Teams, and a
+`docs/` is the published site, served by Vercel straight off the main branch
+with no build step. GitHub Pages is still connected to the same directory as a
+fallback and keeps older shared links working, but Vercel is the live site and
+the one the poller verifies against. Every page carries a navigation bar (Games, Ireland, Teams, and a
 dropdown of every scouting report), so any page reaches any other. The Ireland
 tab and the Scouting dropdown appear as soon as those teams have played; before
 the first game the bar is just Games and Teams.

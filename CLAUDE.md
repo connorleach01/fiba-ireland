@@ -14,8 +14,12 @@ is to turn a finished game into a usable opponent scouting report within minutes
 Connor volunteers this; the audience is coaching staff reading on phones in a gym,
 not analysts.
 
-**Live site: https://connorleach01.github.io/fiba-ireland/**
-Repo `connorleach01/fiba-ireland`, public. GitHub Pages serves `docs/` off `main`.
+**Live site: https://fiba-ireland.vercel.app/**
+Repo `connorleach01/fiba-ireland`, public. Vercel serves `docs/` off `main` (see
+`vercel.json`, no build step). GitHub Pages serves the same directory as a
+fallback and is deliberately left connected, but is NOT the URL that decides
+whether a deploy landed: set `FIBA_SITE_URL` (done in the launchd plist) and
+`deploy.ensure_live` confirms against Vercel.
 
 ## The data source, and why it is easy
 
@@ -157,18 +161,26 @@ result can appear, and a quarter of the old rate overnight and on rest days.
 
 | step | time |
 |---|---|
-| detect the flip (average, 45s poll) | ~22s |
+| **FIBA flips VALID, box score not yet published** | **250 to 495s** |
+| notice it (12s pending poll) | ~6s |
 | schedule GET | 0.4s |
 | game GET | 4.7s |
 | parse, validate, store | under 0.1s |
 | rebuild all 106 pages | 2.3s |
 | commit and push | ~2s |
-| GitHub Pages build (median of 33) | 26s, worst 42s |
+| Vercel deploy | under 30s |
 
-So **roughly a minute from final buzzer to live report**, of which half is
-GitHub's build queue and is not ours to optimise. Do not chase the code path for
-speed; it is already a tenth of the total. The only lever left is the poll
-interval, and 45s is already inside the noise of when FIBA publishes.
+So **five to nine minutes from final buzzer to live report**, and the first row
+is nearly all of it. FIBA marks a game VALID several minutes before the box score
+appears in the page HTML, so the game page parses to nothing in between; measured
+across the four games of match day one that gap ran 250 to 495s (mean 371). It is
+not ours to shorten.
+
+Everything we control totals well under a minute. Do not chase the code path for
+speed. The one lever that mattered was the retry gap: at 45s the data sat
+published for an average of 25s before we looked again, so a game known
+VALID-but-unparseable now polls every 12s (`PENDING_INTERVAL_S`) and that tail is
+about 6s.
 
 **Every cycle logs one line**, whether or not anything happened:
 
@@ -217,7 +229,7 @@ fiba/
   watch.py     the poller and the CLI
 templates/     _base (all CSS + JS), _macros,
                index/scout/review/tournament/teams/schedule
-docs/          the published site (GitHub Pages source)
+docs/          the published site (Vercel source, Pages fallback)
 docs/example/  U18 reference set, stamped "not live U16 data"
 raw/           gzipped scraped pages, gitignored
 data/fiba.db   SQLite, gitignored
