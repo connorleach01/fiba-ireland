@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moved &middot; IRL U16 analytics</title>
+<meta name="robots" content="noindex">
+<!--
+  GitHub Pages serves this file for any path it cannot match, which on this
+  branch is every path. It forwards the visitor to the same path on Vercel, so
+  an old deep link such as /fiba-ireland/example/scout_ISL.html still lands on
+  the right page rather than a generic home page.
+
+  Pages hosted the real site until GitHub's deployment service degraded during
+  the 2026 U16 event: four ten-minute timeouts in ninety minutes with nothing
+  published on their status page, leaving the site hours stale while a coach
+  needed the next opponent's scouting report. Vercel serves the same directory
+  in under thirty seconds. This branch exists purely so shared links survive.
+-->
+<script>
+  (function () {
+    var base = "https://fiba-ireland.vercel.app";
+    // Strip the repository segment: Pages serves from /fiba-ireland/, Vercel
+    // from the domain root.
+    var path = location.pathname.replace(/^\/fiba-ireland/, "");
+    if (path === "/index.html") path = "/";
+    location.replace(base + path + location.search + location.hash);
+  })();
+</script>
+<meta http-equiv="refresh" content="1; url=https://fiba-ireland.vercel.app/">
+<style>
+  body { font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, sans-serif;
+         margin: 0; min-height: 100vh; display: grid; place-items: center;
+         background: #fbfaf7; color: #1c1c1a; padding: 24px; text-align: center; }
+  @media (prefers-color-scheme: dark) { body { background: #16161a; color: #ececec; } }
+  a { color: #2f6f4f; font-weight: 600; }
+  .k { letter-spacing: .14em; text-transform: uppercase; font-size: 10px; opacity: .6; }
+</style>
+</head>
+<body>
+  <div>
+    <p class="k">Ireland U16 analytics</p>
+    <p>This site has moved. Redirecting you now.</p>
+    <p><a href="https://fiba-ireland.vercel.app/">fiba-ireland.vercel.app</a></p>
+  </div>
+</body>
+</html>
