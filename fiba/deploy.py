@@ -29,6 +29,7 @@ import datetime
 import logging
 import re
 import subprocess
+import time
 
 import requests
 
@@ -217,6 +218,11 @@ def publish(message: str = "Update reports") -> bool:
         _git("commit", "-m", message)
         if has_remote():
             _git("push")
+            # A push IS a deploy trigger, so it starts the cooldown. Without
+            # this, ensure_live ran in the same cycle, correctly saw a site that
+            # had not caught up yet (the deploy was two seconds old), and pushed
+            # again, cancelling the deploy it was waiting for.
+            _mark_retrigger(time.time())
             log.info("published: %s", message)
         else:
             log.info("committed locally (no remote configured): %s", message)

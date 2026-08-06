@@ -4,6 +4,7 @@
 """
 from __future__ import annotations
 
+import pathlib
 import sys
 
 from fiba import analysis, clock, db, fetch, lineups, metrics, parse, theming
@@ -600,10 +601,17 @@ def test_deploy_is_verified():
         check("confirming does not push",
               "push" not in [c.args[0] for c in git.call_args_list])
 
-    # The cooldown lives on disk precisely so `launchctl kickstart` cannot reset it.
-    deploy._mark_retrigger(1234.5)
-    check("cooldown survives a process restart", deploy._last_retrigger() == 1234.5)
-    deploy._RETRIGGER_STAMP.unlink(missing_ok=True)
+    # The cooldown lives on disk precisely so `launchctl kickstart` cannot reset
+    # it. Redirect to a scratch path first: an earlier version of this test wrote
+    # and then deleted the real file, which handed the running poller a cleared
+    # cooldown and let it cancel a live deploy.
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        with mock.patch.object(deploy, "_RETRIGGER_STAMP",
+                               pathlib.Path(tmp) / "last_redeploy"):
+            deploy._mark_retrigger(1234.5)
+            check("cooldown survives a process restart",
+                  deploy._last_retrigger() == 1234.5)
 
 
 def test_pending_games_poll_tightly():
