@@ -46,6 +46,20 @@
   <key>WorkingDirectory</key>
   <string>/Users/connorleach/code/fiba-ireland</string>
 
+  <!--
+    The site is served by Vercel, so deploys are confirmed against Vercel.
+    Without this the poller would derive the URL from the git remote, check
+    GitHub Pages, and re-trigger deploys forever chasing a host nobody reads.
+
+    Pages is deliberately left connected as a fallback; it simply is not the
+    URL that decides whether a deploy landed.
+  -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>FIBA_SITE_URL</key>
+    <string>https://fiba-ireland.vercel.app</string>
+  </dict>
+
   <key>RunAtLoad</key>
   <true/>
 
