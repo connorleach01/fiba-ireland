@@ -193,12 +193,23 @@ def store_game(conn, event_slug: str, schedule_row: dict, game: dict) -> None:
         lineups_ok = 0
         log.warning("game %s lineup reconstruction failed: %s", game_id, exc)
 
+    # Final scores come from the box score, not the schedule. The schedule row
+    # carries whatever was true when it was last fetched, which for a game
+    # detected by probing is a live partial score: SUI v CRO sat stored at 38-86
+    # against a real final of 47-101 while FIBA's schedule feed was down. The box
+    # score is the authority, and `validate_game` has already checked it against
+    # the game page's own final score.
+    sides = {t["side"]: t.get("PTS") for t in teams}
     conn.execute(
         "UPDATE games SET parsed_at=?, game_utc=COALESCE(?, game_utc), "
+        "team_a_score=COALESCE(?, team_a_score), "
+        "team_b_score=COALESCE(?, team_b_score), "
         "lineups_ok=?, lineup_max_err=? WHERE event_slug=? AND game_id=?",
         (
             dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
             to_utc(schedule_row.get("game_datetime"), _country_code(schedule_row)),
+            sides.get("A"),
+            sides.get("B"),
             lineups_ok,
             max_err,
             event_slug,
@@ -219,6 +230,44 @@ def _country_code(schedule_row: dict) -> str | None:
         "portugal": "POR",
     }
     return names.get((schedule_row.get("host_country") or "").strip().lower())
+
+
+# How long after tip a game is worth probing directly. The lower bound clears a
+# 40-minute game plus stoppages; the upper bound stops us probing forever on a
+# game that was abandoned or renumbered.
+PROBE_AFTER_TIP_S = 75 * 60
+PROBE_UNTIL_TIP_S = 6 * 3600
+
+
+def _due_by_clock(conn, event_slug: str, already: set[int],
+                  queued: set[int]) -> list[dict]:
+    """Games that should have finished by now, whatever the schedule feed says.
+
+    `statusCode` was the only detection signal until FIBA's schedule page
+    degraded mid-event, serving ten games with every field null for half an hour
+    while two completed games sat unscraped. The stored tip times are unaffected
+    by that outage, so the clock is a second, independent trigger.
+
+    This deliberately ignores `status_code` and `is_live`, which is only safe
+    because `parse.validate_game` requires the play-by-play's explicit
+    end-of-game marker. A game still being played fails that check and is simply
+    retried next cycle.
+    """
+    now = dt.datetime.now(dt.timezone.utc)
+    earliest = (now - dt.timedelta(seconds=PROBE_UNTIL_TIP_S)).isoformat()
+    latest = (now - dt.timedelta(seconds=PROBE_AFTER_TIP_S)).isoformat()
+    rows = conn.execute(
+        "SELECT game_id, team_a_code, team_b_code FROM games "
+        "WHERE event_slug=? AND parsed_at IS NULL AND game_utc IS NOT NULL "
+        "AND team_a_code IS NOT NULL AND game_utc BETWEEN ? AND ? "
+        "ORDER BY game_utc",
+        (event_slug, earliest, latest)).fetchall()
+    extra = [dict(r) for r in rows
+             if r["game_id"] not in already and r["game_id"] not in queued]
+    if extra:
+        log.debug("probing %d game(s) past their expected finish that the "
+                  "schedule does not list as final", len(extra))
+    return extra
 
 
 def sync_event(conn, event_slug: str, *, use_cache: bool = True,
@@ -244,6 +293,10 @@ def sync_event(conn, event_slug: str, *, use_cache: bool = True,
     finals = [g for g in schedule
               if parse.is_final(g["status_code"]) and not g.get("is_live")]
     todo = [g for g in finals if g["game_id"] not in already]
+
+    if only_new:
+        todo += _due_by_clock(conn, event_slug, already,
+                              {g["game_id"] for g in todo})
 
     # When polling live, a game we have not ingested is either new or previously
     # failed, so always pull a fresh copy. Reusing the cache there could pin us to

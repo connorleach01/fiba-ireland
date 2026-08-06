@@ -381,6 +381,20 @@ def parse_game(html: str) -> dict:
     return game
 
 
+END_OF_GAME_CODE = "ENDG"
+
+
+def has_ended(game: dict) -> bool:
+    """Whether the play-by-play carries FIBA's explicit end-of-game marker.
+
+    `act: "periods", ac: "ENDG"`, texted "End of game". Unlike the box score,
+    which looks internally consistent at any moment, this only appears once the
+    game is actually over.
+    """
+    return any(e.get("action_code") == END_OF_GAME_CODE
+               for e in game.get("events") or [])
+
+
 def validate_game(game: dict) -> None:
     """Fail loudly rather than emit a half-parsed game.
 
@@ -460,3 +474,14 @@ def validate_game(game: dict) -> None:
                 f"team {team['org_id']}: periods sum to {scored} but the total is "
                 f"{team['PTS']}; the game is still in progress or a period is missing"
             )
+
+    # The period checks above pass during a live fourth quarter: four periods are
+    # listed and the running scores still sum to the running total. That was
+    # tolerable while `statusCode` was the gate, but FIBA's schedule feed degraded
+    # mid-event and served ten empty games for half an hour, so games are also
+    # detected by probing their own page. This is the invariant that makes that
+    # safe. Verified present in all 166 finished games across the 2025 U16, 2026
+    # U18 and 2026 U16 events.
+    if not has_ended(game):
+        raise ParseError("no end-of-game event in the play-by-play; "
+                         "the game is still in progress")
