@@ -270,7 +270,12 @@ def sync_event(conn, event_slug: str, *, use_cache: bool = True,
             # wedge this game permanently. The next poll starts clean.
             fetch.discard_cached_game(event_slug, row["game_id"])
             failed.append((row["game_id"], str(exc)))
-            log.error("failed %s %s v %s: %s", row["game_id"], row["team_a_code"],
+            # Debug, not error. A failure here is usually just FIBA not having
+            # published the box score yet, and the poller retries every few
+            # seconds until it appears. The caller decides when a repeated
+            # failure has gone on long enough to be worth shouting about;
+            # backfill re-logs its own failures once the run finishes.
+            log.debug("failed %s %s v %s: %s", row["game_id"], row["team_a_code"],
                       row["team_b_code"], exc)
 
     return {

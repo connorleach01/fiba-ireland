@@ -44,6 +44,19 @@ IDLE_INTERVAL_S = 900
 FINISH_WINDOW_START_S = 75 * 60
 FINISH_WINDOW_END_S = 3 * 3600
 
+# FIBA flips `statusCode` to VALID several minutes before it publishes the box
+# score, so the game page parses to nothing in between. Measured across the four
+# games of match day one, that gap ran 250 to 495 seconds (mean 371), and the
+# poller burned 6 to 11 failed attempts waiting it out.
+#
+# Nothing here can shorten FIBA's gap. What it can shorten is the tail: at a 45s
+# cadence the data sat published for an average of 25 seconds before we looked
+# again. Once a game is known VALID-but-unparseable we are no longer hunting for
+# a result, we are waiting on a specific page to fill in, so poll it tightly and
+# cut that tail to about 6 seconds. It costs a few dozen extra requests confined
+# to the minutes a game is actually landing.
+PENDING_INTERVAL_S = 12
+
 # Consecutive result windows on a match day are only about 45 minutes apart, and
 # the machine is woken by a single daily `pmset repeat`. Releasing the sleep hold
 # in one of those gaps would let the Mac sleep at, say, 6am with nothing to wake
@@ -70,16 +83,24 @@ def _as_applescript(text: str) -> str:
     return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def next_interval(conn, event_slug: str, override: int | None = None) -> tuple[int, str]:
+def next_interval(conn, event_slug: str, override: int | None = None,
+                  pending: int = 0) -> tuple[int, str]:
     """How long to wait before the next poll, and why.
 
     Returns the fast interval whenever a game that has already tipped could still
     be publishing its result, so the gap between the final buzzer and the report
     is seconds rather than minutes. Falls back to the idle interval the rest of
     the time. `override` is the `--interval` flag, which pins both.
+
+    `pending` is the count of games that are final but did not parse on the last
+    cycle. That is the tightest signal available: the result exists, FIBA has
+    simply not finished publishing it, and it will appear within minutes.
     """
     if override is not None:
         return override, "fixed"
+
+    if pending:
+        return PENDING_INTERVAL_S, f"{pending} game(s) final but not yet published"
 
     now = dt.datetime.now(dt.timezone.utc)
     earliest = (now - dt.timedelta(seconds=FINISH_WINDOW_END_S)).isoformat()
@@ -246,13 +267,47 @@ def cycle(conn, event_slug: str, org_id: int = IRELAND_ORG_ID,
         log.info("new results: %s", headline)
         notify("FIBA reports updated", headline or f"{len(new_games)} new games")
 
-    if summary["failed"]:
-        for game_id, message in summary["failed"]:
-            log.error("could not ingest %s: %s", game_id, message)
-        notify("FIBA scrape problem",
-               f"{len(summary['failed'])} game(s) failed to parse. Check the log.")
-
+    _report_failures(summary["failed"], time.time())
     return summary
+
+
+# A game that is final but has not parsed yet is the normal state of affairs for
+# the first few minutes after the buzzer, not a fault. Measured across match day
+# one the wait ran up to 495 seconds, so anything inside the grace period is
+# logged quietly and never notified. Past it, something is actually wrong and
+# both the log and a notification should say so, once.
+PUBLISH_GRACE_S = 12 * 60
+
+_first_failure: dict[int, float] = {}
+_alerted: set[int] = set()
+
+
+def _report_failures(failed: list[tuple[int, str]], now: float) -> None:
+    """Log parse failures, escalating only once a game is late rather than slow.
+
+    Without this the poller shouted on every cycle: match day one produced 61
+    ERROR lines and a notification per cycle per game for what was ordinary
+    publishing lag. At the pending interval that would be several hundred. The
+    signal that matters is a game still unparsed well past the observed lag, and
+    that fires exactly once.
+    """
+    still_failing = {game_id for game_id, _ in failed}
+    for game_id in list(_first_failure):
+        if game_id not in still_failing:
+            del _first_failure[game_id]
+            _alerted.discard(game_id)
+
+    for game_id, message in failed:
+        waited = now - _first_failure.setdefault(game_id, now)
+        if waited < PUBLISH_GRACE_S:
+            log.info("%s final, box score not published yet (%ds)", game_id, int(waited))
+        elif game_id not in _alerted:
+            _alerted.add(game_id)
+            log.error("could not ingest %s after %ds: %s", game_id, int(waited), message)
+            notify("FIBA scrape problem",
+                   f"game {game_id} has not parsed in {int(waited // 60)} minutes")
+        else:
+            log.warning("%s still unparsed after %ds: %s", game_id, int(waited), message)
 
 
 def main(argv=None) -> int:
@@ -339,9 +394,11 @@ def main(argv=None) -> int:
     blocker = SleepBlocker()
     try:
         while True:
+            pending = 0
             try:
-                cycle(conn, args.event, args.org, rebuild_always=first,
-                      publish=not args.no_publish)
+                summary = cycle(conn, args.event, args.org, rebuild_always=first,
+                                publish=not args.no_publish)
+                pending = len(summary["failed"])
                 first = False
             except KeyboardInterrupt:
                 log.info("stopped")
@@ -349,7 +406,7 @@ def main(argv=None) -> int:
             except Exception as exc:  # noqa: BLE001 - a poll failure must not end the watch
                 log.exception("poll failed, continuing: %s", exc)
             try:
-                wait, why = next_interval(conn, args.event, pinned)
+                wait, why = next_interval(conn, args.event, pinned, pending)
             except Exception:  # noqa: BLE001 - scheduling must never end the watch
                 wait, why = FAST_INTERVAL_S, "interval lookup failed"
             # Keep the Mac awake through the day's games, but let it sleep
