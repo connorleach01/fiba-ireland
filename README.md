@@ -1,7 +1,9 @@
 # Ireland U16 analytics: FIBA U16 EuroBasket 2026, Division B
 
 **Live site: https://fiba-ireland.vercel.app/**
-(GitHub Pages mirror, slower: https://connorleach01.github.io/fiba-ireland/)
+
+The old `connorleach01.github.io/fiba-ireland` address no longer hosts anything.
+It serves a redirect so links already shared keep working, deep links included.
 
 Turns FIBA's published game pages into scouting and self-scout reports within
 minutes of a game going final, so staff have something usable before they play

@@ -16,10 +16,17 @@ not analysts.
 
 **Live site: https://fiba-ireland.vercel.app/**
 Repo `connorleach01/fiba-ireland`, public. Vercel serves `docs/` off `main` (see
-`vercel.json`, no build step). GitHub Pages serves the same directory as a
-fallback and is deliberately left connected, but is NOT the URL that decides
-whether a deploy landed: set `FIBA_SITE_URL` (done in the launchd plist) and
-`deploy.ensure_live` confirms against Vercel.
+`vercel.json`, no build step); `FIBA_SITE_URL` in the launchd plist points
+`deploy.ensure_live` at it.
+
+**GitHub Pages hosts nothing.** Its source is the orphan `gh-pages` branch, which
+holds three files and no reports: `404.html` catches every path, strips the
+`/fiba-ireland` segment and forwards to the same path on Vercel. Pages was the
+host until GitHub's deployment service degraded on day one of the event (four
+ten-minute timeouts in ninety minutes, no incident published, site hours stale
+with the next opponent's scouting page 404ing). Do not point it back at `docs/`.
+GitHub refuses to unpublish a Pages site via API, so the redirect is how it is
+switched off.
 
 ## The data source, and why it is easy
 
