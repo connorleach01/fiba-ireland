@@ -323,6 +323,18 @@ a { color: var(--ink); text-underline-offset: 2px; }
    has to read as one when you are on it. */
 .sitebar .brand.current { opacity: 1; }
 .sitebar .spacer { flex: 1; }
+/* The event switcher sits beside the brand rather than among the page tabs: it
+   changes which site you are on, not which page, and grouping it with Games or
+   Teams would read as a fourth section. */
+.drop.events > button {
+  border: 1px solid rgba(255,255,255,.34); border-radius: 2px;
+  margin: 5px 8px 5px 2px; padding: 3px 7px;
+}
+.drop.events > button:hover { background: rgba(255,255,255,.2); }
+.drop.events .note {
+  text-transform: none; letter-spacing: .02em; font-weight: 500;
+  opacity: .55; font-size: 9px; margin-left: 4px;
+}
 .drop { position: relative; display: inline-flex; }
 .drop-panel {
   display: none; position: absolute; top: 100%; left: 0; min-width: 224px;
@@ -489,7 +501,7 @@ td .flag, li .flag { margin-right: 5px; }
 <nav class="sitebar no-print">
   <div class="inner">
     <a class="brand"
-       href="index.html">IRL U16</a>
+       href="index.html">IRL U18</a>
       <a href="irl_tournament.html" >Ireland</a>
       <a href="schedule.html" >Games</a>
     <a href="tournament_teams.html" >Teams</a>
@@ -528,7 +540,7 @@ td .flag, li .flag { margin-right: 5px; }
 <header class="masthead">
   <div class="kicker">
     <span>FIBA U18 Eurobasket 2026 Division B &middot; Scouting report</span>
-    <span>Wed 05 Aug 2026, 21:16 (CEST)</span>
+    <span>Thu 06 Aug 2026, 17:05 (CEST)</span>
   </div>
   <h1><svg class="flag" viewBox="0 0 3 2" width="24" height="16" role="img" aria-label="GEO flag"><rect width="3" height="2" fill="#ffffff"/><rect x="1.28" y=".3" width=".44" height="1.4" fill="#ff0000"/><rect x=".8" y=".78" width="1.4" height=".44" fill="#ff0000"/><rect width="3" height="2" fill="none" stroke="rgba(0,0,0,.28)" stroke-width=".08"/></svg>Georgia</h1>
   <p class="sub">4&ndash;3 over 7 games
@@ -1951,7 +1963,7 @@ TOV% forced and DREB% are higher-is-better.</p>
 
 <div class="colophon">
   <span>Derived from the official FIBA box score and play-by-play.</span>
-  <span>Generated Wed 05 Aug 2026, 21:16 (CEST)</span>
+  <span>Generated Thu 06 Aug 2026, 17:05 (CEST)</span>
 </div>
 
 <div class="running-foot">
