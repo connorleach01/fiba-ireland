@@ -32,7 +32,7 @@ import subprocess
 
 import requests
 
-from .config import REPORTS_DIR, ROOT
+from .config import DATA_DIR, REPORTS_DIR, ROOT
 
 log = logging.getLogger(__name__)
 
@@ -43,12 +43,31 @@ VERSION_FILE = REPORTS_DIR / "version.txt"
 # cache-busted with the id we are looking for.
 _CONFIRM_TIMEOUT_S = 15.0
 
-# Re-triggering costs an empty commit and a workflow run. A deploy that is
-# merely slow needs room to finish before we pile another one on top of it,
-# and GitHub cancels an in-flight deploy when a new one supersedes it.
+# Re-triggering costs an empty commit and a workflow run, and crucially GitHub
+# CANCELS an in-flight Pages deploy when a newer one supersedes it. Under the
+# degraded service seen on day one a deploy needed 4 to 7 minutes, so pushing
+# again too soon does not retry the deploy, it kills it: one run was cancelled
+# at 7m0s, seconds from finishing. The cooldown has to exceed a slow deploy.
 RETRIGGER_COOLDOWN_S = 12 * 60
 
-_last_retrigger: float | None = None
+# Held on disk, not just in memory. `launchctl kickstart` restarts the poller
+# with a fresh process and would otherwise reset the cooldown to "never", so a
+# couple of restarts in quick succession could cancel a deploy twice over.
+_RETRIGGER_STAMP = DATA_DIR / "last_redeploy"
+
+
+def _last_retrigger() -> float:
+    try:
+        return float(_RETRIGGER_STAMP.read_text().strip())
+    except (OSError, ValueError):
+        return 0.0
+
+
+def _mark_retrigger(now: float) -> None:
+    try:
+        _RETRIGGER_STAMP.write_text(f"{now}\n")
+    except OSError as exc:
+        log.warning("could not record redeploy time: %s", exc)
 
 
 def _git(*args: str, check: bool = True) -> subprocess.CompletedProcess:
@@ -138,8 +157,6 @@ def ensure_live(now: float) -> bool:
     re-triggering on every failed lookup would push empty commits forever while
     the Mac is off the network.
     """
-    global _last_retrigger
-
     local = local_build_id()
     if not local or not is_repo() or not has_remote():
         return False
@@ -153,9 +170,11 @@ def ensure_live(now: float) -> bool:
 
     log.warning("live site is stale: serving %s, built %s",
                 live or "no version file", local)
-    if _last_retrigger is not None and now - _last_retrigger < RETRIGGER_COOLDOWN_S:
-        wait = int(RETRIGGER_COOLDOWN_S - (now - _last_retrigger))
-        log.info("deploy re-trigger on cooldown, %ds remaining", wait)
+    since = now - _last_retrigger()
+    if since < RETRIGGER_COOLDOWN_S:
+        log.info("deploy re-trigger on cooldown, %ds remaining "
+                 "(a deploy may still be running; pushing now would cancel it)",
+                 int(RETRIGGER_COOLDOWN_S - since))
         return False
 
     try:
@@ -166,7 +185,7 @@ def ensure_live(now: float) -> bool:
                   getattr(exc, "stderr", "") or exc)
         return False
 
-    _last_retrigger = now
+    _mark_retrigger(now)
     log.info("re-triggered deploy for build %s", local)
     return False
 
@@ -178,15 +197,22 @@ def publish(message: str = "Update reports") -> bool:
         return False
 
     try:
-        # Stamp before staging so the id travels in the same commit as the
-        # reports it identifies. Confirming a deploy means confirming that
-        # exact pair arrived together.
-        stamp_build()
+        # Check for real changes BEFORE stamping. Stamping first would rewrite
+        # version.txt on every rebuild, so `git status` would never be clean and
+        # every restart would push a commit whose only content was a new build
+        # id. Each of those pushes cancels the in-flight Pages deploy, which is
+        # how a run that had been going seven minutes died three seconds short.
         _git("add", "--", str(REPORTS_DIR.relative_to(ROOT)))
         status = _git("status", "--porcelain", "--", str(REPORTS_DIR.relative_to(ROOT)))
         if not status.stdout.strip():
             log.debug("no report changes to publish")
             return False
+
+        # Something really did change, so stamp it and stage the id alongside
+        # the reports it identifies. Confirming a deploy means confirming that
+        # exact pair arrived together.
+        stamp_build()
+        _git("add", "--", str(REPORTS_DIR.relative_to(ROOT)))
 
         _git("commit", "-m", message)
         if has_remote():

@@ -177,13 +177,19 @@ def test_fixture_list():
     conn = db.connect()
 
     upcoming = analysis.event_fixtures(conn, "fiba-u16-eurobasket-2026-division-b")
-    check("every fixture is listed before the event starts", len(upcoming) == 81)
-    check("nothing is marked played yet",
-          not any(f["played"] for f in upcoming))
+    check("every fixture is listed", len(upcoming) == 81)
+    # These began life as "nothing is played yet, nothing has a score", which
+    # was true only until the first game tipped and failed the morning of day
+    # one. The invariant that actually holds for the whole event is that the
+    # played flag and the score agree with each other, in both directions.
+    played = [f for f in upcoming if f["played"]]
+    check("a played fixture carries both scores",
+          all(f["home"]["score"] is not None and f["away"]["score"] is not None
+              for f in played))
     # An unplayed game reports 0-0 in the feed, which must never reach a page.
-    check("an unplayed game shows no score",
+    check("an unplayed fixture shows no score",
           all(f["home"]["score"] is None and f["away"]["score"] is None
-              for f in upcoming))
+              for f in upcoming if not f["played"]))
     check("fixtures are in tip order",
           [f["game_utc"] for f in upcoming] == sorted(f["game_utc"] for f in upcoming))
     # Knockout ties are published before the bracket resolves, with no teams. The
@@ -318,8 +324,14 @@ def test_adaptive_polling():
 
     conn = db.connect()
     SLUG = "fiba-u16-eurobasket-2026-division-b"
-    tip = conn.execute("SELECT MIN(game_utc) t FROM games WHERE event_slug=?",
-                       (SLUG,)).fetchone()["t"]
+    # Deliberately the earliest game we have NOT scraped. `next_interval` only
+    # counts unparsed games as reasons to poll fast, so anchoring on the event's
+    # first fixture broke as soon as that game was ingested on day one: every
+    # window around it correctly reported idle, and the test read that as a
+    # regression. An unplayed fixture keeps the windows meaningful all event.
+    tip = conn.execute(
+        "SELECT MIN(game_utc) t FROM games WHERE event_slug=? AND parsed_at IS NULL",
+        (SLUG,)).fetchone()["t"]
     tip = dt.datetime.fromisoformat(tip)
 
     real = dt.datetime
@@ -531,13 +543,116 @@ def test_ranks_and_percentiles():
           all("fg_pct" in pcts[p["person_id"]] for p in heavy))
 
 
+def test_deploy_is_verified():
+    """A push is not a deploy. This is the check that was missing on day one.
+
+    GitHub's Pages service degraded mid-event and three deployments aborted at
+    the ten minute mark. `publish()` reported success on `git push` alone, so
+    nothing noticed, and the site served stale reports for three hours with the
+    next opponent's scouting page 404ing.
+    """
+    print("deploy verification")
+    import time as _time
+    from unittest import mock
+    from fiba import deploy
+
+    check("site url is derived from the remote, not hardcoded",
+          deploy.site_url() == "https://connorleach01.github.io/fiba-ireland")
+
+    # A clean 404 means the deploy carrying version.txt never landed. That must
+    # read as stale, or the very first bad deploy goes undetected forever.
+    with mock.patch.object(deploy, "local_build_id", return_value="LOCAL"), \
+         mock.patch.object(deploy, "live_build_id", return_value=""), \
+         mock.patch.object(deploy, "_last_retrigger", return_value=0.0), \
+         mock.patch.object(deploy, "_mark_retrigger") as marked, \
+         mock.patch.object(deploy, "_git") as git:
+        deploy.ensure_live(10_000.0)
+        pushed = [c.args[0] for c in git.call_args_list]
+        check("a missing version file re-triggers a deploy", "push" in pushed)
+        check("the re-trigger is recorded", marked.called)
+
+    # Unreachable is not the same as stale. Treating it as stale would push an
+    # empty commit on every poll while the Mac is off the network.
+    with mock.patch.object(deploy, "local_build_id", return_value="LOCAL"), \
+         mock.patch.object(deploy, "live_build_id", return_value=None), \
+         mock.patch.object(deploy, "_git") as git:
+        deploy.ensure_live(10_000.0)
+        # Not `git.called`: ensure_live legitimately shells out for is_repo and
+        # has_remote before deciding anything. Only a push re-triggers a deploy.
+        check("an unreachable site does not re-trigger",
+              "push" not in [c.args[0] for c in git.call_args_list])
+
+    # GitHub cancels an in-flight deploy when a newer one supersedes it, so
+    # re-triggering inside the cooldown destroys the very deploy it is waiting on.
+    with mock.patch.object(deploy, "local_build_id", return_value="LOCAL"), \
+         mock.patch.object(deploy, "live_build_id", return_value="OLD"), \
+         mock.patch.object(deploy, "_last_retrigger", return_value=9_990.0), \
+         mock.patch.object(deploy, "_git") as git:
+        deploy.ensure_live(10_000.0)
+        check("cooldown prevents cancelling a running deploy",
+              "push" not in [c.args[0] for c in git.call_args_list])
+
+    with mock.patch.object(deploy, "local_build_id", return_value="LIVE"), \
+         mock.patch.object(deploy, "live_build_id", return_value="LIVE"), \
+         mock.patch.object(deploy, "_git") as git:
+        check("a matching build id confirms the site is current",
+              deploy.ensure_live(10_000.0) is True)
+        check("confirming does not push",
+              "push" not in [c.args[0] for c in git.call_args_list])
+
+    # The cooldown lives on disk precisely so `launchctl kickstart` cannot reset it.
+    deploy._mark_retrigger(1234.5)
+    check("cooldown survives a process restart", deploy._last_retrigger() == 1234.5)
+    deploy._RETRIGGER_STAMP.unlink(missing_ok=True)
+
+
+def test_pending_games_poll_tightly():
+    """A final game that has not published yet is the one case worth rushing."""
+    print("pending-game polling")
+    import time as _time
+    from unittest import mock
+    from fiba import watch
+
+    conn = db.connect()
+    SLUG = "fiba-u16-eurobasket-2026-division-b"
+
+    check("a pending game polls faster than the fast interval",
+          watch.next_interval(conn, SLUG, None, 1)[0] < watch.FAST_INTERVAL_S)
+    check("pending polling explains itself",
+          "not yet published" in watch.next_interval(conn, SLUG, None, 1)[1])
+    check("--interval still pins everything",
+          watch.next_interval(conn, SLUG, 300, 5)[0] == 300)
+
+    # Day one logged 61 errors and a notification per cycle per failing game for
+    # what was ordinary publishing lag. At the pending interval that is several
+    # hundred, so the grace period must stay silent and escalate exactly once.
+    watch._first_failure.clear()
+    watch._alerted.clear()
+    now = 1_000_000.0
+    with mock.patch.object(watch, "notify") as notify:
+        watch._report_failures([(1, "no player rows")], now)
+        watch._report_failures([(1, "no player rows")], now + 60)
+        check("publishing lag is not alerted", not notify.called)
+
+        watch._report_failures([(1, "no player rows")], now + watch.PUBLISH_GRACE_S + 1)
+        check("a genuinely late game alerts", notify.call_count == 1)
+
+        watch._report_failures([(1, "no player rows")], now + watch.PUBLISH_GRACE_S + 90)
+        check("it does not alert again", notify.call_count == 1)
+
+    watch._report_failures([], now + 2000)
+    check("recovery clears the tracking",
+          not watch._first_failure and not watch._alerted)
+
+
 def main() -> int:
     for test in (test_clock, test_parse_both_encodings, test_metrics_match_published,
                  test_four_factors_sanity, test_shot_zones,
                  test_rejects_unfinished_games, test_lineups_validate,
                  test_small_sample_rates_withheld, test_fixture_list,
                  test_times_are_venue_local, test_degraded_schedule_cannot_blank_data,
-                 test_adaptive_polling,
+                 test_adaptive_polling, test_deploy_is_verified,
+                 test_pending_games_poll_tightly,
                  test_empty_event_shape,
                  test_theming, test_ranks_and_percentiles):
         test()
